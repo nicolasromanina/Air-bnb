@@ -58,15 +58,15 @@ const WelcomeSection = () => {
 
             {/* Feature badges */}
             <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-3 bg-foreground text-background px-4 py-3 rounded-lg">
-                <Bed className="w-5 h-5" />
-                <span className="text-sm font-medium">
+              <div className="flex flex-col items-center gap-2 bg-foreground text-background px-6 py-4 rounded-lg">
+                <Bed className="w-6 h-6" />
+                <span className="text-sm font-medium text-center">
                   Lorem ipsum dolor sit amet
                 </span>
               </div>
-              <div className="flex items-center gap-3 bg-foreground text-background px-4 py-3 rounded-lg">
-                <Wifi className="w-5 h-5" />
-                <span className="text-sm font-medium">
+              <div className="flex flex-col items-center gap-2 bg-foreground text-background px-6 py-4 rounded-lg">
+                <Wifi className="w-6 h-6" />
+                <span className="text-sm font-medium text-center">
                   Lorem ipsum dolor sit amet
                 </span>
               </div>
