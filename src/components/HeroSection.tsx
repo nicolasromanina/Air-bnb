@@ -53,11 +53,8 @@ const HeroSection = () => {
             </div>
           </div>
 
-          {/* Right Column - Image Collage with Gray Background */}
+          {/* Right Column - Image Collage */}
           <div className="relative h-[500px] md:h-[600px] lg:h-[700px]">
-            {/* Gray Background Container */}
-            <div className="absolute inset-0 bg-hero-gray rounded-3xl -right-4 md:-right-8 lg:-right-12" />
-            
             {/* Decorative Elements */}
             <div className="absolute top-0 right-0 w-32 h-40 md:w-40 md:h-52 bg-hero-pink z-10" />
             <div className="absolute bottom-16 left-0 md:left-8 w-24 h-24 md:w-32 md:h-32 bg-hero-gray z-0" />
