@@ -1,4 +1,4 @@
-import Logo from "./Logo";
+
 import footer1 from "@/assets/footer-1.jpg";
 import footer2 from "@/assets/footer-2.jpg";
 import footer3 from "@/assets/footer-3.jpg";
