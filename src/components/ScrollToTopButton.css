@@ -1,0 +1,291 @@
+/* ScrollToTopButton.css */
+
+.scroll-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  
+  width: 64px;
+  height: 64px;
+  
+  border-radius: 50%;
+  border: none;
+  
+  background: linear-gradient(135deg, 
+    rgba(255, 0, 128, 0.9), 
+    rgba(255, 77, 166, 0.9),
+    rgba(148, 0, 211, 0.9)
+  );
+  color: white;
+  
+  cursor: pointer;
+  z-index: 10000;
+  
+  box-shadow: 
+    0 10px 30px rgba(255, 0, 128, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 20px rgba(255, 255, 255, 0.1) inset;
+  
+  opacity: 0;
+  transform: translateY(30px) scale(0.8) rotate(-180deg);
+  pointer-events: none;
+  
+  transition:
+    opacity 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.3s ease,
+    box-shadow 0.3s ease;
+  
+  overflow: hidden;
+}
+
+.scroll-to-top.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1) rotate(0);
+  pointer-events: auto;
+}
+
+/* Contenu du bouton */
+.scroll-to-top-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+/* Flèche SVG */
+.scroll-to-top-arrow {
+  width: 24px;
+  height: 24px;
+  z-index: 3;
+  transition: transform 0.3s ease;
+}
+
+/* Cercle de progression */
+.scroll-progress-circle {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.progress-circle-bg {
+  fill: transparent;
+  stroke: rgba(255, 255, 255, 0.15);
+  stroke-width: 3;
+}
+
+.progress-circle {
+  fill: transparent;
+  stroke: url(#gradient-progress);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 283;
+  stroke-dashoffset: 283;
+  transition: stroke-dashoffset 0.2s ease;
+}
+
+/* Réflexion de lumière dynamique */
+.light-reflection {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.scroll-to-top.hovered .light-reflection {
+  opacity: 0.8;
+}
+
+/* Pourcentage au survol */
+.scroll-percentage {
+  position: absolute;
+  top: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  white-space: nowrap;
+  opacity: 0;
+  animation: fadeInUp 0.3s forwards;
+}
+
+/* Animations au survol */
+.scroll-to-top:hover {
+  background: linear-gradient(135deg, 
+    rgba(255, 0, 128, 1), 
+    rgba(255, 77, 166, 1),
+    rgba(148, 0, 211, 1)
+  );
+  box-shadow: 
+    0 15px 40px rgba(255, 0, 128, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset,
+    0 0 30px rgba(255, 255, 255, 0.15) inset;
+  
+  transform: scale(1.05);
+}
+
+.scroll-to-top:hover .scroll-to-top-arrow {
+  transform: translateY(-2px);
+}
+
+/* Animation d'entrée */
+@keyframes buttonEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.8) rotate(-180deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0);
+  }
+}
+
+.scroll-to-top.visible {
+  animation: buttonEntrance 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Animation de pulse améliorée */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 
+      0 10px 30px rgba(255, 0, 128, 0.4),
+      0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+      0 0 20px rgba(255, 255, 255, 0.1) inset;
+  }
+  50% {
+    box-shadow: 
+      0 10px 40px rgba(255, 0, 128, 0.7),
+      0 0 0 1px rgba(255, 255, 255, 0.15) inset,
+      0 0 30px rgba(255, 255, 255, 0.15) inset;
+  }
+}
+
+.scroll-to-top.visible {
+  animation: 
+    buttonEntrance 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+    pulseGlow 3s infinite ease-in-out;
+}
+
+/* Animation de vibration subtile */
+@keyframes subtleVibrate {
+  0%, 100% { transform: translateY(0) scale(1); }
+  25% { transform: translateY(-1px) scale(1.02); }
+  75% { transform: translateY(1px) scale(0.98); }
+}
+
+.scroll-to-top:hover {
+  animation: subtleVibrate 0.4s ease;
+}
+
+/* Fade in pour le pourcentage */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Particules flottantes en arrière-plan */
+.floating-particles {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 120px;
+  height: 120px;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.floating-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 0, 128, 0.6);
+  border-radius: 50%;
+  bottom: 0;
+  animation: floatUp linear infinite;
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-120px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Animation des particules au clic */
+.particle {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* Gradients SVG */
+svg defs {
+  position: absolute;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .scroll-to-top {
+    width: 56px;
+    height: 56px;
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
+  
+  .scroll-to-top-arrow {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .floating-particles {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+/* Animation pour les préférences de réduction de mouvement */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-to-top,
+  .scroll-to-top-arrow,
+  .light-reflection,
+  .floating-particle,
+  .particle {
+    transition: none;
+    animation: none;
+  }
+  
+  .scroll-to-top.visible {
+    animation: none;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import ScrollToTopButton from "./components/ScrollToTopButton";
 
 // Import du Provider de contexte
 import { ContentProvider } from "@/context/ContentContext";
@@ -81,6 +82,7 @@ const App = () => (
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <ScrollToTopButton />
         </BrowserRouter>
       </TooltipProvider>
     </ContentProvider>
