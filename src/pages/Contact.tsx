@@ -177,13 +177,6 @@ const Contact: React.FC = () => {
             </div>
           </div>
         </section>
-
-        {/* --- BOTTOM BANNER --- */}
-        <section className="bg-[#E5E5E5] py-20 overflow-hidden flex justify-center items-center">
-            <h1 className="text-[60px] md:text-[100px] lg:text-[140px] font-black tracking-tighter text-black leading-none select-none">
-              Adipiscing elit
-            </h1>
-        </section>
       </main>
 
       <Footer />
