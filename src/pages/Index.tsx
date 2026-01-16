@@ -19,8 +19,8 @@ const Index = () => {
       {/* ----- PLAQUE GRISE DÉCORATIVE ----- */}
       <div className="absolute 
         top-0             /* Commence tout en haut (derrière Navbar) */
-        right-[0%]           /* Alignée à droite */
-        w-[45%]           /* Largeur de la plaque */
+        right-[8%]           /* Alignée à droite */
+        w-[44%]           /* Largeur de la plaque */
         h-[730px]         /* Hauteur : elle descend jusque sous le collage */
         bg-[#E5E7EB]      /* Couleur grise */
         hidden lg:block   /* Visible uniquement sur grand écran */

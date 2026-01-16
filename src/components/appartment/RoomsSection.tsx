@@ -19,6 +19,9 @@ const rooms = [
   { image: room7, title: "Curabitur tempus urna at turpis", description: "Rorem ipsum dolor sit amet, consectetur adipiscing elit", guests: "jusqu'à 4 invités", bedrooms: "2 chambres à coucher" },
   { image: room8, title: "Curabitur tempus urna at turpis", description: "Rorem ipsum dolor sit amet, consectetur adipiscing elit", guests: "jusqu'à 4 invités", bedrooms: "2 chambres à coucher" },
   { image: room9, title: "Curabitur tempus urna at turpis", description: "Rorem ipsum dolor sit amet, consectetur adipiscing elit", guests: "jusqu'à 4 invités", bedrooms: "2 chambres à coucher" },
+  { image: room7, title: "Curabitur tempus urna at turpis", description: "Rorem ipsum dolor sit amet, consectetur adipiscing elit", guests: "jusqu'à 4 invités", bedrooms: "2 chambres à coucher" },
+  { image: room8, title: "Curabitur tempus urna at turpis", description: "Rorem ipsum dolor sit amet, consectetur adipiscing elit", guests: "jusqu'à 4 invités", bedrooms: "2 chambres à coucher" },
+  { image: room9, title: "Curabitur tempus urna at turpis", description: "Rorem ipsum dolor sit amet, consectetur adipiscing elit", guests: "jusqu'à 4 invités", bedrooms: "2 chambres à coucher" },
 ];
 
 const RoomsSection = () => {
@@ -46,11 +49,11 @@ const RoomsSection = () => {
       </div>
       
       {/* Show more button */}
-      <div className="flex justify-center mt-12 lg:mt-16">
-        <button className="bg-primary text-primary-foreground font-montserrat font-medium px-10 py-4 rounded-full hover:opacity-90 transition-opacity">
-          Affichez plus
-        </button>
-      </div>
+        <div className="flex justify-center mt-12 lg:mt-16">
+          <button className="bg-black text-primary-foreground font-montserrat font-medium px-10 py-4 rounded-full hover:opacity-90 transition-opacity">
+            Affichez plus
+          </button>
+        </div>
     </section>
   );
 };

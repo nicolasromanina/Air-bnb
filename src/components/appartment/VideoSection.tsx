@@ -6,9 +6,6 @@ const VideoSection = () => {
     <section className="py-16 lg:py-24 bg-secondary relative">
       <div className="max-w-7xl mx-auto px-6 lg:px-16 xl:px-24">
         {/* Large title */}
-        <h2 className="font-montserrat font-bold text-gray-medium text-4xl md:text-5xl lg:text-6xl xl:text-7xl mb-8 leading-none">
-          Lorem ipsum dolor
-        </h2>
         
         {/* Video container */}
         <div className="relative aspect-[16/7] overflow-hidden">

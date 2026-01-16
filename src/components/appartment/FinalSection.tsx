@@ -23,6 +23,14 @@ const FinalSection = () => {
               <br />
               libero
             </p>
+            <div className="max-w-[1280px] mx-auto px-6 lg:px-12">
+              <div 
+                className="border-t"
+                style={{
+                  borderColor: 'hsla(0, 0%, 0%, 0.2)'
+                }}
+              />
+            </div>
             <p className="font-montserrat font-semibold text-foreground text-sm mb-4">
               Class aptent taciti sociosqu ad
               <br />

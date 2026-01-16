@@ -1,190 +1,103 @@
-
 import footer1 from "@/assets/footer-1.jpg";
 import footer2 from "@/assets/footer-2.jpg";
 import footer3 from "@/assets/footer-3.jpg";
 import footer4 from "@/assets/footer-4.jpg";
 
-const linksUtiles = [
-  "Nunc vulputate libero",
-  "Curabitur tempus",
-  "Vestibulum eu nisl",
-  "Inceptos himenaeos",
-];
-
-const pagesLegales = [
-  "Curabitur tempus",
-  "Inceptos himenaeos",
-  "Nunc vulputate libero",
-  "Vestibulum eu nisl",
-];
-
 const Footer = () => {
+  // COHÉRENCE TOTALE AVEC LE HERO : 
+  // On reprend exactement "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20"
+  const gridContainer = "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
+
   return (
-    <footer 
-      className="bg-background"
-      style={{
-        backgroundColor: 'hsl(0 0% 90%)'
-      }}
-    >
-      {/* Separator line above logo */}
-      <div 
-        className="max-w-[1280px] mx-auto px-6 lg:px-12"
-      >
-        <div 
-          className="border-t"
-          style={{
-            borderColor: 'hsla(0, 0%, 0%, 0.2)'
-          }}
-        />
-      </div>
+    <footer className="w-full bg-white pb-12 text-black">
+      {/* L'enveloppe ci-dessous applique la marge (gridContainer).
+          Le fond gris (#E5E5E5) s'arrête là où la grille s'arrête.
+      */}
+      <div className={gridContainer}>
+        <div className="bg-[#E5E5E5] rounded-sm pt-20 overflow-hidden">
+          
+          {/* Contenu interne avec un padding pour ne pas coller aux bords du bloc gris */}
+          <div className="px-8 md:px-12 lg:px-16">
+            
+            {/* Bordure haute interne */}
+           
 
-      {/* Upper footer */}
-      <div 
-        className="max-w-[1280px] mx-auto px-6 lg:px-12 py-12 lg:py-16"
-      >
-        {/* Logo centered on top */}
-        <div className="flex justify-center mb-10">
-          <img 
-            src="./Logo.png" 
-            alt="SWEETHOME Logo" 
-            className="h-8 w-auto" 
-          />
-        </div>
+            {/* Logo Centré */}
+            <div className="flex justify-center mb-24">
+              <img src="./Logo.png" alt="SWEETHOME" className="h-10 w-auto" />
+            </div>
+            <div className="border-t border-black/20 mb-5" />
+            {/* Grille de contenu 4 colonnes */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 pb-20">
+              
+              {/* Galerie - Col 1 */}
+              <div className="grid grid-cols-2 gap-2">
+                {[footer1, footer2, footer3, footer4].map((img, i) => (
+                  <div key={i} className="aspect-square overflow-hidden rounded-sm bg-black/5">
+                    <img 
+                      src={img} 
+                      className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" 
+                      alt="" 
+                    />
+                  </div>
+                ))}
+              </div>
 
-      {/* Separator line above */}
-      <div className="max-w-[1280px] mx-auto px-6 lg:px-12">
-        <div 
-          className="border-t"
-          style={{
-            borderColor: 'hsla(0, 0%, 0%, 0.2)'
-          }}
-        />
-      </div>
+              {/* Spacer Luxe - Col 2 */}
+              <div className="hidden lg:block" />
 
-      <br/>
+              {/* Liens Utiles - Col 3 */}
+              <div className="flex flex-col">
+                <h4 className="font-bold text-[10px] tracking-[0.3em] uppercase mb-8 opacity-90">Liens Utiles</h4>
+                <ul className="space-y-4">
+                  {["Nunc vulputate libero", "Curabitur tempus", "Vestibulum eu nisl", "Inceptos himenaeos"].map((link) => (
+                    <li key={link}>
+                      <a href="#" className="text-sm opacity-50 hover:opacity-100 transition-opacity">
+                        {link}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
-          {/* Images grid */}
-          <div className="col-span-2 md:col-span-1 grid grid-cols-2 gap-2">
-            <img
-              src={footer1}
-              alt="Living room"
-              className="w-full h-[80px] lg:h-[100px] object-cover"
-            />
-            <img
-              src={footer2}
-              alt="Modern interior"
-              className="w-full h-[80px] lg:h-[100px] object-cover"
-            />
-            <img
-              src={footer3}
-              alt="Bedroom"
-              className="w-full h-[80px] lg:h-[100px] object-cover"
-            />
-            <img
-              src={footer4}
-              alt="Modern bedroom"
-              className="w-full h-[80px] lg:h-[100px] object-cover"
-            />
-          </div>
+              {/* Pages Légales - Col 4 */}
+              <div className="flex flex-col">
+                <h4 className="font-bold text-[10px] tracking-[0.3em] uppercase mb-8 opacity-90">Pages Légales</h4>
+                <ul className="space-y-4">
+                  {["Mentions Légales", "Politique de confidentialité", "Conditions Générales", "Contact"].map((link) => (
+                    <li key={link}>
+                      <a href="#" className="text-sm opacity-50 hover:opacity-100 transition-opacity">
+                        {link}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            
+             <div className="border-t border-black/20 mb-5" />
 
-          {/* Spacer for alignment */}
-          <div className="hidden md:block" />
-
-          {/* Liens utiles */}
-          <div>
-            <h4 
-              className="font-semibold text-sm tracking-wider uppercase mb-4"
-              style={{
-                fontFamily: "'Inter', sans-serif"
-              }}
-            >
-              Lien Utiles
-            </h4>
-            <ul className="space-y-2">
-              {linksUtiles.map((link, index) => (
-                <li key={index}>
-                  <a
-                    href="#"
-                    className="text-sm transition-colors"
-                    style={{
-                      fontFamily: "'Inter', sans-serif",
-                      color: 'hsla(0, 0%, 0%, 0.7)'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = 'hsl(0 0% 0%)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = 'hsla(0, 0%, 0%, 0.7)';
-                    }}
-                  >
-                    {link}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Pages légales */}
-          <div>
-            <h4 
-              className="font-semibold text-sm tracking-wider uppercase mb-4"
-              style={{
-                fontFamily: "'Inter', sans-serif"
-              }}
-            >
-              Pages Legales
-            </h4>
-            <ul className="space-y-2">
-              {pagesLegales.map((link, index) => (
-                <li key={index}>
-                  <a
-                    href="#"
-                    className="text-sm transition-colors"
-                    style={{
-                      fontFamily: "'Inter', sans-serif",
-                      color: 'hsla(0, 0%, 0%, 0.7)'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = 'hsl(0 0% 0%)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = 'hsla(0, 0%, 0%, 0.7)';
-                    }}
-                  >
-                    {link}
-                  </a>
-                </li>
-              ))}
-            </ul>
+            {/* Bannière Visuelle - Texte Gigantesque */}
+            <div className="border-t border-black/5">
+              <div className="py-20 lg:py-32">
+                <h2 
+                  className="text-[10vw] lg:text-[130px] font-medium text-center leading-none tracking-tighter" 
+                  style={{ fontFamily: "'Playfair Display', serif" }}
+                >
+                  Adipiscing elit
+                </h2>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Separator line above banner */}
-      <div className="max-w-[1280px] mx-auto px-6 lg:px-12">
-        <div 
-          className="border-t"
-          style={{
-            borderColor: 'hsla(0, 0%, 0%, 0.2)'
-          }}
-        />
-      </div>
-
-      {/* Banner */}
-      <div 
-        className="py-10 lg:py-16 overflow-hidden"
-      >
-        <h2 
-          className="text-5xl md:text-7xl lg:text-[120px] xl:text-[160px] font-medium italic text-center leading-none tracking-tight"
-          style={{
-            color: 'hsl(0 0% 0%)',
-            fontFamily: "'Playfair Display', serif",
-            fontStyle: 'normal'
-          }}
-        >
-          Adipiscing elit
-        </h2>
+      {/* COPYRIGHT - Aligné sur la même grille extérieure */}
+      <div className={`${gridContainer} mt-8`}>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] uppercase tracking-[0.2em] opacity-40 px-2">
+          <p>© 2026 SWEETHOME LUXURY. All rights reserved.</p>
+          <p>Designed for Excellence</p>
+        </div>
       </div>
     </footer>
   );

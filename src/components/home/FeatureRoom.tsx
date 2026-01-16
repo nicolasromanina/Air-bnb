@@ -3,139 +3,100 @@ import featureBedroom from "@/assets/horizontal-photo-room.png";
 import featureLiving from "@/assets/square-photo-room.png";
 
 const FeatureRoom = () => {
+  // COHÉRENCE HERO & FOOTER : Grid de 1440px avec marges réactives
+  const gridContainer = "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
+
   return (
-    <section 
-      className="w-full py-12 md:py-16 lg:py-20 px-4 sm:px-8 lg:px-12 xl:px-20"
-      style={{
-        backgroundColor: 'hsl(0 0% 100%)' // CHANGÉ: blanc au lieu de gris clair (91%)
-      }}
-    >
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-6 lg:gap-20 mb-12 lg:mb-16">
-        <h2 
-          className="text-[28px] sm:text-[36px] lg:text-[44px] xl:text-[52px] font-bold leading-[1.05] tracking-tight uppercase max-w-[400px]"
-          style={{
-            color: 'hsl(0 0% 8%)', // foreground color
-            fontFamily: "'Playfair Display', serif"
-          }}
-        >
-          Adipiscing<br />
-          Elit Amet<br />
-          Consectetur .
-        </h2>
-        <p 
-          className="text-sm sm:text-base leading-relaxed max-w-md lg:pt-2"
-          style={{
-            color: 'hsl(0 0% 8%)', // foreground color
-            fontFamily: "'Inter', sans-serif"
-          }}
-        >
-          Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Curabitur tempus urna at turpis condimentum lobortis.
-        </p>
-      </div>
-
-      {/* Grid content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-        {/* Left column */}
-        <div className="flex flex-col gap-6">
-          {/* Feature cards */}
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-            {/* Dark card */}
-            <div 
-              className="p-6 sm:p-8 flex flex-col items-center text-center flex-1"
+    <section className="w-full py-16 md:py-24 bg-white font-montserrat">
+      <div className={gridContainer}>
+        
+        {/* Header : Aligné sur la grille */}
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-8 mb-16 md:mb-20">
+          <div className="max-w-[500px]">
+            <h2 
+              className="text-[32px] sm:text-[42px] lg:text-[52px] xl:text-[62px] font-bold leading-[1] tracking-tighter uppercase"
               style={{
-                backgroundColor: 'hsl(0 0% 8%)', // primary color
-                color: 'hsl(0 0% 100%)' // primary-foreground
+                color: 'hsl(0 0% 8%)',
+                fontFamily: "'Playfair Display', serif"
               }}
             >
-              <div 
-                className="w-12 h-12 rounded-full flex items-center justify-center mb-5"
-                style={{
-                  backgroundColor: 'hsl(0 0% 100%)' // white
-                }}
-              >
-                <Home 
-                  className="w-5 h-5"
-                  style={{
-                    color: 'hsl(0 0% 8%)' // foreground
-                  }}
-                />
-              </div>
-              <h3 
-                className="text-lg sm:text-xl font-semibold mb-3"
-                style={{
-                  fontFamily: "'Playfair Display', serif"
-                }}
-              >
-                Lorem ipsum dolor sit amet
-              </h3>
-              <p 
-                className="text-sm leading-relaxed"
-                style={{
-                  opacity: 0.8 // primary-foreground/80
-                }}
-              >
-                Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia
-              </p>
-            </div>
-
-            {/* Light card */}
-            <div 
-              className="p-6 sm:p-8 flex flex-col items-center text-center flex-1"
-              style={{
-                backgroundColor: 'hsl(0 0% 96%)', // secondary color
-                color: 'hsl(0 0% 8%)' // foreground
-              }}
-            >
-              <div 
-                className="w-12 h-12 rounded-full flex items-center justify-center mb-5"
-                style={{
-                  backgroundColor: 'hsl(0 0% 8%)' // primary color
-                }}
-              >
-                <Home 
-                  className="w-5 h-5"
-                  style={{
-                    color: 'hsl(0 0% 100%)' // primary-foreground
-                  }}
-                />
-              </div>
-              <h3 
-                className="text-lg sm:text-xl font-semibold mb-3"
-                style={{
-                  fontFamily: "'Playfair Display', serif"
-                }}
-              >
-                Nunc vulputate libero et velit
-              </h3>
-              <p 
-                className="text-sm leading-relaxed"
-                style={{
-                  color: 'hsl(0 0% 45%)' // muted-foreground
-                }}
-              >
-                Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia
-              </p>
-            </div>
+              Adipiscing<br />
+              Elit Amet<br />
+              Consectetur
+            </h2>
           </div>
-
-          {/* Bedroom image */}
-          <div className="w-full h-[200px] sm:h-[260px] lg:h-[300px] overflow-hidden">
-            <img
-              src={featureBedroom}
-              alt="Luxury bedroom interior"
-              className="w-full h-full object-cover"
-            />
+          
+          <div className="max-w-md">
+            <p 
+              className="text-sm sm:text-base leading-relaxed text-gray-600 border-l-2 border-black/10 pl-6"
+              style={{ fontFamily: "'Inter', sans-serif" }}
+            >
+              Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.
+            </p>
           </div>
         </div>
 
-        {/* Right column - Living room image */}
-        <div className="w-full h-[300px] sm:h-[400px] lg:h-full min-h-[400px] overflow-hidden">
-          <img
-            src={featureLiving}
-            alt="Modern living room interior"
-            className="w-full h-full object-cover"
-          />
+        {/* Grid content : 2 colonnes principales */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+          
+          {/* Colonne Gauche */}
+          <div className="flex flex-col gap-8">
+            {/* Cartes de caractéristiques */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              
+              {/* Dark card */}
+              <div 
+                className="p-8 md:p-10 flex flex-col items-start text-left rounded-sm transition-transform hover:-translate-y-1 duration-500"
+                style={{
+                  backgroundColor: 'hsl(0 0% 8%)',
+                  color: 'hsl(0 0% 100%)'
+                }}
+              >
+                <div className="w-12 h-12 rounded-full flex items-center justify-center mb-6 bg-white">
+                  <Home className="w-5 h-5 text-black" />
+                </div>
+                <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  Lorem ipsum dolor sit amet
+                </h3>
+                <p className="text-sm leading-relaxed opacity-70">
+                  Nunc vulputate libero et velit interdum, ac aliquet odio mattis.
+                </p>
+              </div>
+
+              {/* Light card (Gris très clair pour subtilité) */}
+              <div 
+                className="p-8 md:p-10 flex flex-col items-start text-left rounded-sm bg-[#F5F5F5] transition-transform hover:-translate-y-1 duration-500"
+              >
+                <div className="w-12 h-12 rounded-full flex items-center justify-center mb-6 bg-black">
+                  <Home className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  Nunc vulputate libero et velit
+                </h3>
+                <p className="text-sm leading-relaxed text-gray-500">
+                  Nunc vulputate libero et velit interdum, ac aliquet odio mattis.
+                </p>
+              </div>
+            </div>
+
+            {/* Bedroom image (Horizontal) */}
+            <div className="w-full aspect-[16/9] overflow-hidden rounded-sm group">
+              <img
+                src={featureBedroom}
+                alt="Luxury bedroom interior"
+                className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000 scale-105 group-hover:scale-100"
+              />
+            </div>
+          </div>
+
+          {/* Colonne Droite - Grande image verticale */}
+          <div className="w-full h-full min-h-[500px] lg:min-h-full overflow-hidden rounded-sm group">
+            <img
+              src={featureLiving}
+              alt="Modern living room interior"
+              className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000 scale-105 group-hover:scale-100"
+            />
+          </div>
         </div>
       </div>
     </section>

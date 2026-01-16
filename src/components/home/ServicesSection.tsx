@@ -6,56 +6,60 @@ const services = [
   {
     image: room1,
     title: "Lorem ipsum dolor sit amet",
-    description: "Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos."
+    description: "Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra."
   },
   {
     image: room2,
     title: "Class aptent taciti sociosqu ad litora",
-    description: "Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos."
+    description: "Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra."
   },
   {
     image: room3,
     title: "Torquent per conubia nostra, per inceptos",
-    description: "Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos."
+    description: "Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra."
   }
 ];
 
 const ServicesSection = () => {
+  // COHÉRENCE GRID : 1440px max-width pour l'alignement global
+  const gridContainer = "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
+
   return (
-    <section 
-      className="py-20"
-      style={{
-        backgroundColor: 'hsl(0 0% 100%)'
-      }}
-    >
-      <div className="container mx-auto px-8">
-        {/* Section Title */}
-        <h2 
-          className="text-center mb-16 font-medium text-4xl md:text-5xl lg:text-[3.5rem] leading-tight tracking-tight uppercase"
-          style={{
-            color: 'hsl(0 0% 10%)',
-            fontFamily: "'Playfair Display', sans-serif"
-          }}
-        >
-          Adipiscing elit amet,<br />consectetur.
-        </h2>
+    <section className="w-full py-20 md:py-28 bg-white font-montserrat">
+      <div className={gridContainer}>
+        
+        {/* Section Title - Impact visuel aligné sur la grille */}
+        <div className="max-w-4xl mx-auto text-center mb-20">
+          <h2 
+            className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tighter mb-6"
+            style={{
+              color: 'hsl(0 0% 10%)',
+              fontFamily: "'Playfair Display', serif"
+            }}
+          >
+            Adipiscing elit amet,<br />consectetur.
+          </h2>
+          <div className="w-20 h-1 bg-[#FF1B7C] mx-auto"></div>
+        </div>
 
         {/* Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 lg:gap-16 mb-20">
           {services.map((service, index) => (
-            <div key={index} className="group">
-              {/* Image */}
-              <div className="aspect-[4/3] overflow-hidden rounded-sm mb-6">
+            <div key={index} className="group flex flex-col items-start">
+              {/* Image avec effet de cadre luxury */}
+              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-sm mb-8 bg-gray-100 shadow-sm">
                 <img
                   src={service.image}
                   alt={service.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110"
                 />
+                {/* Overlay discret au survol */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
               </div>
               
               {/* Content */}
               <h3 
-                className="mb-3 font-semibold text-lg md:text-xl leading-tight"
+                className="mb-4 font-bold text-xl md:text-2xl leading-tight tracking-tight"
                 style={{
                   color: 'hsl(0 0% 10%)',
                   fontFamily: "'Playfair Display', serif"
@@ -63,12 +67,7 @@ const ServicesSection = () => {
               >
                 {service.title}
               </h3>
-              <p 
-                className="text-xs leading-relaxed"
-                style={{
-                  color: 'hsl(0 0% 40%)'
-                }}
-              >
+              <p className="text-sm leading-relaxed text-gray-500 font-medium border-l-2 border-black/10 pl-6">
                 {service.description}
               </p>
             </div>
@@ -78,13 +77,13 @@ const ServicesSection = () => {
         {/* CTA Button */}
         <div className="text-center">
           <button 
-            className="px-8 py-3 rounded-full text-sm font-medium tracking-wide transition-all duration-300 hover:opacity-90"
+            className="px-12 py-5 rounded-sm text-[12px] font-bold  tracking-[0.2em] transition-all duration-500 shadow-xl hover:-translate-y-1"
             style={{
-              backgroundColor: 'hsl(342 90% 55%)',
-              color: 'hsl(0 0% 100%)'
+              backgroundColor: '#FF1B7C',
+              color: 'white'
             }}
           >
-            Reserver maintenant
+            Réserver maintenant
           </button>
         </div>
       </div>

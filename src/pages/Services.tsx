@@ -1,26 +1,24 @@
-import HeroSection from "@/components/home/HeroSection";
+import React from "react";
 import Navbar from "@/components/Navbar";
-import WelcomeSection from "@/components/home/WelcomeSection";
-import MarqueeSection from "@/components/home/MarqueeSection";
-import StatsSection from "@/components/home/StatsSection";
-import VideoSection from "@/components/home/VideoSection";
-import ServicesSection from "@/components/home/ServicesSection";
-import FeaturesSection from "@/components/home/FeaturesSection";
-import DestinationSearch from "@/components/home/DestinationSearch";
-import MarqueeBlackSection from "@/components/home/MarqueeBlackSection";
-import ThreeCardsSection from "@/components/home/ThreeCardsSection";
-import FeatureRoom from "@/components/home/FeatureRoom";
-import LogoSection from "@/components/home/LogoSection";
+import Service1 from "@/components/services/Service1";
+import Service2 from "@/components/services/Service2";
 import Footer from "@/components/Footer";
-const Index = () => {
+const Services = () => {
   return (
-    <main className="relative bg-white min-h-screen overflow-x-hidden">
+    <main className="min-h-screen bg-white">
 
         <Navbar />
-
+                <br />
+        <br />
+        <br />
+        <Service1 />
+        <br />
+        <br />
+        <br />
+        <Service2 />
         <Footer />
 
     </main>
   );
 };
-export default Index;
+export default Services;

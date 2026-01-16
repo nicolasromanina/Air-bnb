@@ -19,32 +19,33 @@ const FeatureSection = () => {
             {/* Dark cards stack */}
             <div className="space-y-0">
               {/* Top dark card */}
-              <div className="bg-primary text-primary-foreground p-6 lg:p-8">
+              <div className="bg-black text-primary-foreground p-6 lg:p-12">
                 <p className="font-montserrat font-semibold text-lg lg:text-xl mb-4">
                   Nunc vulputate libero et velit interdum, ac{" "}
                   <span className="text-gray-dark">aliquet odio mattis.</span>
                 </p>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-row items-center justify-between h-full py-2">
                   <div className="w-12 h-12 border border-primary-foreground/30 flex items-center justify-center">
                     <Bed className="w-6 h-6" />
                   </div>
-                  <p className="font-montserrat text-sm text-primary-foreground/70">
+                  <p className="font-montserrat text-sm text-primary-foreground/70 text-center">
                     Amet, consectetur
                     <br />
                     adipiscing elit.
                   </p>
                 </div>
               </div>
+              <br />
               
-              {/* Bottom dark card with image */}
-              <div className="bg-primary text-primary-foreground flex">
+             {/* Bottom white card with image */}
+              <div className="bg-white text-black flex lg:p-12">
                 <div className="p-6 flex-1">
-                  <p className="font-montserrat font-semibold text-sm mb-4">
+                  <p className="font-montserrat font-semibold text-sm mb-4 text-black">
                     Nunc vulputate
                     <br />
                     libero
                   </p>
-                  <p className="font-montserrat text-xs text-primary-foreground/70">
+                  <p className="font-montserrat text-xs text-black/70">
                     Rorem ipsum dolor sit amet,
                     <br />
                     consectetur adipiscing elit
@@ -62,13 +63,6 @@ const FeatureSection = () => {
                 </div>
               </div>
             </div>
-            
-            {/* Bottom text */}
-            <p className="font-montserrat text-muted-foreground text-sm mt-8 max-w-sm">
-              Class aptent taciti sociosqu ad litora
-              torquent per conubia nostra, per
-              inceptos himenaeos.
-            </p>
           </div>
           
           {/* Right column */}
@@ -96,9 +90,23 @@ const FeatureSection = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            
-            {/* Bottom text */}
-            <p className="font-montserrat text-muted-foreground text-sm mt-8 text-right max-w-xs ml-auto">
+          </div>
+        </div>
+        
+        {/* New section for bottom texts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 mt-12">
+          {/* Left bottom text */}
+          <div>
+            <p className="font-montserrat text-muted-foreground text-sm max-w-sm">
+              Class aptent taciti sociosqu ad litora
+              torquent per conubia nostra, per
+              inceptos himenaeos.
+            </p>
+          </div>
+          
+          {/* Right bottom text */}
+          <div className="flex justify-end">
+            <p className="font-montserrat text-muted-foreground text-sm max-w-xs text-right">
               Class aptent taciti sociosqu
               ad litora torquent .
             </p>

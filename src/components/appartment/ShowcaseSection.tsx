@@ -15,8 +15,8 @@ const ShowcaseSection = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left - Image with decorative elements */}
           <div className="relative">
-            {/* Gray decorative rectangle - top */}
-            <div className="absolute -top-8 left-1/3 w-32 h-20 bg-gray-dark hidden lg:block" />
+            {/* Gray decorative rectangle - top -  */}
+            <div className="absolute -top-10 -left-[-80%] w-40 h-40 bg-gray-500 lg:block z-5" />
             
             {/* Main image */}
             <div className="relative z-10">
@@ -28,7 +28,7 @@ const ShowcaseSection = () => {
             </div>
             
             {/* Pink decorative square - bottom left */}
-            <div className="absolute -bottom-8 -left-8 w-20 h-20 bg-accent hidden lg:block" />
+            <div className="absolute -bottom-8 -left-8 w-20 h-20 bg-accent lg:block z-10" />
           </div>
           
           {/* Right - Content */}

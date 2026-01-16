@@ -19,36 +19,48 @@ function LogoSection() {
     { name: "Logoipsum 8", logo: logo8 }
   ];
 
+  // COHÉRENCE GRID : 1440px max-width pour s'aligner sur le reste du site
+  const gridContainer = "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
+
   return (
-    <section className="bg-[#F8F9FA] px-8 lg:px-16 xl:px-24 py-20 lg:py-28">
-      <div className="max-w-[1280px] mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-[48px] lg:text-[56px] font-bold text-black mb-6 leading-tight">
-            Elit amet,<br />consectetur
-          </h2>
-
-          <p className="text-[16px] leading-relaxed text-black/80 max-w-[800px] mx-auto">
-            Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Curabitur tempus urna at turpis condimentum lobortis.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8">
-          {logos.map((item, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-xl border border-gray-200 h-[140px] flex items-center justify-center hover:shadow-lg transition-shadow p-4"
+    <section className="bg-white py-16 md:py-24 font-montserrat">
+      <div className={gridContainer}>
+        
+        {/* INNER BOX (Le fond gris clair structuré) */}
+        <div className="bg-[#F3F3F3] rounded-sm py-16 md:py-24 px-6 md:px-12 lg:px-16">
+          
+          {/* Header Section */}
+          <div className="text-center mb-16 max-w-[800px] mx-auto">
+            <h2 
+              className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-8 leading-[0.9] uppercase tracking-tighter"
+              style={{ fontFamily: "'Playfair Display', serif" }}
             >
-              <div className="text-center">
-                <div className="flex items-center justify-center">
+              Elit amet,<br />consectetur
+            </h2>
+
+            <p className="text-sm md:text-base leading-relaxed text-gray-600 font-medium">
+              Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra.
+            </p>
+          </div>
+
+          {/* Logos Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
+            {logos.map((item, index) => (
+              <div
+                key={index}
+                className="group bg-white h-[120px] lg:h-[150px] flex items-center justify-center transition-all duration-500 hover:bg-black"
+              >
+                <div className="flex items-center justify-center p-6">
                   <img 
                     src={item.logo} 
                     alt={item.name}
-                    className="max-w-full max-h-[60px] object-contain"
+                    className="max-w-full max-h-[50px] object-contain transition-all duration-500 group-hover:invert group-hover:scale-110"
                   />
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          
         </div>
       </div>
     </section>

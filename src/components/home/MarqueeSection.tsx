@@ -1,29 +1,40 @@
 const MarqueeSection = () => {
+  // COHÉRENCE HERO : Même max-width et paddings extérieurs
+  const gridContainer = "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
+
   return (
-    <section 
-      className="w-full py-8 sm:py-10 lg:py-12 overflow-hidden"
-      style={{
-        backgroundColor: 'hsl(0 0% 96%)' // secondary color
-      }}
-    >
-      <div 
-        className="whitespace-nowrap flex items-center gap-8 sm:gap-12 lg:gap-16"
-        style={{
-          animation: 'marquee-section 30s linear infinite'
-        }}
-      >
-        {[...Array(6)].map((_, i) => (
-          <span
-            key={i}
-            className="text-[48px] sm:text-[72px] lg:text-[96px] xl:text-[120px] font-bold tracking-tight"
+    <section className="w-full bg-white py-6 md:py-10 font-montserrat">
+      {/* WRAPPER DE LA GRILLE (Marges extérieures) */}
+      <div className={gridContainer}>
+        
+        {/* INNER BOX (Le fond gris délimité comme le Footer/Destination) */}
+        <div 
+          className="rounded-sm overflow-hidden py-8 sm:py-12 lg:py-16"
+          style={{
+            backgroundColor: 'hsl(0 0% 98%)' // Gris cohérent avec le reste
+          }}
+        >
+          {/* Conteneur de l'animation */}
+          <div 
+            className="whitespace-nowrap flex items-center gap-8 sm:gap-12 lg:gap-16 w-max"
             style={{
-              fontFamily: "'Playfair Display', serif",
-              color: 'hsla(0, 0%, 45%, 0.3)' // muted-foreground/30
+              animation: 'marquee-section 30s linear infinite'
             }}
           >
-            Lorem ipsum dolor
-          </span>
-        ))}
+            {[...Array(10)].map((_, i) => (
+              <span
+                key={i}
+                className="text-[40px] sm:text-[60px] lg:text-[80px] xl:text-[100px] font-bold tracking-tighter"
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  color: 'hsla(0, 0%, 10%, 0.15)' // Plus subtil pour l'aspect luxe
+                }}
+              >
+                Lorem ipsum dolor •
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
       
       <style>
