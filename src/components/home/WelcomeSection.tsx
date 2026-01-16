@@ -6,46 +6,72 @@ import welcomeicon from "@/assets/icon (7).png";
 import welcomeicon1 from "@/assets/icon (8).png";
 
 const WelcomeSection = () => {
-  const containerStyles = "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
+  const containerStyles =
+    "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
 
   return (
     <section className="bg-white py-20 lg:py-32">
       <div className={containerStyles}>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24 items-center">
-          
-          {/* Left - Image Grid */}
-          <div className="grid grid-cols-2 gap-4 sm:gap-6">
-            <div className="row-span-2 relative group cursor-pointer overflow-hidden rounded-xl">
-              <img src={welcomeRoom1} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 aspect-[4/5]" alt="" />
-              <div className="absolute inset-0 flex items-center justify-center bg-black/10">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-2xl transition-transform group-hover:scale-110">
-                  <Play className="w-6 h-6 text-black fill-black ml-1" />
-                </div>
+
+        {/* DESKTOP GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-[auto_auto_1fr] gap-12 items-start">
+
+          {/* VIDEO (square) */}
+          <div className="relative aspect-square w-full max-w-[420px] overflow-hidden rounded-xl group cursor-pointer">
+            <img
+              src={welcomeRoom1}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              alt="Welcome video"
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-xl transition-transform group-hover:scale-110">
+                <Play className="w-5 h-5 text-black fill-black ml-1" />
               </div>
             </div>
-            <img src={welcomeRoom2} className="rounded-xl aspect-square object-cover hover:scale-105 transition-all duration-500" alt="" />
-            <img src={welcomeRoom3} className="rounded-xl aspect-square object-cover hover:scale-105 transition-all duration-500" alt="" />
           </div>
 
-          {/* Right - Content */}
-          <div className="flex flex-col justify-center space-y-8">
-            <div className="space-y-4">
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-black tracking-tight leading-tight">
-                Welcome to <br /> lorem consectetur
-              </h2>
-              <p className="text-gray-600 text-lg leading-relaxed max-w-xl">
-                Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra.
-              </p>
+          {/* IMAGES COLUMN (same height as video) */}
+          <div className="grid grid-rows-2 gap-4 w-[220px] h-full">
+            <div className="relative overflow-hidden rounded-xl">
+              <img
+                src={welcomeRoom2}
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                alt="Image 1"
+              />
             </div>
 
-            <div className="flex flex-row sm:row bg-black text-white rounded-xl overflow-hidden shadow-xl">
+            <div className="relative overflow-hidden rounded-xl">
+              <img
+                src={welcomeRoom3}
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                alt="Image 2"
+              />
+            </div>
+          </div>
+
+          {/* CONTENT */}
+          <div className="flex flex-col justify-center space-y-6 max-w-xl">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-black tracking-tight leading-tight">
+              Welcome to <br /> lorem consectetur
+            </h2>
+
+            <p className="text-gray-600 text-base md:text-lg leading-relaxed">
+              Nunc vulputate libero et velit interdum, ac aliquet odio mattis.
+              Class aptent taciti sociosqu ad litora torquent per conubia nostra.
+            </p>
+
+            <div className="flex flex-col sm:flex-row bg-black text-white rounded-xl overflow-hidden shadow-xl">
               <div className="flex items-center gap-4 px-6 py-5 flex-1 border-b sm:border-b-0 sm:border-r border-white/10">
-                <img className="w-6 h-6 invert" src={welcomeicon1} alt="" />
-                <span className="text-sm font-semibold uppercase tracking-wider">Luxe & Confort</span>
+                <img className="w-5 h-5 invert" src={welcomeicon1} alt="" />
+                <span className="text-xs font-semibold uppercase tracking-widest">
+                  Luxe & Confort
+                </span>
               </div>
               <div className="flex items-center gap-4 px-6 py-5 flex-1">
-                <img className="w-6 h-6 invert" src={welcomeicon} alt="" />
-                <span className="text-sm font-semibold uppercase tracking-wider">Service Premium</span>
+                <img className="w-5 h-5 invert" src={welcomeicon} alt="" />
+                <span className="text-xs font-semibold uppercase tracking-widest">
+                  Service Premium
+                </span>
               </div>
             </div>
 
@@ -53,6 +79,7 @@ const WelcomeSection = () => {
               Faire une réservation
             </button>
           </div>
+
         </div>
       </div>
     </section>

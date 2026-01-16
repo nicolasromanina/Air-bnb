@@ -1,6 +1,7 @@
 import React from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import NavbarSpacer from '@/components/NavbarSpacer';
 
 // --- Icônes SVG Intégrées (Pixel Perfect) ---
 const MailIcon = () => (
@@ -19,7 +20,7 @@ const Contact: React.FC = () => {
   return (
     <div className="font-['Montserrat'] bg-white overflow-x-hidden">
       <Navbar />
-
+      <NavbarSpacer />
       <main>
         {/* --- SECTION 1: HERO & CONTACT FORM --- */}
         <section className="relative bg-[#E5E5E5] pt-16 pb-24 px-4 md:px-8 xl:px-0">
