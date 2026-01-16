@@ -5,39 +5,48 @@ import heroSecondary from "@/assets/left-photo-destination.png";
 
 /* ================= ROTATING BADGE ================= */
 const RotatingBadge = () => (
-  <div className="w-[100px] h-[100px] xl:w-[120px] xl:h-[120px] relative flex-shrink-0">
+  <div className="w-[160px] h-[160px] xl:w-[200px] xl:h-[200px] relative flex-shrink-0">
     <svg
-      viewBox="0 0 120 120"
+      viewBox="0 0 140 140"
       className="w-full h-full animate-[spin_20s_linear_infinite]"
     >
       <defs>
+        {/* Cercle pour texte à l'intérieur */}
         <path
-          id="circlePath"
-          d="M 60, 60 m -45, 0 a 45,45 0 1,1 90,0 a 45,45 0 1,1 -90,0"
+          id="innerCirclePath"
+          d="M70,70 m -50,0 a 50,50 0 1,1 100,0 a 50,50 0 1,1 -100,0"
         />
       </defs>
 
-      <circle cx="60" cy="60" r="50" fill="hsl(0 0% 12%)" />
+      {/* Cercle de fond */}
+      <circle cx="70" cy="70" r="60" fill="hsl(0 0% 12%)" />
 
+      {/* Texte suivant le contour intérieur du cercle */}
       <text
         fill="white"
-        fontSize="8"
+        fontSize="10"
         fontWeight="600"
         letterSpacing="2"
         className="font-montserrat"
       >
-        <textPath href="#circlePath">
-          LOREM IPSUM • LOREM IPSUM •
+        <textPath href="#innerCirclePath">
+          LOREM IPSUM • LOREM IPSUM • LOREM IPSUM •
         </textPath>
       </text>
 
+      {/* Étoile centrale */}
       <polygon
-        points="60,48 63,55 71,56 65,61 67,69 60,65 53,69 55,61 49,56 57,55"
+        points="70,55 73,62 81,63 75,68 77,76 70,72 63,76 65,68 59,63 67,62"
         fill="white"
       />
     </svg>
   </div>
 );
+
+
+
+
+
 
 /* ================= MAIN COMPONENT ================= */
 const DestinationSearch = () => {
