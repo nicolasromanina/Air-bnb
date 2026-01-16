@@ -90,7 +90,7 @@ const AdminIndex = () => {
             </h2>
             <p className="text-background/70 max-w-xl mx-auto mb-8">
               Toutes les modifications sont sauvegardées localement et prêtes à être
-              utilisées par votre application front-end.
+              utilisées par votre application.
             </p>
             <Link to="/admin">
               <Button
@@ -110,10 +110,14 @@ const AdminIndex = () => {
       <footer className="py-8 px-6 border-t border-border">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">S</span>
-            </div>
-            <span className="font-bold text-foreground">SweetHome Admin</span>
+            <img 
+              src="/Logo.png" 
+              alt="SweetHome Logo" 
+              className="h-8 sm:h-10 w-auto object-contain" 
+            />
+            
+            
+            <span className="font-bold text-foreground">Admin</span>
           </div>
           <p className="text-sm text-muted-foreground">
             © 2026 SweetHome. Dashboard d'administration.
