@@ -1,113 +1,114 @@
-import { Bed } from "lucide-react";
-import featureRoom from "@/assets/feature-room.jpg";
-import smallRoom from "@/assets/small-room.jpg";
+import { Newspaper } from "lucide-react";
+import bedroomSmall from "@/assets/bedroom-small.jpg";
+import bedroomLarge from "@/assets/bedroom-large.jpg";
+
+const GRID_CONTAINER = "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
 
 const FeatureSection = () => {
   return (
-    <section className="py-16 lg:py-24 px-6 lg:px-16 xl:px-24 bg-secondary">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
-          {/* Left column */}
-          <div>
-            {/* Title */}
-            <h2 className="font-montserrat font-bold text-foreground text-3xl lg:text-4xl xl:text-[42px] leading-tight mb-12">
+    <section className="py-12 lg:py-20">
+      <div className={GRID_CONTAINER}>
+        {/* Le background gris est maintenant à l'intérieur du grid container */}
+        <div className="bg-[#EBEBEB] py-12 lg:py-16 px-8 lg:px-12 rounded-lg">
+          
+          {/* Top Section */}
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-20">
+            {/* Left Title */}
+            <h1 className="font-serif text-[42px] leading-[1.15] tracking-tight text-foreground lg:text-[52px]">
               Consectetur
               <br />
               ipsum elit
-            </h2>
-            
-            {/* Dark cards stack */}
-            <div className="space-y-0">
-              {/* Top dark card */}
-              <div className="bg-black text-primary-foreground p-6 lg:p-12">
-                <p className="font-montserrat font-semibold text-lg lg:text-xl mb-4">
-                  Nunc vulputate libero et velit interdum, ac{" "}
-                  <span className="text-gray-dark">aliquet odio mattis.</span>
-                </p>
-                <div className="flex flex-row items-center justify-between h-full py-2">
-                  <div className="w-12 h-12 border border-primary-foreground/30 flex items-center justify-center">
-                    <Bed className="w-6 h-6" />
+            </h1>
+
+            {/* Right Paragraph */}
+            <p className="text-base leading-[1.7] text-foreground lg:text-lg">
+              <span className="font-semibold">Nunc vulputate libero et velit interdum, ac aliquet odio mattis.</span>{" "}
+              <span className="text-muted-foreground">Class aptent taciti sociosqu ad</span>{" "}
+              <span className="font-semibold">litora torquent per conubia nostra, per inceptos himenaeos.</span>{" "}
+              <span className=" text-muted-foreground">Curabitur tempus urna at turpis</span>{" "}
+              <span className="font-semibold">condimentum lobortis.</span>
+            </p>
+          </div>
+
+          {/* Cards Section */}
+          <div className="mt-12 grid grid-cols-1 gap-6 lg:mt-16 lg:grid-cols-2 lg:gap-10">
+            {/* Left Column - Cards */}
+            <div className="flex flex-col gap-4">
+              {/* Dark Card -> Changé en bg-black pur */}
+              <div className="rounded-lg bg-black px-7 pb-7 pt-6 text-white">
+                <h2 className="mb-8 text-lg font-normal leading-snug lg:text-xl">
+                  Nunc vulputate libero et velit
+                  <br />
+                  interdum, ac{" "}
+                  <span className="text-gray-500">aliquet odio mattis.</span>
+                </h2>
+
+                <div className="flex items-end justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-md border border-white/20 bg-gray-500">
+                    <Newspaper className="h-5 w-5 opacity-80" />
                   </div>
-                  <p className="font-montserrat text-sm text-primary-foreground/70 text-center">
+                  <p className="text-right text-[13px] leading-relaxed text-white/60">
                     Amet, consectetur
                     <br />
                     adipiscing elit.
                   </p>
                 </div>
               </div>
-              <br />
-              
-             {/* Bottom white card with image */}
-              <div className="bg-white text-black flex lg:p-12">
-                <div className="p-6 flex-1">
-                  <p className="font-montserrat font-semibold text-sm mb-4 text-black">
-                    Nunc vulputate
-                    <br />
-                    libero
-                  </p>
-                  <p className="font-montserrat text-xs text-black/70">
+
+              {/* Light Card */}
+              <div className="overflow-hidden rounded-lg border border-border bg-white">
+                <div className="flex">
+                  <div className="flex flex-1 flex-col justify-center px-5 py-4">
+                    <h3 className="text-[15px] font-semibold leading-snug text-black">
+                      Nunc vulputate
+                      <br />
+                      libero
+                    </h3>
+                  </div>
+                  <div className="w-28 flex-shrink-0 lg:w-32">
+                    <img
+                      src={bedroomSmall}
+                      alt="bedroom"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-end justify-between border-t border-border px-5 py-4">
+                  <p className="text-[13px] leading-relaxed text-gray-500">
                     Rorem ipsum dolor sit amet,
                     <br />
                     consectetur adipiscing elit
                   </p>
-                </div>
-                <div className="w-32 lg:w-40">
-                  <img
-                    src={smallRoom}
-                    alt="Room preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="flex items-end p-4">
-                  <div className="w-10 h-10 rounded-full bg-accent" />
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#FF2E63]">
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          
-          {/* Right column */}
-          <div>
-            {/* Mixed text */}
-            <div className="mb-8 lg:mb-12">
-              <p className="font-montserrat font-bold text-foreground text-xl lg:text-2xl leading-relaxed">
-                Nunc vulputate libero et velit interdum, ac aliquet odio mattis.{" "}
-                <span className="text-muted-foreground font-normal">
-                  Class aptent taciti sociosqu ad
-                </span>{" "}
-                litora torquent per conubia nostra, per inceptos himenaeos.{" "}
-                <span className="text-muted-foreground font-normal">
-                  Curabitur tempus urna at turpis
-                </span>{" "}
-                condimentum lobortis.
-              </p>
-            </div>
-            
-            {/* Large image */}
-            <div className="aspect-[4/3]">
-              <img
-                src={featureRoom}
-                alt="Luxury bedroom with garden view"
-                className="w-full h-full object-cover"
-              />
+
+            {/* Right Column - Large Image */}
+            <div className="flex flex-col justify-end">
+              <div className="overflow-hidden rounded-lg">
+                <img
+                  src={bedroomLarge}
+                  alt="bedroom large"
+                  className="h-auto w-full object-cover lg:h-[200px]"
+                />
+              </div>
             </div>
           </div>
-        </div>
-        
-        {/* New section for bottom texts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 mt-12">
-          {/* Left bottom text */}
-          <div>
-            <p className="font-montserrat text-muted-foreground text-sm max-w-sm">
+
+          {/* Footer Text */}
+          <div className="mt-12 flex flex-col justify-between gap-6 sm:flex-row lg:mt-16">
+            <p className="max-w-[260px] text-[13px] leading-relaxed text-gray-500">
               Class aptent taciti sociosqu ad litora
+              <br />
               torquent per conubia nostra, per
+              <br />
               inceptos himenaeos.
             </p>
-          </div>
-          
-          {/* Right bottom text */}
-          <div className="flex justify-end">
-            <p className="font-montserrat text-muted-foreground text-sm max-w-xs text-right">
+            <p className="max-w-[220px] text-[13px] leading-relaxed text-gray-500 sm:text-right">
               Class aptent taciti sociosqu
+              <br />
               ad litora torquent .
             </p>
           </div>

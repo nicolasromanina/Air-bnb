@@ -14,7 +14,6 @@ const Appartment = () => {
   return (
     <main className="min-h-screen bg-background" id="appartements">
       <Navbar />
-      <NavbarSpacer />
       <HeroSection />
       <RoomsSection />
       <FeatureSection />

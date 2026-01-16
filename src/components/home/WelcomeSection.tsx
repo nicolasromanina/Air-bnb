@@ -61,12 +61,18 @@ const WelcomeSection = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row bg-black text-white rounded-xl overflow-hidden shadow-xl">
-              <div className="flex items-center gap-4 px-6 py-5 flex-1 border-b sm:border-b-0 sm:border-r border-white/10">
+              {/* Luxe & Confort */}
+              <div className="flex items-center gap-4 px-6 py-5 flex-1">
                 <img className="w-5 h-5 invert" src={welcomeicon1} alt="" />
                 <span className="text-xs font-semibold uppercase tracking-widest">
                   Luxe & Confort
                 </span>
               </div>
+
+              {/* Vertical Divider */}
+              <div className="hidden sm:block w-px bg-white/100" />
+
+              {/* Service Premium */}
               <div className="flex items-center gap-4 px-6 py-5 flex-1">
                 <img className="w-5 h-5 invert" src={welcomeicon} alt="" />
                 <span className="text-xs font-semibold uppercase tracking-widest">
@@ -74,6 +80,7 @@ const WelcomeSection = () => {
                 </span>
               </div>
             </div>
+
 
             <button className="w-fit bg-[#FF1B7C] text-white px-10 py-4 rounded-md font-bold uppercase tracking-widest hover:bg-black transition-all">
               Faire une réservation
