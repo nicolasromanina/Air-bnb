@@ -38,7 +38,7 @@ const WelcomeSection = () => {
               </p>
             </div>
 
-            <div className="flex flex-col sm:row bg-black text-white rounded-xl overflow-hidden shadow-xl">
+            <div className="flex flex-row sm:row bg-black text-white rounded-xl overflow-hidden shadow-xl">
               <div className="flex items-center gap-4 px-6 py-5 flex-1 border-b sm:border-b-0 sm:border-r border-white/10">
                 <img className="w-6 h-6 invert" src={welcomeicon1} alt="" />
                 <span className="text-sm font-semibold uppercase tracking-wider">Luxe & Confort</span>
