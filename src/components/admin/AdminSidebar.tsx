@@ -50,12 +50,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, onToggle 
       {/* Header */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
         {!collapsed && (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">S</span>
-            </div>
-            <span className="font-bold text-sm tracking-wide">SWEETHOME</span>
-          </div>
+          
+              <img src="./Logo.png" alt="SWEETHOME" className="h-10 w-auto" />
         )}
         {collapsed && (
           <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center mx-auto">
