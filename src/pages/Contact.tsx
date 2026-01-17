@@ -1,7 +1,12 @@
 import React from 'react';
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import NavbarSpacer from '@/components/NavbarSpacer';
+import apartment1 from "@/assets/apartment-1.jpg";
+import apartment2 from "@/assets/apartment-2.jpg";
+import bedroomTestimonial from "@/assets/bedroom-testimonial.jpg";
+import avatar from "@/assets/avatar.jpg";
 
 // Configuration de la grille unifiée
 const GRID_CONTAINER = "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
@@ -103,53 +108,128 @@ const Contact: React.FC = () => {
         </div>
 
         {/* --- SECTION 2: TESTIMONIAL --- */}
-        <section className="py-24 overflow-hidden">
-          <div className={GRID_CONTAINER}>
-            <div className="flex flex-col lg:flex-row gap-16 items-center">
-              <div className="lg:w-1/2 space-y-8">
-                <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-[0.9]">
-                  L'excellence à <br /> votre service.
-                </h2>
-                <p className="text-gray-500 text-lg leading-relaxed max-w-md italic">
-                  "Nous croyons que chaque séjour doit être une expérience unique, définie par le confort et l'attention aux détails."
-                </p>
+        <section className="section-dark py-16 lg:py-24">
+          <div className="container mx-auto px-4 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+              {/* Left Side - Text Content */}
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold uppercase leading-tight mb-6">
+                    CLASS APTENT TACITI SOCIOSQU AD LITORA TORQUENT .
+                  </h2>
+                  <p className="text-dark-muted text-sm leading-relaxed">
+                    Nunc vulputate libero et velit interdum, ac aliquet odio mattis.
+                    Class aptent taciti sociosqu ad litora torquent per conubia nostra,
+                    per inceptos himenaeos. Curabitur tempus urna at turpis
+                    condimentum lobortis.
+                  </p>
+                </div>
 
                 {/* Testimonial Card */}
-                <div className="bg-gray-50 p-10 rounded-2xl border border-gray-100 relative">
-                  <div className="absolute -top-4 -left-4 bg-[#FF2D75] p-3 rounded-lg text-white">
-                    <QuoteIcon />
-                  </div>
-                  <p className="text-gray-700 text-base leading-relaxed mb-8 font-medium">
-                    "Une expérience inoubliable. L'attention portée aux détails et la réactivité de l'équipe ont rendu notre séjour parfait du début à la fin."
+                <div className="bg-background text-foreground p-6 lg:p-8">
+                  <div className="testimonial-quote mb-4">"</div>
+                  <p className="text-sm leading-relaxed mb-6">
+                    Gorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    Nunc vulputate libero et velit interdum, ac aliquet odio
+                    mattis. Class aptent taciti sociosqu ad litora torquent per
+                    conubia nostra, per inceptos himenaeos.
                   </p>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full overflow-hidden bg-black ring-4 ring-white shadow-md">
-                        <img src="https://i.pravatar.cc/150?u=johndoe" alt="John Doe" />
-                      </div>
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={avatar}
+                        alt="John Doe"
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
                       <div>
-                        <h4 className="font-black uppercase text-xs tracking-widest">John Doe</h4>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase">Client Premium</p>
+                        <p className="font-semibold text-sm">John Doe</p>
+                        <p className="text-xs text-muted-foreground">
+                          Curabitur tempus urna<br />at turpis
+                        </p>
                       </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button className="w-8 h-8 border border-foreground rounded-full flex items-center justify-center hover:bg-foreground hover:text-background transition-colors">
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      <button className="w-8 h-8 border border-foreground rounded-full flex items-center justify-center hover:bg-foreground hover:text-background transition-colors">
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="lg:w-1/2 relative">
-                <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-[#EBEBEB] rounded-full -z-10"></div>
-                <div className="h-[600px] w-full rounded-2xl overflow-hidden shadow-2xl transform lg:rotate-2">
-                  <img 
-                    src="https://images.unsplash.com/photo-1540518614846-7eded433c457?q=80&w=1000&auto=format&fit=crop" 
-                    alt="Interior Design" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+              {/* Right Side - Image with Accent */}
+              <div className="relative">
+                <div className="absolute top-[50px] left-0 w-20 h-20 bg-primary -translate-x-4 z-10" />
+                <img
+                  src={bedroomTestimonial}
+                  alt="Chambre moderne avec canapé terracotta"
+                  className="w-full h-[400px] lg:h-[500px] object-cover"
+                />
               </div>
             </div>
           </div>
         </section>
 
+        {/* --- SECTION 3: IMAGES GALLERY --- */}
+       <section className="bg-white py-12 lg:py-16">
+        <div className={GRID_CONTAINER}>
+          
+          {/* Le fond (bg-secondary ou bg-background) est limité ici par le grid */}
+          <div className="bg-white rounded-[2rem] px-8 py-12 md:px-12 lg:px-16 lg:py-20 shadow-sm">
+            
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+              
+              {/* Texte de gauche - occupe 3 colonnes sur 12 */}
+              <div className="lg:col-span-6">
+                <h3 className="text-xl md:text-2xl font-bold leading-tight mb-4 text-black uppercase tracking-tighter">
+                  Gorem ipsum <br /> dolor sit amet, <br /> consectetur
+                </h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  Sorem ipsum dolor sit amet, consectetur <br />
+                  adipiscing elit. Nunc vulputate et velit <br />
+                  interdum, ac aliquet odio mattis.
+                </p>
+              </div>
+
+              {/* Section centrale/droite - occupe 9 colonnes sur 12 */}
+              <div className="lg:col-span-6">
+                <div className="flex flex-col">
+                  
+                  {/* Texte au-dessus des images */}
+                  <div className="mb-6 lg:mb-8">
+                    <p className="text-lg md:text-xl lg:text-2xl leading-relaxed text-black font-medium">
+                      Nunc vulputate <span className="text-[#FF2D75] font-bold">libero et velit</span> interdum, ac <br className="hidden lg:block"/> aliquet odio mattis.
+                    </p>
+                  </div>
+                  
+                  {/* Images côte à côte */}
+                  <div className="flex gap-4">
+                    <div className="w-1/3 aspect-[4/5] overflow-hidden rounded-xl shadow-lg">
+                      <img
+                        src={apartment1}
+                        alt="Salon moderne"
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
+                    <div className="w-1/3 aspect-[4/5] overflow-hidden rounded-xl shadow-lg">
+                      <img
+                        src={apartment2}
+                        alt="Chambre minimaliste"
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
+                  </div>
+                  
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
       </main>
 
       <Footer />

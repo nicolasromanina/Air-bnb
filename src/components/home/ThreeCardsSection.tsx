@@ -49,7 +49,7 @@ function ThreeCardsSection() {
               </p>
             </div>
 
-            <button className="bg-[#FF1B7C] hover:bg-white hover:text-black text-white font-bold text-[12px] tracking-[0.2em] px-10 py-5 rounded-sm transition-all duration-500 w-full relative z-10 shadow-lg"
+            <button className="bg-[#FF1B7C] hover:bg-white hover:text-black text-white font-bold text-sm tracking-[0.2em] px-10 py-5 rounded-sm transition-all duration-500 w-full relative z-10 shadow-lg"
                     style={{ fontFamily: "'Montserrat', sans-serif" }}>
               Réserver maintenant
             </button>
