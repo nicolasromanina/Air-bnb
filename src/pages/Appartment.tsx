@@ -7,7 +7,7 @@ import VideoSection from "@/components/appartment/VideoSection";
 import FinalSection from "@/components/appartment/FinalSection";
 import PerfectShow from "@/components/appartment/PerfectShow";
 import Footer from "@/components/Footer";
-import NavbarSpacer from "@/components/NavbarSpacer";
+import MarqueeSection from "@/components/appartment/MarqueeSection";
 
 
 const Appartment = () => {
@@ -19,6 +19,7 @@ const Appartment = () => {
       <FeatureSection />
       <ShowcaseSection />
       <PerfectShow />
+      <MarqueeSection />
       <VideoSection />
       <FinalSection />
       <Footer />

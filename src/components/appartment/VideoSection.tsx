@@ -7,7 +7,7 @@ const GRID_CONTAINER = "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:
 
 const VideoSection = () => {
   return (
-    <section className="py-16 lg:py-24 bg-white">
+    <section className="py-2 lg:py-0 bg-white">
       <div className={GRID_CONTAINER}>
         
         {/* BLOC GRIS ENCASTRÉ */}
