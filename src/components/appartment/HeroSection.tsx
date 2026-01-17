@@ -11,7 +11,7 @@ const HeroSection = () => {
         
         {/* Conteneur interne avec le fond gris, aligné sur la grille */}
         <div className="flex flex-col lg:flex-row bg-[#EBEBEB] overflow-hidden rounded-sm min-h-[500px] lg:min-h-[600px]">
-          
+          +
           {/* Colonne Gauche : Contenu texte */}
           <div className="w-full lg:w-1/2 flex flex-col justify-center p-8 sm:p-12 lg:p-16 xl:p-24">
             <h1 className="text-black font-sans font-black text-4xl md:text-5xl lg:text-[56px] xl:text-[75px] leading-[0.9] tracking-tighter uppercase mb-8">
