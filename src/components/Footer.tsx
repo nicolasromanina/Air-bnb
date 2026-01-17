@@ -94,8 +94,8 @@ const Footer = () => {
 
       {/* COPYRIGHT - Aligné sur la même grille extérieure */}
       <div className={`${gridContainer} mt-8`}>
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] uppercase tracking-[0.2em] opacity-40 px-2">
-          <p>© 2026 SWEETHOME LUXURY. All rights reserved.</p>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] tracking-[0.2em] opacity-40 px-2">
+          <p>© 2026 SWEETHOME. All rights reserved.</p>
           <p>Designed for Excellence</p>
         </div>
       </div>

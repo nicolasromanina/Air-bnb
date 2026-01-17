@@ -1,0 +1,49 @@
+.pink-powder-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.pink-powder-particle {
+  position: absolute;
+  bottom: -40px;
+  border-radius: 50%;
+
+  background: radial-gradient(
+    circle,
+    rgba(255, 0, 128, 0.9),
+    rgba(255, 0, 128, 0.4),
+    transparent
+  );
+
+  opacity: 0;
+  animation-name: powder-float;
+  animation-timing-function: ease-out;
+  animation-iteration-count: infinite;
+}
+
+@keyframes powder-float {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: translateY(-110vh) scale(1.3);
+    opacity: 0;
+  }
+}
+.pink-powder-particle:nth-child(odd) {
+  background: radial-gradient(
+    circle,
+    rgba(255, 105, 180, 0.9),
+    rgba(255, 105, 180, 0.4),
+    transparent
+  );
+}

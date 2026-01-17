@@ -12,10 +12,13 @@ import ThreeCardsSection from "@/components/home/ThreeCardsSection";
 import FeatureRoom from "@/components/home/FeatureRoom";
 import LogoSection from "@/components/home/LogoSection";
 import Footer from "@/components/Footer";
+import PinkPowderEffect from "@/components/PinkPowderEffect";
 const Index = () => {
   return (
+    
     <main className="relative bg-white min-h-screen overflow-x-hidden">
       
+      <PinkPowderEffect />
       {/* ----- PLAQUE GRISE DÉCORATIVE ----- */}
       <div className="absolute 
         top-0             /* Commence tout en haut (derrière Navbar) */

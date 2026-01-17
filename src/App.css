@@ -5,6 +5,12 @@
   text-align: center;
 }
 
+.pink-powder-particle {
+  --rand: calc(random() * 1);
+  --x: calc((random() - 0.5) * 200px);
+}
+
+
 .logo {
   height: 6em;
   padding: 1.5em;
