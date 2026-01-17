@@ -34,7 +34,6 @@ import ConfirmationEditor from "@/pages/Admin/ConfirmationEditor";
 import PricingEditor from "@/pages/Admin/PricingEditor";
 import ContactEditor from "@/pages/Admin/ContactEditor";
 import SettingsEditor from "@/pages/Admin/SettingsEditor";
-import PinkPowderEffect from "./components/PinkPowderEffect";
 
 const queryClient = new QueryClient();
 
@@ -46,7 +45,6 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-        <PinkPowderEffect />
           <Routes>
             {/* Routes Publiques */}
             <Route path="/" element={<Index />} />

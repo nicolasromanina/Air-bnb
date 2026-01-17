@@ -86,13 +86,14 @@ const Navbar = () => {
     <>
       <nav 
         ref={navRef}
-        className={`fixed top-0 left-0 right-0 z-[1000] w-full transition-all duration-500 font-montserrat ${
+        className={`fixed top-0 left-0 right-0 z-[1000] w-full transition-all duration-500 ${
           isVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
         } ${
           isScrolled 
             ? "bg-white/95 backdrop-blur-md shadow-lg py-3" 
             : "bg-white py-4 md:py-6 lg:py-8 md:bg-transparent"
         }`}
+        style={{ fontFamily: "'Montserrat', sans-serif" }}
       >
         <div className={gridContainer}>
           <div className="flex items-center justify-between">
@@ -131,6 +132,7 @@ const Navbar = () => {
                           : "text-gray-800 hover:text-[#FF1B7C]"
                       }`}
                       aria-current={active ? "page" : undefined}
+                      style={{ fontFamily: "'Montserrat', sans-serif" }}
                     >
                       {link.label}
                       <span className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] bg-[#FF1B7C] transition-all duration-500 ${
@@ -149,6 +151,7 @@ const Navbar = () => {
               <button 
                 onClick={() => handleNavClick("/contact")}
                 className="bg-[#FF1B7C] text-white px-6 lg:px-8 py-2.5 lg:py-3 rounded-sm font-bold text-xs lg:text-sm tracking-wider hover:bg-[#e0176d] active:scale-95 transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-[#FF1B7C] focus:ring-offset-2"
+                style={{ fontFamily: "'Montserrat', sans-serif" }}
               >
                 Réserver maintenant
               </button>
@@ -160,6 +163,7 @@ const Navbar = () => {
               className="md:hidden text-gray-800 p-2 z-50 focus:outline-none focus:ring-2 focus:ring-[#FF1B7C] rounded-sm"
               aria-label={isOpen ? "Fermer le menu" : "Ouvrir le menu"}
               aria-expanded={isOpen}
+              style={{ fontFamily: "'Montserrat', sans-serif" }}
             >
               {isOpen ? (
                 <X size={28} className="text-gray-800" />
@@ -185,6 +189,7 @@ const Navbar = () => {
         className={`md:hidden fixed top-0 right-0 bottom-0 w-full max-w-sm bg-white z-[1000] transition-all duration-500 ease-in-out transform ${
           isOpen ? "translate-x-0" : "translate-x-full"
         } shadow-2xl`}
+        style={{ fontFamily: "'Montserrat', sans-serif" }}
       >
         {/* En-tête du menu mobile */}
         <div className="flex items-center justify-between p-6 border-b">
@@ -197,6 +202,7 @@ const Navbar = () => {
             onClick={() => setIsOpen(false)}
             className="text-gray-800 p-2 focus:outline-none focus:ring-2 focus:ring-[#FF1B7C] rounded-sm"
             aria-label="Fermer le menu"
+            style={{ fontFamily: "'Montserrat', sans-serif" }}
           >
             <X size={24} />
           </button>
@@ -217,6 +223,7 @@ const Navbar = () => {
                       : "text-gray-800 hover:bg-gray-100 active:bg-gray-200"
                   }`}
                   aria-current={active ? "page" : undefined}
+                  style={{ fontFamily: "'Montserrat', sans-serif" }}
                 >
                   {link.label}
                 </button>
@@ -229,14 +236,19 @@ const Navbar = () => {
             <button 
               onClick={() => handleNavClick("/contact")}
               className="w-full bg-[#FF1B7C] text-white py-4 rounded-sm font-bold tracking-wider text-lg hover:bg-[#e0176d] active:scale-[0.98] transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF1B7C] focus:ring-offset-2"
+              style={{ fontFamily: "'Montserrat', sans-serif" }}
             >
               Réserver maintenant
             </button>
             
             {/* Contact info supplémentaire pour mobile */}
             <div className="mt-6 text-sm text-gray-600 text-center">
-              <p className="font-semibold">Disponible 7j/7</p>
-              <p className="mt-1">contact@example.com</p>
+              <p className="font-semibold" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                Disponible 7j/7
+              </p>
+              <p className="mt-1" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                contact@example.com
+              </p>
             </div>
           </div>
         </div>

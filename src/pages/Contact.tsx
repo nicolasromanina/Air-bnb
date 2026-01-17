@@ -18,7 +18,7 @@ const QuoteIcon = () => (
 
 const Contact: React.FC = () => {
   return (
-    <div className="font-['Montserrat'] bg-white overflow-x-hidden">
+    <div className="bg-white overflow-x-hidden" style={{ fontFamily: "'Montserrat', sans-serif" }}>
       <Navbar />
       <NavbarSpacer />
       <main>
@@ -38,11 +38,15 @@ const Contact: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1 bg-white/50 backdrop-blur-sm p-5 rounded-[10px] flex items-center gap-4">
                   <div className="bg-black text-white p-3 rounded-full"><MailIcon /></div>
-                  <span className="text-[14px] font-medium">Lorem@mail.com</span>
+                  <span className="text-[14px] font-medium" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                    Lorem@mail.com
+                  </span>
                 </div>
                 <div className="flex-1 bg-white/50 backdrop-blur-sm p-5 rounded-[10px] flex items-center gap-4">
                   <div className="bg-black text-white p-3 rounded-full"><PhoneIcon /></div>
-                  <span className="text-[14px] font-medium">+33 00 00 000</span>
+                  <span className="text-[14px] font-medium" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                    +33 00 00 000
+                  </span>
                 </div>
               </div>
             </div>
@@ -52,33 +56,57 @@ const Contact: React.FC = () => {
               <form className="space-y-6">
                 <div className="grid grid-cols-1 gap-6">
                   <div>
-                    <label className="block text-[12px] font-bold mb-2 tracking-wide">Nom</label>
-                    <input type="text" placeholder="Votre nom" className="w-full bg-[#F3F4F6] p-4 rounded-[8px] outline-none text-[14px] focus:ring-1 focus:ring-[#FF2D75]/20 transition-all" />
+                    <label className="block text-[12px] font-bold mb-2 tracking-wide"
+                           style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                      Nom
+                    </label>
+                    <input type="text" placeholder="Votre nom" className="w-full bg-[#F3F4F6] p-4 rounded-[8px] outline-none text-[14px] focus:ring-1 focus:ring-[#FF2D75]/20 transition-all"
+                           style={{ fontFamily: "'Montserrat', sans-serif" }} />
                   </div>
                   <div>
-                    <label className="block text-[12px] font-bold mb-2 tracking-wide">Numéro de téléphone</label>
-                    <input type="tel" placeholder="Votre numéro de téléphone" className="w-full bg-[#F3F4F6] p-4 rounded-[8px] outline-none text-[14px] focus:ring-1 focus:ring-[#FF2D75]/20 transition-all" />
+                    <label className="block text-[12px] font-bold mb-2 tracking-wide"
+                           style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                      Numéro de téléphone
+                    </label>
+                    <input type="tel" placeholder="Votre numéro de téléphone" className="w-full bg-[#F3F4F6] p-4 rounded-[8px] outline-none text-[14px] focus:ring-1 focus:ring-[#FF2D75]/20 transition-all"
+                           style={{ fontFamily: "'Montserrat', sans-serif" }} />
                   </div>
                   <div>
-                    <label className="block text-[12px] font-bold mb-2 tracking-wide">Adresse e-mail</label>
-                    <input type="email" placeholder="Votre adresse e-mail" className="w-full bg-[#F3F4F6] p-4 rounded-[8px] outline-none text-[14px] focus:ring-1 focus:ring-[#FF2D75]/20 transition-all" />
+                    <label className="block text-[12px] font-bold mb-2 tracking-wide"
+                           style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                      Adresse e-mail
+                    </label>
+                    <input type="email" placeholder="Votre adresse e-mail" className="w-full bg-[#F3F4F6] p-4 rounded-[8px] outline-none text-[14px] focus:ring-1 focus:ring-[#FF2D75]/20 transition-all"
+                           style={{ fontFamily: "'Montserrat', sans-serif" }} />
                   </div>
                   <div>
-                    <label className="block text-[12px] font-bold mb-2 tracking-wide">Adresse</label>
-                    <input type="text" placeholder="Votre adresse" className="w-full bg-[#F3F4F6] p-4 rounded-[8px] outline-none text-[14px] focus:ring-1 focus:ring-[#FF2D75]/20 transition-all" />
+                    <label className="block text-[12px] font-bold mb-2 tracking-wide"
+                           style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                      Adresse
+                    </label>
+                    <input type="text" placeholder="Votre adresse" className="w-full bg-[#F3F4F6] p-4 rounded-[8px] outline-none text-[14px] focus:ring-1 focus:ring-[#FF2D75]/20 transition-all"
+                           style={{ fontFamily: "'Montserrat', sans-serif" }} />
                   </div>
                   <div>
-                    <label className="block text-[12px] font-bold mb-2 tracking-wide">Message</label>
-                    <textarea rows={4} placeholder="Votre message" className="w-full bg-[#F3F4F6] p-4 rounded-[8px] outline-none text-[14px] resize-none focus:ring-1 focus:ring-[#FF2D75]/20 transition-all"></textarea>
+                    <label className="block text-[12px] font-bold mb-2 tracking-wide"
+                           style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                      Message
+                    </label>
+                    <textarea rows={4} placeholder="Votre message" className="w-full bg-[#F3F4F6] p-4 rounded-[8px] outline-none text-[14px] resize-none focus:ring-1 focus:ring-[#FF2D75]/20 transition-all"
+                              style={{ fontFamily: "'Montserrat', sans-serif" }}></textarea>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-3">
                   <input type="checkbox" id="consent" className="w-4 h-4 accent-[#FF2D75] cursor-pointer" />
-                  <label htmlFor="consent" className="text-[11px] text-gray-500 cursor-pointer">Coût de la récolte de données à des fins marketing sera à votre charge</label>
+                  <label htmlFor="consent" className="text-[11px] text-gray-500 cursor-pointer"
+                         style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                    Coût de la récolte de données à des fins marketing sera à votre charge
+                  </label>
                 </div>
 
-                <button className="w-full bg-[#FF2D75] text-white font-bold py-4 rounded-[8px] text-[14px] hover:bg-[#e62969] transition-all transform active:scale-[0.98] tracking-wider">
+                <button className="w-full bg-[#FF2D75] text-white font-bold py-4 rounded-[8px] text-[14px] hover:bg-[#e62969] transition-all transform active:scale-[0.98] tracking-wider"
+                        style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   Envoyer le message
                 </button>
               </form>
@@ -91,17 +119,20 @@ const Contact: React.FC = () => {
           <div className="max-w-[1280px] mx-auto flex flex-col xl:flex-row gap-16 items-center">
             
             <div className="w-full xl:w-1/2">
-              <h2 className="text-[32px] md:text-[40px] font-extrabold leading-[1.1] mb-8 uppercase tracking-tight max-w-[500px]">
+              <h2 className="text-[32px] md:text-[40px] font-extrabold leading-[1.1] mb-8 uppercase tracking-tight max-w-[500px]"
+                  style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 Class aptent taciti sociosqu ad litora torquent .
               </h2>
-              <p className="text-[#4B5563] text-[15px] leading-relaxed mb-12 max-w-[550px]">
+              <p className="text-[#4B5563] text-[15px] leading-relaxed mb-12 max-w-[550px]"
+                 style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Curabitur tempus urna et turpis condimentum lobortis.
               </p>
 
               {/* Testimonial Card */}
               <div className="relative bg-white border border-gray-100 p-10 rounded-[10px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] max-w-[550px]">
                 <div className="mb-6"><QuoteIcon /></div>
-                <p className="italic text-[16px] leading-relaxed mb-8 text-[#1f2937]">
+                <p className="italic text-[16px] leading-relaxed mb-8 text-[#1f2937]"
+                   style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos."
                 </p>
                 <div className="flex items-center justify-between">
@@ -110,15 +141,21 @@ const Contact: React.FC = () => {
                       <img src="https://i.pravatar.cc/150?u=johndoe" alt="John Doe" className="w-full h-full object-cover" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-[16px]">John Doe</h4>
-                      <p className="text-[12px] text-gray-400">Lorem ipsum dolor sit amet, consectetur</p>
+                      <h4 className="font-bold text-[16px]" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                        John Doe
+                      </h4>
+                      <p className="text-[12px] text-gray-400" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                        Lorem ipsum dolor sit amet, consectetur
+                      </p>
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button className="w-10 h-10 rounded-full border border-black flex items-center justify-center hover:bg-black hover:text-white transition-all group">
+                    <button className="w-10 h-10 rounded-full border border-black flex items-center justify-center hover:bg-black hover:text-white transition-all group"
+                            style={{ fontFamily: "'Montserrat', sans-serif" }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
                     </button>
-                    <button className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center hover:bg-[#FF2D75] border-none transition-all">
+                    <button className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center hover:bg-[#FF2D75] border-none transition-all"
+                            style={{ fontFamily: "'Montserrat', sans-serif" }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg>
                     </button>
                   </div>
@@ -145,17 +182,21 @@ const Contact: React.FC = () => {
           <div className="max-w-[1280px] mx-auto">
             <div className="flex flex-col xl:flex-row gap-12">
               <div className="w-full xl:w-1/3">
-                <h3 className="text-[32px] font-extrabold leading-tight mb-6 uppercase tracking-tight">
+                <h3 className="text-[32px] font-extrabold leading-tight mb-6 uppercase tracking-tight"
+                    style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   Gorem ipsum dolor sit amet, consectetur
                 </h3>
-                <p className="text-gray-600 text-[15px] leading-relaxed">
+                <p className="text-gray-600 text-[15px] leading-relaxed"
+                   style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.
                 </p>
               </div>
               
               <div className="w-full xl:w-2/3">
                 <div className="mb-6">
-                   <p className="text-[16px] font-bold">Nunc vulputate <span className="text-gray-400 font-normal italic">libero et velit</span> interdum, ac aliquet odio mattis.</p>
+                   <p className="text-[16px] font-bold" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                     Nunc vulputate <span className="text-gray-400 font-normal italic">libero et velit</span> interdum, ac aliquet odio mattis.
+                   </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="h-[350px] rounded-[10px] overflow-hidden group">
