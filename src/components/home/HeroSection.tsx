@@ -58,6 +58,7 @@ function HeroSection() {
     <section 
       ref={containerRef}
       className="relative flex items-center justify-center bg-white lg:bg-transparent min-h-screen overflow-hidden"
+      style={{ fontFamily: "'Montserrat', sans-serif" }}
     >
       {/* Background Particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 hidden sm:block">
@@ -90,7 +91,8 @@ function HeroSection() {
               }}
             />
 
-            <h1 className="text-[42px] xs:text-[50px] sm:text-[60px] md:text-[70px] lg:text-[75px] xl:text-[85px] 2xl:text-[100px] font-black leading-[0.85] tracking-tighter text-black mb-6 md:mb-8 uppercase">
+            <h1 className="text-[42px] xs:text-[50px] sm:text-[60px] md:text-[70px] lg:text-[75px] xl:text-[85px] 2xl:text-[100px] font-black leading-[0.85] tracking-tighter text-black mb-6 md:mb-8 uppercase"
+                style={{ fontFamily: "'Montserrat', sans-serif" }}>
               <span 
                 className={`inline-block transition-all duration-700 ease-out ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}
                 style={{ transform: isVisible ? `translateY(0) translateX(${mousePosition.x * 0.05}px)` : 'translateY(8px)' }}
@@ -113,12 +115,14 @@ function HeroSection() {
               </span>
             </h1>
 
-            <p className={`text-base md:text-lg leading-relaxed text-gray-700 mb-8 md:mb-10 max-w-[460px] font-medium transition-all duration-700 delay-300 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}>
+            <p className={`text-base md:text-lg leading-relaxed text-gray-700 mb-8 md:mb-10 max-w-[460px] font-medium transition-all duration-700 delay-300 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}
+               style={{ fontFamily: "'Montserrat', sans-serif" }}>
               Norem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.
             </p>
 
             <div className={`transition-all duration-700 delay-400 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-              <button className="w-full sm:w-auto bg-[#FF1B7C] hover:bg-black text-white font-bold px-10 py-4 rounded-[4px] transition-all duration-500 shadow-lg hover:shadow-[#FF1B7C]/20 relative overflow-hidden group">
+              <button className="w-full sm:w-auto bg-[#FF1B7C] hover:bg-black text-white font-bold px-10 py-4 rounded-[4px] transition-all duration-500 shadow-lg hover:shadow-[#FF1B7C]/20 relative overflow-hidden group"
+                      style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                 <span className="relative z-10">Réserver</span>
               </button>
@@ -137,10 +141,12 @@ function HeroSection() {
                 />
               </div>
               <div className="flex-1">
-                <h3 className="text-sm sm:text-[15px] font-bold text-black mb-1 leading-tight">
+                <h3 className="text-sm sm:text-[15px] font-bold text-black mb-1 leading-tight"
+                    style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   Lorem ipsum dolor sit amet
                 </h3>
-                <p className="text-[10px] sm:text-xs text-gray-500">
+                <p className="text-[10px] sm:text-xs text-gray-500"
+                   style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   Korem ipsum dolor sit amet, consectetur adipiscing elit.
                 </p>
               </div>
@@ -148,9 +154,7 @@ function HeroSection() {
           </div>
 
           {/* ----- COLONNE DROITE (COLLAGE) ----- */}
-          {/* Ajout d'un padding-left important (lg:pl-12) pour laisser de la place au carré qui dépasse à gauche */}
-          {/* ----- COLONNE DROITE (COLLAGE) ----- */}
-            <div className="relative h-[400px] xs:h-[500px] sm:h-[600px] lg:h-[650px] w-full order-1 lg:order-2 lg:pl-12">
+          <div className="relative h-[400px] xs:h-[500px] sm:h-[600px] lg:h-[650px] w-full order-1 lg:order-2 lg:pl-12">
               
               {/* 1. Image Principale */}
               <div 

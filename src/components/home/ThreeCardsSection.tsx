@@ -5,7 +5,7 @@ function ThreeCardsSection() {
   const gridContainer = "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
 
   return (
-    <section className="bg-white py-16 md:py-24 font-montserrat">
+    <section className="bg-white py-16 md:py-24" style={{ fontFamily: "'Montserrat', sans-serif" }}>
       <div className={gridContainer}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
           
@@ -14,15 +14,17 @@ function ThreeCardsSection() {
             <div>
               <h3 
                 className="text-[28px] lg:text-[32px] font-bold text-black leading-none uppercase tracking-tighter mb-20"
-                style={{ fontFamily: "'Playfair Display', serif" }}
+                style={{ fontFamily: "'Montserrat', sans-serif" }}
               >
                 Sorem ipsum<br />dolor sit amet
               </h3>
             </div>
 
             <div>
-              <p className="text-[18px] lg:text-[20px] leading-snug font-medium">
-                <span className="text-gray-400 uppercase text-sm block mb-2 font-bold tracking-widest">Origine</span>
+              <p className="text-[18px] lg:text-[20px] leading-snug font-medium"
+                 style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                <span className="text-gray-400 uppercase text-sm block mb-2 font-bold tracking-widest"
+                      style={{ fontFamily: "'Montserrat', sans-serif" }}>Origine</span>
                 <span className="text-black">Class aptent taciti socios quad litora torquent.</span>
               </p>
             </div>
@@ -36,17 +38,19 @@ function ThreeCardsSection() {
             <div className="relative z-10">
               <h3 
                 className="text-[28px] lg:text-[32px] font-bold text-white leading-tight uppercase tracking-tighter mb-6"
-                style={{ fontFamily: "'Playfair Display', serif" }}
+                style={{ fontFamily: "'Montserrat', sans-serif" }}
               >
                 Sit amet,<br />consectetur elit.
               </h3>
 
-              <p className="text-sm leading-relaxed text-gray-300 mb-10">
+              <p className="text-sm leading-relaxed text-gray-300 mb-10"
+                 style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.
               </p>
             </div>
 
-            <button className="bg-[#FF1B7C] hover:bg-white hover:text-black text-white font-bold text-[12px] uppercase tracking-[0.2em] px-10 py-5 rounded-sm transition-all duration-500 w-full relative z-10 shadow-lg">
+            <button className="bg-[#FF1B7C] hover:bg-white hover:text-black text-white font-bold text-[12px] tracking-[0.2em] px-10 py-5 rounded-sm transition-all duration-500 w-full relative z-10 shadow-lg"
+                    style={{ fontFamily: "'Montserrat', sans-serif" }}>
               Réserver maintenant
             </button>
           </div>
@@ -62,18 +66,20 @@ function ThreeCardsSection() {
             <div>
               <h3 
                 className="text-[28px] lg:text-[32px] font-bold text-black leading-tight uppercase tracking-tighter mb-6"
-                style={{ fontFamily: "'Playfair Display', serif" }}
+                style={{ fontFamily: "'Montserrat', sans-serif" }}
               >
                 Inceptos<br />himenaeos.
               </h3>
 
-              <p className="text-sm leading-relaxed text-gray-500 mb-10 font-medium">
+              <p className="text-sm leading-relaxed text-gray-500 mb-10 font-medium"
+                 style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.
               </p>
             </div>
 
             <div className="border-t border-gray-100 pt-8">
-              <h4 className="text-[18px] lg:text-[20px] font-bold text-black leading-tight uppercase tracking-tight">
+              <h4 className="text-[18px] lg:text-[20px] font-bold text-black leading-tight  tracking-tight"
+                  style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 Sorem ipsum dolor sit amet
               </h4>
             </div>

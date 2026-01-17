@@ -7,7 +7,7 @@ const FeatureRoom = () => {
   const gridContainer = "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
 
   return (
-    <section className="w-full py-16 md:py-24 bg-white font-montserrat">
+    <section className="w-full py-16 md:py-24 bg-white" style={{ fontFamily: "'Montserrat', sans-serif" }}>
       <div className={gridContainer}>
         
         {/* Header : Aligné sur la grille */}
@@ -17,7 +17,7 @@ const FeatureRoom = () => {
               className="text-[32px] sm:text-[42px] lg:text-[52px] xl:text-[62px] font-bold leading-[1] tracking-tighter uppercase"
               style={{
                 color: 'hsl(0 0% 8%)',
-                fontFamily: "'Playfair Display', serif"
+                fontFamily: "'Montserrat', sans-serif"
               }}
             >
               Adipiscing<br />
@@ -29,7 +29,7 @@ const FeatureRoom = () => {
           <div className="max-w-md">
             <p 
               className="text-sm sm:text-base leading-relaxed text-gray-600 border-l-2 border-black/10 pl-6"
-              style={{ fontFamily: "'Inter', sans-serif" }}
+              style={{ fontFamily: "'Montserrat', sans-serif" }}
             >
               Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.
             </p>
@@ -55,10 +55,11 @@ const FeatureRoom = () => {
                 <div className="w-12 h-12 rounded-full flex items-center justify-center mb-6 bg-white">
                   <Home className="w-5 h-5 text-black" />
                 </div>
-                <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+                <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   Lorem ipsum dolor sit amet
                 </h3>
-                <p className="text-sm leading-relaxed opacity-70">
+                <p className="text-sm leading-relaxed opacity-70"
+                   style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   Nunc vulputate libero et velit interdum, ac aliquet odio mattis.
                 </p>
               </div>
@@ -70,10 +71,11 @@ const FeatureRoom = () => {
                 <div className="w-12 h-12 rounded-full flex items-center justify-center mb-6 bg-black">
                   <Home className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+                <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   Nunc vulputate libero et velit
                 </h3>
-                <p className="text-sm leading-relaxed text-gray-500">
+                <p className="text-sm leading-relaxed text-gray-500"
+                   style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   Nunc vulputate libero et velit interdum, ac aliquet odio mattis.
                 </p>
               </div>

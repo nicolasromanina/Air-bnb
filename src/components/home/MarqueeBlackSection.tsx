@@ -20,7 +20,7 @@ const MarqueeBlackSection = () => {
                 key={i}
                 className="text-[48px] sm:text-[72px] lg:text-[96px] xl:text-[115px] font-black tracking-tighter inline-block transition-transform duration-500 hover:scale-105"
                 style={{
-                  fontFamily: "'Playfair Display', serif",
+                  fontFamily: "'Montserrat', sans-serif",
                   color: '#1a1a1a', // Noir profond
                   // Reveal effect subtil au chargement
                   animation: `reveal-text 1s cubic-bezier(0.2, 1, 0.3, 1) ${i * 0.1}s both`

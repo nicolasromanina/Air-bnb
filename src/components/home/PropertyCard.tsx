@@ -53,7 +53,7 @@ const PropertyCard = ({
             className="text-xl md:text-2xl italic mb-4 leading-tight"
             style={{
               color: 'hsl(0 0% 98%)',
-              fontFamily: "'Playfair Display', serif",
+              fontFamily: "'Montserrat', sans-serif",
               fontStyle: 'normal'
             }}
           >
@@ -65,7 +65,8 @@ const PropertyCard = ({
             <span 
               className="text-4xl md:text-5xl font-bold"
               style={{
-                color: 'hsl(0 0% 98%)'
+                color: 'hsl(0 0% 98%)',
+                fontFamily: "'Montserrat', sans-serif"
               }}
             >
               {price}€
@@ -73,7 +74,8 @@ const PropertyCard = ({
             <span 
               className="text-lg"
               style={{
-                color: 'hsl(0 0% 65%)'
+                color: 'hsl(0 0% 65%)',
+                fontFamily: "'Montserrat', sans-serif"
               }}
             >
               / {priceUnit}
@@ -87,7 +89,8 @@ const PropertyCard = ({
               backgroundColor: buttonHover ? 'hsla(340, 100%, 59%, 0.9)' : 'hsl(340 100% 59%)',
               color: 'hsl(0 0% 100%)',
               borderRadius: '9999px',
-              transform: buttonHover ? 'scale(1.02)' : 'scale(1)'
+              transform: buttonHover ? 'scale(1.02)' : 'scale(1)',
+              fontFamily: "'Montserrat', sans-serif"
             }}
             onMouseEnter={() => setButtonHover(true)}
             onMouseLeave={() => setButtonHover(false)}
@@ -104,7 +107,8 @@ const PropertyCard = ({
                 style={{
                   border: `1px solid ${featureHoverIndex === index ? 'hsla(340, 100%, 59%, 0.5)' : 'hsl(0 0% 20%)'}`,
                   color: 'hsl(0 0% 65%)',
-                  borderRadius: '9999px'
+                  borderRadius: '9999px',
+                  fontFamily: "'Montserrat', sans-serif"
                 }}
                 onMouseEnter={() => setFeatureHoverIndex(index)}
                 onMouseLeave={() => setFeatureHoverIndex(null)}
@@ -126,7 +130,8 @@ const PropertyCard = ({
           <p 
             className="text-sm"
             style={{
-              color: 'hsl(0 0% 65%)'
+              color: 'hsl(0 0% 65%)',
+              fontFamily: "'Montserrat', sans-serif"
             }}
           >
             {description}

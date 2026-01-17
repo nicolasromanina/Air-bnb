@@ -26,7 +26,7 @@ const MarqueeSection = () => {
                 key={i}
                 className="text-[40px] sm:text-[60px] lg:text-[80px] xl:text-[100px] font-bold tracking-tighter"
                 style={{
-                  fontFamily: "'Playfair Display', serif",
+                  fontFamily: "'Montserrat', sans-serif",
                   color: 'hsla(0, 0%, 10%, 0.15)' // Plus subtil pour l'aspect luxe
                 }}
               >

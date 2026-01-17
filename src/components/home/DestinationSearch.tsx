@@ -24,7 +24,7 @@ const RotatingBadge = () => (
         fontSize="10"
         fontWeight="600"
         letterSpacing="2"
-        className="font-montserrat"
+        style={{ fontFamily: "'Montserrat', sans-serif" }}
       >
         <textPath href="#innerCirclePath">
           LOREM IPSUM • LOREM IPSUM • LOREM IPSUM •
@@ -47,8 +47,9 @@ const DestinationSearch = () => {
     "max-w-[1440px] w-full mx-auto px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20";
 
   const InputField = ({ label, placeholder, icon: Icon }) => (
-    <div className="mb-4 font-montserrat">
-      <label className="block text-[10px] xs:text-[11px] font-bold mb-2 tracking-[0.1em] text-gray-800">
+    <div className="mb-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+      <label className="block text-[10px] xs:text-[11px] font-bold mb-2 tracking-[0.1em] text-gray-800"
+             style={{ fontFamily: "'Montserrat', sans-serif" }}>
         {label}
       </label>
 
@@ -59,6 +60,7 @@ const DestinationSearch = () => {
           className="w-full bg-white border border-gray-100 rounded-lg px-4 xs:px-5 py-3 xs:py-4 text-sm
                      placeholder:text-gray-400 focus:ring-2 focus:ring-black/5
                      outline-none transition-all shadow-sm"
+          style={{ fontFamily: "'Montserrat', sans-serif" }}
         />
         <div className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 xs:w-9 xs:h-9
                         bg-[#1a1a1a] rounded-md flex items-center justify-center
@@ -70,7 +72,8 @@ const DestinationSearch = () => {
   );
 
   return (
-    <section className="bg-white py-8 xs:py-10 sm:py-12 md:py-16 lg:py-20 overflow-hidden font-montserrat">
+    <section className="bg-white py-8 xs:py-10 sm:py-12 md:py-16 lg:py-20 overflow-hidden"
+             style={{ fontFamily: "'Montserrat', sans-serif" }}>
       <div className={gridContainer}>
         <div className="bg-[#E5E5E5] rounded-sm relative z-10 py-10 sm:py-14 md:py-16 lg:py-20 px-4 xs:px-6 sm:px-8 md:px-10 lg:px-12 xl:px-16">
 
@@ -106,7 +109,8 @@ const DestinationSearch = () => {
                 {/* TITRE AU-DESSUS DE L'IMAGE MAIN */}
                 <h1 className="text-xl xs:text-2xl sm:text-2xl md:text-3xl xl:text-4xl
                                font-black uppercase tracking-tight
-                               leading-[1.1] text-[#1a1a1a]">
+                               leading-[1.1] text-[#1a1a1a]"
+                    style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   Sit amet,<br />
                   consectetur<br />
                   adipiscing elit.
@@ -129,12 +133,14 @@ const DestinationSearch = () => {
               <div className="w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[400px] md:max-w-[420px] mx-auto lg:mx-0">
                 <h2 className="text-xl xs:text-2xl sm:text-2xl md:text-3xl xl:text-3xl 
                                font-extrabold leading-tight text-[#1a1a1a] 
-                               mb-3 xs:mb-4 tracking-tight">
+                               mb-3 xs:mb-4 tracking-tight"
+                    style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   Lorem ipsum dolor<br />sit amet
                 </h2>
 
                 <p className="text-gray-600 text-xs xs:text-sm mb-8 xs:mb-10 
-                             leading-relaxed font-medium">
+                             leading-relaxed font-medium"
+                   style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   Consectetur adipiscing elit. Nunc vulputate libero et velit
                   interdum, ac aliquet odio mattis.
                 </p>
@@ -165,6 +171,7 @@ const DestinationSearch = () => {
                                   ? "bg-black scale-[1.01]"
                                   : "bg-[#FF1B7C]"
                               }`}
+                  style={{ fontFamily: "'Montserrat', sans-serif" }}
                 >
                   <span className="text-xs xs:text-sm tracking-widest">
                     Rechercher

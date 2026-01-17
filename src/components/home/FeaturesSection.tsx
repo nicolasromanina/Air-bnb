@@ -19,7 +19,7 @@ const FeaturesSection = () => {
   const gridContainer = "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
 
   return (
-    <section className="w-full bg-white py-12 md:py-20 font-montserrat">
+    <section className="w-full bg-white py-12 md:py-20" style={{ fontFamily: "'Montserrat', sans-serif" }}>
       {/* WRAPPER DE LA GRILLE (Marges extérieures pour Full HD) */}
       <div className={gridContainer}>
         
@@ -34,7 +34,7 @@ const FeaturesSection = () => {
                 className="text-4xl md:text-5xl font-bold leading-[1] tracking-tighter uppercase"
                 style={{
                   color: 'hsl(0 0% 10%)',
-                  fontFamily: "'Playfair Display', serif"
+                  fontFamily: "'Montserrat', sans-serif"
                 }}
               >
                 Elit amet<br />consectetur
@@ -49,7 +49,8 @@ const FeaturesSection = () => {
                     <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-black">
                       <feature.icon className="w-5 h-5 text-white" />
                     </div>
-                    <span className="text-sm font-bold uppercase tracking-tight text-black">
+                    <span className="text-sm font-bold uppercase tracking-tight text-black"
+                          style={{ fontFamily: "'Montserrat', sans-serif" }}>
                       {feature.title}
                     </span>
                   </div>
@@ -75,13 +76,14 @@ const FeaturesSection = () => {
                   className="text-2xl md:text-3xl font-bold leading-tight uppercase tracking-tight"
                   style={{
                     color: 'hsl(0 0% 10%)',
-                    fontFamily: "'Playfair Display', serif"
+                    fontFamily: "'Montserrat', sans-serif"
                   }}
                 >
                   Aptent taciti<br />sociosqu ad litora
                 </h3>
                 
-                <p className="text-sm leading-relaxed text-gray-600 font-medium">
+                <p className="text-sm leading-relaxed text-gray-600 font-medium"
+                   style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra.
                 </p>
               </div>

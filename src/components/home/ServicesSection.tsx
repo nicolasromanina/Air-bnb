@@ -25,7 +25,7 @@ const ServicesSection = () => {
   const gridContainer = "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
 
   return (
-    <section className="w-full py-20 md:py-28 bg-white font-montserrat">
+    <section className="w-full py-20 md:py-28 bg-white" style={{ fontFamily: "'Montserrat', sans-serif" }}>
       <div className={gridContainer}>
         
         {/* Section Title - Impact visuel aligné sur la grille */}
@@ -34,7 +34,7 @@ const ServicesSection = () => {
             className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tighter mb-6"
             style={{
               color: 'hsl(0 0% 10%)',
-              fontFamily: "'Playfair Display', serif"
+              fontFamily: "'Montserrat', sans-serif"
             }}
           >
             Adipiscing elit amet,<br />consectetur.
@@ -62,12 +62,13 @@ const ServicesSection = () => {
                 className="mb-4 font-bold text-xl md:text-2xl leading-tight tracking-tight"
                 style={{
                   color: 'hsl(0 0% 10%)',
-                  fontFamily: "'Playfair Display', serif"
+                  fontFamily: "'Montserrat', sans-serif"
                 }}
               >
                 {service.title}
               </h3>
-              <p className="text-sm leading-relaxed text-gray-500 font-medium border-l-2 border-black/10 pl-6">
+              <p className="text-sm leading-relaxed text-gray-500 font-medium border-l-2 border-black/10 pl-6"
+                 style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 {service.description}
               </p>
             </div>
@@ -80,7 +81,8 @@ const ServicesSection = () => {
             className="px-12 py-5 rounded-sm text-[12px] font-bold  tracking-[0.2em] transition-all duration-500 shadow-xl hover:-translate-y-1"
             style={{
               backgroundColor: '#FF1B7C',
-              color: 'white'
+              color: 'white',
+              fontFamily: "'Montserrat', sans-serif"
             }}
           >
             Réserver maintenant

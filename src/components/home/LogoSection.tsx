@@ -23,7 +23,7 @@ function LogoSection() {
   const gridContainer = "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
 
   return (
-    <section className="bg-white py-16 md:py-24 font-montserrat">
+    <section className="bg-white py-16 md:py-24" style={{ fontFamily: "'Montserrat', sans-serif" }}>
       <div className={gridContainer}>
         
         {/* INNER BOX (Le fond gris clair structuré) */}
@@ -33,12 +33,13 @@ function LogoSection() {
           <div className="text-center mb-16 max-w-[800px] mx-auto">
             <h2 
               className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-8 leading-[0.9] uppercase tracking-tighter"
-              style={{ fontFamily: "'Playfair Display', serif" }}
+              style={{ fontFamily: "'Montserrat', sans-serif" }}
             >
               Elit amet,<br />consectetur
             </h2>
 
-            <p className="text-sm md:text-base leading-relaxed text-gray-600 font-medium">
+            <p className="text-sm md:text-base leading-relaxed text-gray-600 font-medium"
+               style={{ fontFamily: "'Montserrat', sans-serif" }}>
               Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra.
             </p>
           </div>
@@ -48,7 +49,7 @@ function LogoSection() {
             {logos.map((item, index) => (
               <div
                 key={index}
-                className="group bg-white h-[120px] lg:h-[150px] flex items-center justify-center transition-all duration-500 hover:bg-black"
+                className="group bg-white h-[120px] lg:h-[150px] flex items-center justify-center transition-all duration-500 hover:bg-[#FF1493]"
               >
                 <div className="flex items-center justify-center p-6">
                   <img 

@@ -10,7 +10,7 @@ const WelcomeSection = () => {
     "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
 
   return (
-    <section className="bg-white py-20 lg:py-32">
+    <section className="bg-white py-20 lg:py-32" style={{ fontFamily: "'Montserrat', sans-serif" }}>
       <div className={containerStyles}>
 
         {/* ================= MOBILE MEDIA ================= */}
@@ -50,11 +50,13 @@ const WelcomeSection = () => {
 
         {/* ================= MOBILE CONTENT ================= */}
         <div className="flex flex-col space-y-6 max-w-xl lg:hidden">
-          <h2 className="text-3xl md:text-4xl font-bold text-black tracking-tight leading-tight">
+          <h2 className="text-3xl md:text-4xl font-bold text-black tracking-tight leading-tight"
+              style={{ fontFamily: "'Montserrat', sans-serif" }}>
             Welcome to <br /> lorem consectetur
           </h2>
 
-          <p className="text-gray-600 text-base md:text-lg leading-relaxed">
+          <p className="text-gray-600 text-base md:text-lg leading-relaxed"
+             style={{ fontFamily: "'Montserrat', sans-serif" }}>
             Nunc vulputate libero et velit interdum, ac aliquet odio mattis.
             Class aptent taciti sociosqu ad litora torquent per conubia nostra.
           </p>
@@ -62,7 +64,8 @@ const WelcomeSection = () => {
           <div className="flex flex-col bg-black text-white rounded-xl overflow-hidden shadow-xl">
             <div className="flex items-center gap-4 px-6 py-5">
               <img className="w-5 h-5 invert" src={welcomeicon1} alt="" />
-              <span className="text-xs font-semibold uppercase tracking-widest">
+              <span className="text-xs font-semibold  tracking-widest"
+                    style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 Luxe & Confort
               </span>
             </div>
@@ -71,13 +74,15 @@ const WelcomeSection = () => {
 
             <div className="flex items-center gap-4 px-6 py-5">
               <img className="w-5 h-5 invert" src={welcomeicon} alt="" />
-              <span className="text-xs font-semibold uppercase tracking-widest">
+              <span className="text-xs font-semibold  tracking-widest"
+                    style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 Service Premium
               </span>
             </div>
           </div>
 
-          <button className="w-fit bg-[#FF1B7C] text-white px-10 py-4 rounded-md font-bold uppercase tracking-widest hover:bg-black transition-all">
+          <button className="w-fit bg-[#FF1B7C] text-white px-10 py-4 rounded-md font-bold  tracking-widest hover:bg-black transition-all"
+                  style={{ fontFamily: "'Montserrat', sans-serif" }}>
             Faire une réservation
           </button>
         </div>
@@ -120,11 +125,13 @@ const WelcomeSection = () => {
 
           {/* CONTENT (DESKTOP ORIGINAL) */}
           <div className="flex flex-col justify-center space-y-6 max-w-xl">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-black tracking-tight leading-tight">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-black tracking-tight leading-tight"
+                style={{ fontFamily: "'Montserrat', sans-serif" }}>
               Welcome to <br /> lorem consectetur
             </h2>
 
-            <p className="text-gray-600 text-base md:text-lg leading-relaxed">
+            <p className="text-gray-600 text-base md:text-lg leading-relaxed"
+               style={{ fontFamily: "'Montserrat', sans-serif" }}>
               Nunc vulputate libero et velit interdum, ac aliquet odio mattis.
               Class aptent taciti sociosqu ad litora torquent per conubia nostra.
             </p>
@@ -132,7 +139,8 @@ const WelcomeSection = () => {
             <div className="flex flex-col sm:flex-row bg-black text-white rounded-xl overflow-hidden shadow-xl">
               <div className="flex items-center gap-4 px-6 py-5 flex-1">
                 <img className="w-5 h-5 invert" src={welcomeicon1} alt="" />
-                <span className="text-xs font-semibold uppercase tracking-widest">
+                <span className="text-xs font-semibold  tracking-widest"
+                      style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   Luxe & Confort
                 </span>
               </div>
@@ -141,13 +149,15 @@ const WelcomeSection = () => {
 
               <div className="flex items-center gap-4 px-6 py-5 flex-1">
                 <img className="w-5 h-5 invert" src={welcomeicon} alt="" />
-                <span className="text-xs font-semibold uppercase tracking-widest">
+                <span className="text-xs font-semibold  tracking-widest"
+                      style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   Service Premium
                 </span>
               </div>
             </div>
 
-            <button className="w-fit bg-[#FF1B7C] text-white px-10 py-4 rounded-md font-bold uppercase tracking-widest hover:bg-black transition-all">
+            <button className="w-fit bg-[#FF1B7C] text-white px-10 py-4 rounded-md font-bold  tracking-widest hover:bg-black transition-all"
+                    style={{ fontFamily: "'Montserrat', sans-serif" }}>
               Faire une réservation
             </button>
           </div>

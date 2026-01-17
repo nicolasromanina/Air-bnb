@@ -23,7 +23,8 @@ const VideoSection = () => {
   };
 
   return (
-    <section className="w-full bg-white py-8 xs:py-10 sm:py-12 md:py-16 lg:py-20 font-montserrat">
+    <section className="w-full bg-white py-8 xs:py-10 sm:py-12 md:py-16 lg:py-20" 
+             style={{ fontFamily: "'Montserrat', sans-serif" }}>
       <div className={gridContainer}>
         
         {/* INNER BOX : Le fond gris et les éléments décoratifs sont limités ici */}
@@ -41,13 +42,14 @@ const VideoSection = () => {
                        leading-[1.1] sm:leading-[1.05] tracking-tighter uppercase"
               style={{
                 color: 'hsl(0 0% 8%)',
-                fontFamily: "'Playfair Display', serif"
+                fontFamily: "'Montserrat', sans-serif"
               }}
             >
               Adipiscing elit amet,<br />consectetur.
             </h2>
             <p className="text-xs xs:text-sm sm:text-base leading-relaxed max-w-xs xs:max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl 
-                        mx-auto text-gray-600 font-medium px-2 xs:px-0">
+                        mx-auto text-gray-600 font-medium px-2 xs:px-0"
+               style={{ fontFamily: "'Montserrat', sans-serif" }}>
               Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti
               sociosqu ad litora torquent per conubia nostra.
             </p>
@@ -71,6 +73,7 @@ const VideoSection = () => {
                            backdrop-blur-md bg-white/10 transition-all duration-500 
                            hover:scale-110 hover:bg-[#FF1B7C] hover:border-[#FF1B7C]"
                   aria-label="Lire la vidéo"
+                  style={{ fontFamily: "'Montserrat', sans-serif" }}
                 >
                   <Play className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 
                                  text-white fill-white ml-0.5 xs:ml-1" />
@@ -128,6 +131,7 @@ const VideoSection = () => {
                          flex items-center justify-center transition-all duration-300 
                          hover:bg-[#FF1B7C] hover:scale-110 z-20"
                 aria-label="Image précédente"
+                style={{ fontFamily: "'Montserrat', sans-serif" }}
               >
                 <ChevronLeft className="w-4 h-4 xs:w-5 xs:h-5" />
               </button>
@@ -139,6 +143,7 @@ const VideoSection = () => {
                          flex items-center justify-center transition-all duration-300 
                          hover:bg-[#FF1B7C] hover:scale-110 z-20"
                 aria-label="Image suivante"
+                style={{ fontFamily: "'Montserrat', sans-serif" }}
               >
                 <ChevronRight className="w-4 h-4 xs:w-5 xs:h-5" />
               </button>
@@ -155,6 +160,7 @@ const VideoSection = () => {
                         : 'bg-gray-400 hover:bg-gray-600'
                     }`}
                     aria-label={`Aller à l'image ${idx + 1}`}
+                    style={{ fontFamily: "'Montserrat', sans-serif" }}
                   />
                 ))}
               </div>
@@ -170,6 +176,7 @@ const VideoSection = () => {
                        font-bold tracking-[0.15em] xs:tracking-[0.17em] sm:tracking-[0.19em] md:tracking-[0.2em]
                        transition-all duration-500 hover:bg-[#FF1B7C] hover:-translate-y-1 shadow-lg
                        min-w-[180px] xs:min-w-[200px] sm:min-w-[220px] md:min-w-[240px]"
+              style={{ fontFamily: "'Montserrat', sans-serif" }}
             >
               Réserver maintenant
             </button>

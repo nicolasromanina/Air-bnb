@@ -197,7 +197,8 @@ const StatsBar = ({ stats }: StatsBarProps) => {
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
         transform: 'translateY(20px)',
         opacity: 0,
-        animation: isVisible ? 'slideUpFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards' : 'none'
+        animation: isVisible ? 'slideUpFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards' : 'none',
+        fontFamily: "'Montserrat', sans-serif"
       }}
     >
       <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
@@ -214,10 +215,10 @@ const StatsBar = ({ stats }: StatsBarProps) => {
           >
             <div className="relative inline-block mb-2">
               <span 
-                className="text-3xl md:text-5xl font-bold font-body"
+                className="text-3xl md:text-5xl font-bold"
                 style={{
                   color: 'hsl(0 0% 100%)',
-                  fontFamily: "'Inter', sans-serif",
+                  fontFamily: "'Montserrat', sans-serif",
                   display: 'inline-block',
                   minWidth: '50px'
                 }}
@@ -241,7 +242,8 @@ const StatsBar = ({ stats }: StatsBarProps) => {
                 opacity: isVisible ? 1 : 0,
                 transform: isVisible ? 'translateY(0)' : 'translateY(10px)',
                 transition: `opacity 0.5s ease-out ${(index * 100) + 400}ms, 
-                           transform 0.5s ease-out ${(index * 100) + 400}ms`
+                           transform 0.5s ease-out ${(index * 100) + 400}ms`,
+                fontFamily: "'Montserrat', sans-serif"
               }}
             >
               {stat.label}
