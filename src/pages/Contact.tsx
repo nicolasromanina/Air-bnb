@@ -30,7 +30,7 @@ const Contact: React.FC = () => {
       <Navbar />
       <NavbarSpacer />
 
-      <main className="py-12 lg:py-20">
+      <main className="py-0 lg:py-0">
         
         {/* --- SECTION 1: HERO & FORM (Fond gris encastré) --- */}
         <div className={GRID_CONTAINER}>
