@@ -126,7 +126,7 @@ const VideoSection = () => {
                 className="absolute left-2 xs:left-3 sm:left-4 top-1/2 -translate-y-1/2 
                          w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 rounded-full bg-black/80 text-white 
                          flex items-center justify-center transition-all duration-300 
-                         hover:bg-black hover:scale-110 z-20"
+                         hover:bg-[#FF1B7C] hover:scale-110 z-20"
                 aria-label="Image précédente"
               >
                 <ChevronLeft className="w-4 h-4 xs:w-5 xs:h-5" />
@@ -137,7 +137,7 @@ const VideoSection = () => {
                 className="absolute right-2 xs:right-3 sm:right-4 top-1/2 -translate-y-1/2 
                          w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 rounded-full bg-black/80 text-white 
                          flex items-center justify-center transition-all duration-300 
-                         hover:bg-black hover:scale-110 z-20"
+                         hover:bg-[#FF1B7C] hover:scale-110 z-20"
                 aria-label="Image suivante"
               >
                 <ChevronRight className="w-4 h-4 xs:w-5 xs:h-5" />
