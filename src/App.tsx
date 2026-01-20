@@ -14,7 +14,7 @@ import Services from "./pages/Services";
 import Appartment from "./pages/Appartment";
 import AppartmentDetailPage from "./pages/AppartmentDetailPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
-import Payment from "./pages/Payment";
+import Payment from "./pages/reservation/Payment";
 import PriceSection from "./pages/Price";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
@@ -34,6 +34,8 @@ import ConfirmationEditor from "@/pages/Admin/ConfirmationEditor";
 import PricingEditor from "@/pages/Admin/PricingEditor";
 import ContactEditor from "@/pages/Admin/ContactEditor";
 import SettingsEditor from "@/pages/Admin/SettingsEditor";
+import PaymentSuccess from "./pages/reservation/PaymentSuccess";
+import PaymentCanceled from "./pages/reservation/PaymentCanceled";
 
 const queryClient = new QueryClient();
 
@@ -50,11 +52,14 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/services" element={<Services />} />
             <Route path="/appartement" element={<Appartment />} />
-            <Route path="/appartement-detail" element={<AppartmentDetailPage />} />
+            <Route path="/apartment/:id" element={<AppartmentDetailPage />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/payment" element={<Payment />} />
+            
+            <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/payment-cancel" element={<PaymentCanceled />} />
             <Route path="/price" element={<PriceSection />} />
 
             {/* Routes Admin (Anciennes) */}

@@ -1,4 +1,5 @@
 import { Users, Bed } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface RoomCardProps {
   image: string;
@@ -6,9 +7,16 @@ interface RoomCardProps {
   description: string;
   guests: string;
   bedrooms: string;
+  id: number;
 }
 
-const RoomCard = ({ image, title, description, guests, bedrooms }: RoomCardProps) => {
+const RoomCard = ({ image, title, description, guests, bedrooms, id }: RoomCardProps) => {
+  const navigate = useNavigate();
+
+  const handleReserve = () => {
+    navigate(`/apartment/${id}`);
+  };
+
   return (
     <div className="bg-card rounded-2xl shadow-lg overflow-hidden">
       {/* Image */}
@@ -42,7 +50,10 @@ const RoomCard = ({ image, title, description, guests, bedrooms }: RoomCardProps
         </div>
         
         {/* Button */}
-        <button className="bg-accent text-accent-foreground font-montserrat font-semibold px-8 py-3 rounded-full hover:opacity-90 transition-opacity">
+        <button 
+          onClick={handleReserve}
+          className="bg-accent text-accent-foreground font-montserrat font-semibold px-8 py-3 rounded-full hover:opacity-90 transition-opacity"
+        >
           Reserver
         </button>
       </div>
