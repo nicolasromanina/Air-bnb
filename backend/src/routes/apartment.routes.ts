@@ -35,7 +35,7 @@ router.delete('/rooms/:id', authenticate, apartmentController.deleteRoom.bind(ap
 // Routes pour l'import/export
 router.post('/reset', authenticate, async (req, res) => {
   try {
-    const defaultPage = await apartmentController.createDefaultPage();
+    const defaultPage = await (apartmentController as any).createDefaultPage();
     res.json({ 
       message: 'Données réinitialisées avec succès', 
       page: defaultPage 

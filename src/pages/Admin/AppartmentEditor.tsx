@@ -1165,7 +1165,7 @@ const AppartmentEditor: React.FC = () => {
                                   <div className="flex-1">
                                     {roomDetail.images[currentImageIndex].startsWith('/uploads/') ? (
                                       <img 
-                                        src={`http://localhost:3000${roomDetail.images[currentImageIndex]}`} 
+                                        src={`https://airbnb-backend.onrender.com${roomDetail.images[currentImageIndex]}`} 
                                         alt={`Hero ${currentImageIndex + 1}`}
                                         className="w-full h-48 object-cover rounded border"
                                         onError={(e) => {
@@ -1292,7 +1292,7 @@ const AppartmentEditor: React.FC = () => {
                                   </div>
                                   {img && img.startsWith('/uploads/') && (
                                     <img 
-                                      src={`http://localhost:3000${img}`} 
+                                      src={`https://airbnb-backend.onrender.com${img}`} 
                                       alt={`Room ${idx + 1}`}
                                       className="w-full h-20 object-cover rounded border text-xs"
                                       onError={(e) => {

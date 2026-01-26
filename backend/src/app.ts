@@ -17,37 +17,60 @@ import roomDetailRoutes from './routes/roomDetail.routes';
 import contactRoutes from './routes/contact.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { logger } from './utils/logger';
+import { connectDatabase } from './config/database';
 import path from 'path';
 
 dotenv.config();
 
 export const createApp = () => {
   const app = express();
+  const isProduction = process.env.NODE_ENV === 'production';
 
   // Security middleware
-  app.use(helmet());
+  app.use(helmet({
+    hsts: {
+      maxAge: 31536000, // 1 year
+      includeSubDomains: true,
+      preload: true,
+    },
+    contentSecurityPolicy: false, // Configure based on your needs
+  }));
 
-  // Rate limiting
+  // Trust proxy for production (needed for load balancers, reverse proxies)
+  if (isProduction) {
+    app.set('trust proxy', 1);
+  }
+
+  // Rate limiting (stricter in production)
   const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
+    windowMs: isProduction ? 15 * 60 * 1000 : 15 * 60 * 1000,
+    max: isProduction ? 100 : 500,
     message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.',
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => {
+      // Skip rate limiting for health checks
+      return req.path === '/health';
+    },
   });
   app.use('/api/', limiter);
 
   // CORS configuration
-  // Allow common dev origins (Vite/CRA) or use FRONTEND_URL (comma-separated)
-  const defaultOrigins = ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:8080'];
+  const defaultOrigins = isProduction 
+    ? [] 
+    : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:8080'];
   const envOrigins = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(o => o.trim()) : [];
-  const allowedOrigins = [...envOrigins, ...defaultOrigins];
+  const allowedOrigins = [...new Set([...envOrigins, ...defaultOrigins])];
+
+  logger.info(`✅ CORS allowed origins: ${allowedOrigins.join(', ')}`);
 
   app.use(cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // allow non-browser requests like curl/postman
+      if (!origin) return callback(null, true);
       if (allowedOrigins.indexOf(origin) !== -1) {
         return callback(null, true);
       }
-      logger.warn(`CORS request blocked from origin: ${origin}`);
+      logger.warn(`⚠️  CORS request blocked from origin: ${origin}`);
       return callback(new Error('CORS not allowed from this origin'));
     },
     credentials: true,
@@ -72,11 +95,10 @@ export const createApp = () => {
   });
 
   // Connect to MongoDB
-  mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/booking-app')
-    .then(() => logger.info('Connected to MongoDB successfully'))
-    .catch((err) => {
-      logger.error('MongoDB connection error:', err);
-    });
+  connectDatabase().catch((err) => {
+    logger.error('❌ Failed to initialize database:', err);
+    process.exit(1);
+  });
 
   // Routes
   app.use('/api/payments', paymentRoutes);

@@ -92,7 +92,7 @@ class RoomDetailController {
       const { roomId } = req.params;
       const id = parseInt(roomId);
       const updateData = req.body;
-      const updatedBy = req.user?.email || 'anonymous';
+      const updatedBy = (req as any).user?.email || 'anonymous';
       
       // Extract meta from updateData to avoid conflicts
       const { meta, ...cleanData } = updateData;

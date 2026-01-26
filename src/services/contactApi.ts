@@ -5,7 +5,7 @@ import { config } from '@/config/env';
 
 // Configuration de l'instance Axios
 const createApiClient = (): AxiosInstance => {
-  const baseURL = config.apiBaseUrl || 'http://localhost:3000/api';
+  const baseURL = config.apiBaseUrl || 'https://airbnb-backend.onrender.com/api';
   
   return axios.create({
     baseURL,

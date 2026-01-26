@@ -36,7 +36,7 @@ class ApartmentController {
         finalSection
       } = req.body;
       
-      const updatedBy = req.user?.email || 'anonymous';
+      const updatedBy = (req as any).user?.email || 'anonymous';
 
       // Récupérer la dernière version
       const latestPage = await ApartmentPage.findOne().sort({ 'meta.updatedAt': -1 });
@@ -81,7 +81,7 @@ class ApartmentController {
     try {
       const { section, subsection } = req.params;
       const sectionData = req.body;
-      const updatedBy = req.user?.email || 'anonymous';
+      const updatedBy = (req as any).user?.email || 'anonymous';
 
       const validSections = [
         'heroSection',

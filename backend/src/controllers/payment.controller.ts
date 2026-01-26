@@ -7,6 +7,9 @@ import { User } from '../models/User';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { logger, logStep } from '../utils/logger';
 import { body, validationResult } from 'express-validator';
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 
 const stripeService = new StripeService();
 const reservationService = new ReservationService();

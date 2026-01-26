@@ -95,7 +95,7 @@ export interface ServicePageData {
 import { api } from './api';
 
 // Configuration du backend
-const BACKEND_URL = 'http://localhost:3000/api/services';
+const BACKEND_URL = 'https://airbnb-backend.onrender.com/api/services';
 
 // Fonction utilitaire pour les requêtes
 const makeRequest = async <T>(

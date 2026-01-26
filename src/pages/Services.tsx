@@ -355,7 +355,7 @@ const Service1: React.FC<Service1Props> = ({
       const normalizedUrl = normalizeImageUrl(dataValue);
       
       // Appliquer le cache-buster UNIQUEMENT sur les images uploadées (/uploads/)
-      if (normalizedUrl.includes('/uploads/') || normalizedUrl.includes('localhost:3000')) {
+      if (normalizedUrl.includes('/uploads/') || normalizedUrl.includes('airbnb-backend.onrender.com')) {
         return addCacheBuster(normalizedUrl, metaVersion, metaTimestamp || imageVersion);
       }
       
@@ -1064,7 +1064,7 @@ const Service2: React.FC<Service2Props> = ({
       const normalizedUrl = normalizeImageUrl(dataValue);
       
       // Appliquer le cache-buster UNIQUEMENT sur les images uploadées (/uploads/)
-      if (normalizedUrl.includes('/uploads/') || normalizedUrl.includes('localhost:3000')) {
+      if (normalizedUrl.includes('/uploads/') || normalizedUrl.includes('airbnb-backend.onrender.com')) {
         return addCacheBuster(normalizedUrl, metaVersion, metaTimestamp || imageVersion);
       }
       

@@ -55,7 +55,7 @@ const normalizeImageUrl = (url: string | any): string => {
   }
   
   if (urlStr.startsWith('/uploads')) {
-    const backendOrigin = 'http://localhost:3000';
+    const backendOrigin = 'https://airbnb-backend.onrender.com';
     return `${backendOrigin}${urlStr}`;
   }
   

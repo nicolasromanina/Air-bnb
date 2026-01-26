@@ -54,11 +54,11 @@ export class ReservationService {
 
         for (const rawOpt of reservationData.additionalOptions) {
           const opt = rawOpt || {};
-          const optionId = opt.optionId || opt._id || opt.id || null;
-          const name = String(opt.name || opt.optionName || opt.title || '').trim();
-          const pricingType = allowedPricing.includes(opt.pricingType) ? opt.pricingType : 'fixed';
-          const price = Number(opt.price ?? opt.unitPrice ?? 0);
-          const quantity = Number(opt.quantity ?? opt.qty ?? 1);
+          const optionId = opt.optionId || (opt as any)._id || (opt as any).id || null;
+          const name = String(opt.name || (opt as any).optionName || (opt as any).title || '').trim();
+          const pricingType = allowedPricing.includes((opt as any).pricingType) ? (opt as any).pricingType : 'fixed';
+          const price = Number(opt.price ?? (opt as any).unitPrice ?? 0);
+          const quantity = Number(opt.quantity ?? (opt as any).qty ?? 1);
 
           if (!name) throw Object.assign(new Error('Invalid reservation option: name is required'), { statusCode: 400 });
           if (isNaN(price) || price < 0) throw Object.assign(new Error('Invalid reservation option: price must be >= 0'), { statusCode: 400 });

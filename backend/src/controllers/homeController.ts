@@ -41,7 +41,7 @@ class HomeController {
         threeCardsSection
       } = req.body;
       
-      const updatedBy = req.user?.email || 'anonymous';
+      const updatedBy = (req as any).user?.email || 'anonymous';
 
       // Récupérer la dernière version
       const latestPage = await HomePage.findOne().sort({ 'meta.updatedAt': -1 });
@@ -90,7 +90,7 @@ class HomeController {
     try {
       const { section } = req.params;
       const sectionData = req.body;
-      const updatedBy = req.user?.email || 'anonymous';
+      const updatedBy = (req as any).user?.email || 'anonymous';
 
       const validSections = [
         'heroSection',

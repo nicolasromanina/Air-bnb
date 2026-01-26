@@ -231,7 +231,7 @@ function AppartmentDetail() {
             apartmentNumber: apartment.title || `Appartement ${aptIdNum}`,
             title: apartment.title || 'Réservation',
             image: roomDetail?.images?.[0]?.startsWith('/uploads/') 
-                ? `http://localhost:3000${roomDetail.images[0]}`
+                ? `https://airbnb-backend.onrender.com${roomDetail.images[0]}`
                 : roomDetail?.images?.[0] || 'https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200',
             includes: [],
             checkIn: checkInDate,
@@ -277,7 +277,7 @@ function AppartmentDetail() {
                                         src={
                                             roomDetail?.images?.[currentImageIndex] 
                                                 ? (roomDetail.images[currentImageIndex].startsWith('/uploads/') 
-                                                    ? `http://localhost:3000${roomDetail.images[currentImageIndex]}`
+                                                    ? `https://airbnb-backend.onrender.com${roomDetail.images[currentImageIndex]}`
                                                     : roomDetail.images[currentImageIndex])
                                                 : "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200"
                                         } 
@@ -333,7 +333,7 @@ function AppartmentDetail() {
                                         <img 
                                             src={
                                                 img.startsWith('/uploads/') 
-                                                    ? `http://localhost:3000${img}`
+                                                    ? `https://airbnb-backend.onrender.com${img}`
                                                     : img
                                             }
                                             className="w-full h-full object-cover" 

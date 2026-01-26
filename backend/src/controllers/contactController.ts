@@ -27,7 +27,7 @@ class ContactController {
   async updateContactPage(req: Request, res: Response): Promise<void> {
     try {
       const { heroSection, contactForm, testimonialSection, gallerySection } = req.body;
-      const updatedBy = req.user?.email || 'anonymous';
+      const updatedBy = (req as any).user?.email || 'anonymous';
 
       // Vérifier les données requises
       if (!heroSection || !contactForm || !testimonialSection || !gallerySection) {
@@ -74,7 +74,7 @@ class ContactController {
     try {
       const { section } = req.params;
       const sectionData = req.body;
-      const updatedBy = req.user?.email || 'anonymous';
+      const updatedBy = (req as any).user?.email || 'anonymous';
 
       const validSections = ['heroSection', 'contactForm', 'testimonialSection', 'gallerySection'];
       
@@ -112,7 +112,7 @@ class ContactController {
   async addTestimonial(req: Request, res: Response): Promise<void> {
     try {
       const testimonial = req.body;
-      const updatedBy = req.user?.email || 'anonymous';
+      const updatedBy = (req as any).user?.email || 'anonymous';
 
       const updatedPage = await ContactPage.findOneAndUpdate(
         {},
@@ -141,7 +141,7 @@ class ContactController {
   async addGalleryItem(req: Request, res: Response): Promise<void> {
     try {
       const galleryItem = req.body;
-      const updatedBy = req.user?.email || 'anonymous';
+      const updatedBy = (req as any).user?.email || 'anonymous';
 
       const updatedPage = await ContactPage.findOneAndUpdate(
         {},

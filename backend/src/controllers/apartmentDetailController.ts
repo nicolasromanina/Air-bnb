@@ -94,7 +94,7 @@ class ApartmentDetailController {
       const { apartmentId } = req.params;
       const id = parseInt(apartmentId);
       const updateData = req.body;
-      const updatedBy = req.user?.email || 'anonymous';
+      const updatedBy = (req as any).user?.email || 'anonymous';
       
       const updatedDetail = await ApartmentDetailPage.findOneAndUpdate(
         { apartmentId: id },
@@ -134,7 +134,7 @@ class ApartmentDetailController {
       const { apartmentId, section } = req.params;
       const id = parseInt(apartmentId);
       const sectionData = req.body;
-      const updatedBy = req.user?.email || 'anonymous';
+      const updatedBy = (req as any).user?.email || 'anonymous';
       
       const validSections = ['hero', 'details', 'gallery', 'lastSection'];
       if (!validSections.includes(section)) {
@@ -177,7 +177,7 @@ class ApartmentDetailController {
       const { apartmentId } = req.params;
       const { optionIds } = req.body;
       const id = parseInt(apartmentId);
-      const updatedBy = req.user?.email || 'anonymous';
+      const updatedBy = (req as any).user?.email || 'anonymous';
       
       const updatedDetail = await ApartmentDetailPage.findOneAndUpdate(
         { apartmentId: id },
@@ -233,7 +233,7 @@ class ApartmentDetailController {
       const { apartmentId } = req.params;
       const { roomData } = req.body;
       const id = parseInt(apartmentId);
-      const updatedBy = req.user?.email || 'anonymous';
+      const updatedBy = (req as any).user?.email || 'anonymous';
       
       // Vérifier si le détail existe
       let detail = await ApartmentDetailPage.findOne({ apartmentId: id });

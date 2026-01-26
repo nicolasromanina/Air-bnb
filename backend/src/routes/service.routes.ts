@@ -36,7 +36,7 @@ router.post('/features', authenticate, serviceController.addFeature.bind(service
 // Routes pour l'import/export
 router.post('/reset', authenticate, async (req, res) => {
   try {
-    const defaultPage = await serviceController.createDefaultPage();
+    const defaultPage = await (serviceController as any).createDefaultPage();
     res.json({ 
       message: 'Données réinitialisées avec succès', 
       page: defaultPage 
