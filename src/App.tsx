@@ -23,6 +23,7 @@ import AuthPage from "./pages/AuthPage";
 import AdminRoutes from "./routes/AdminRoutes";
 import PaymentSuccess from "./pages/reservation/PaymentSuccess";
 import PaymentCanceled from "./pages/reservation/PaymentCanceled";
+import Reservations from "./pages/reservation/Reservations";
 import AuthGuard from "./components/payment/AuthGuard";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,7 @@ const App = () => (
             />
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/payment-canceled" element={<PaymentCanceled />} />
+            <Route path="/reservations" element={<Reservations />} />
             <Route path="/price" element={<PriceSection />} />
             {/* Admin routes consolidated */}
             <Route path="/admin/*" element={<AdminRoutes />} />

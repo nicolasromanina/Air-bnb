@@ -203,6 +203,8 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
           customerName: `${data.firstName} ${data.lastName}`,
         };
         localStorage.setItem('currentReservation', JSON.stringify(completeReservationData));
+        localStorage.setItem('userEmail', data.email);
+        localStorage.setItem('userName', `${data.firstName} ${data.lastName}`);
         console.log("💾 Données sauvegardées dans localStorage avec montant:", finalAmount);
         
         toast.success("Redirection vers la page de paiement sécurisée...");

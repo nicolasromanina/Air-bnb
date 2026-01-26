@@ -261,6 +261,10 @@ class ApiService {
     return this.request(`/payments/session/${sessionId}`);
   }
 
+  async getStripeSessionDetails(sessionId: string): Promise<ApiResponse<any>> {
+    return this.request(`/payments/stripe-session/${sessionId}`);
+  }
+
   async getUserPayments(page = 1, limit = 10, status?: string): Promise<ApiResponse<PaginatedResponse<any>>> {
     const params = new URLSearchParams({
       page: page.toString(),

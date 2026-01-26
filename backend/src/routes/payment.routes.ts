@@ -60,6 +60,12 @@ router.post(
 
 router.get('/session/:sessionId', paymentController.getPaymentBySessionId);
 
+// Nouvel endpoint pour récupérer les infos Stripe complètes
+router.get(
+  '/stripe-session/:sessionId',
+  paymentController.getStripeSessionDetails
+);
+
 // Protected routes
 router.post(
   '/create',

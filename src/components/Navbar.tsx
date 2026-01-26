@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Menu, X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import UserMenu from "./UserMenu";
 
 const Navbar = () => {
+  const { isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -147,14 +150,18 @@ const Navbar = () => {
             </div>
 
             {/* CTA Button Desktop */}
-            <div className="hidden md:flex items-center z-50">
-              <button 
-                onClick={() => handleNavClick("/contact")}
-                className="bg-[#FF1B7C] text-white px-6 lg:px-8 py-2.5 lg:py-3 rounded-sm font-bold text-xs lg:text-sm tracking-wider hover:bg-[#e0176d] active:scale-95 transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-[#FF1B7C] focus:ring-offset-2"
-                style={{ fontFamily: "'Montserrat', sans-serif" }}
-              >
-                Réserver maintenant
-              </button>
+            <div className="hidden md:flex items-center gap-4 z-50">
+              {isAuthenticated ? (
+                <UserMenu />
+              ) : (
+                <button 
+                  onClick={() => handleNavClick("/contact")}
+                  className="bg-[#FF1B7C] text-white px-6 lg:px-8 py-2.5 lg:py-3 rounded-sm font-bold text-xs lg:text-sm tracking-wider hover:bg-[#e0176d] active:scale-95 transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-[#FF1B7C] focus:ring-offset-2"
+                  style={{ fontFamily: "'Montserrat', sans-serif" }}
+                >
+                  Réserver maintenant
+                </button>
+              )}
             </div>
 
             {/* Bouton Menu Mobile */}
@@ -233,13 +240,38 @@ const Navbar = () => {
 
           {/* Bouton CTA Mobile */}
           <div className="pt-6 border-t">
-            <button 
-              onClick={() => handleNavClick("/contact")}
-              className="w-full bg-[#FF1B7C] text-white py-4 rounded-sm font-bold tracking-wider text-lg hover:bg-[#e0176d] active:scale-[0.98] transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF1B7C] focus:ring-offset-2"
-              style={{ fontFamily: "'Montserrat', sans-serif" }}
-            >
-              Réserver maintenant
-            </button>
+            {isAuthenticated ? (
+              <>
+                <button 
+                  onClick={() => {
+                    handleNavClick("/reservations");
+                    setIsOpen(false);
+                  }}
+                  className="w-full bg-[#FF1B7C] text-white py-4 rounded-sm font-bold tracking-wider text-lg hover:bg-[#e0176d] active:scale-[0.98] transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF1B7C] focus:ring-offset-2 mb-3"
+                  style={{ fontFamily: "'Montserrat', sans-serif" }}
+                >
+                  Mes réservations
+                </button>
+                <button 
+                  onClick={() => {
+                    navigate("/auth");
+                    setIsOpen(false);
+                  }}
+                  className="w-full bg-gray-200 text-gray-800 py-3 rounded-sm font-bold tracking-wider text-base hover:bg-gray-300 transition-all duration-300"
+                  style={{ fontFamily: "'Montserrat', sans-serif" }}
+                >
+                  Déconnexion
+                </button>
+              </>
+            ) : (
+              <button 
+                onClick={() => handleNavClick("/contact")}
+                className="w-full bg-[#FF1B7C] text-white py-4 rounded-sm font-bold tracking-wider text-lg hover:bg-[#e0176d] active:scale-[0.98] transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF1B7C] focus:ring-offset-2"
+                style={{ fontFamily: "'Montserrat', sans-serif" }}
+              >
+                Réserver maintenant
+              </button>
+            )}
             
             {/* Contact info supplémentaire pour mobile */}
             <div className="mt-6 text-sm text-gray-600 text-center">

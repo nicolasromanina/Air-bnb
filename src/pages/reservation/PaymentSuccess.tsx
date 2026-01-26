@@ -37,35 +37,83 @@ const PaymentSuccess = () => {
       try {
         console.log("🔍 Vérification du paiement pour session:", sessionId);
         
-        // Première tentative avec notre API
+        // Première tentative avec notre API - vérifier le paiement auprès de Stripe
         const response = await api.verifyPayment(sessionId);
         
         if (response.success && response.data) {
-          setPaymentDetails(response.data);
+          // Enrichir les données avec les infos du sessionId
+          const enrichedPaymentDetails = {
+            ...response.data,
+            sessionId: sessionId,
+            verifiedAt: new Date().toISOString()
+          };
+          setPaymentDetails(enrichedPaymentDetails);
+          console.log("✅ Paiement vérifié depuis Stripe:", enrichedPaymentDetails);
           toast.success("Paiement confirmé avec succès !");
           
           // Nettoyer la réservation du localStorage
           localStorage.removeItem('currentReservation');
         } else {
-          // Si l'API échoue, essayer de récupérer les infos depuis Stripe via notre endpoint
-          const paymentResponse = await api.getPaymentBySessionId(sessionId);
-          if (paymentResponse.success && paymentResponse.data?.payment) {
-            const payment = paymentResponse.data.payment;
+          // Si l'API échoue, essayer de récupérer les infos Stripe complètes
+          const stripeResponse = await api.getStripeSessionDetails(sessionId);
+          if (stripeResponse.success && stripeResponse.data?.session) {
+            const session = stripeResponse.data.session;
+            const payment = stripeResponse.data.payment;
+            
+            // Extraire et formater les infos Stripe
+            const paymentMetadata = session.metadata || {};
+            const reservationDetails = payment?.reservation || {};
+            
             setPaymentDetails({
-              success: true,
-              paymentStatus: payment.status,
-              customerEmail: payment.userEmail,
-              amountTotal: payment.amount * 100, // Convertir en centimes
-              currency: payment.currency || 'eur',
-              metadata: {
-                reservationDetails: payment.reservation?.details || "Réservation confirmée"
-              },
-              paymentId: payment._id,
-              reservationId: payment.reservation?._id
+              success: session.status === 'paid',
+              paymentStatus: session.status === 'paid' ? 'paid' : 'pending',
+              customerEmail: session.customer_email || payment?.userEmail || "client@example.com",
+              customerName: session.customer_details?.name || `${paymentMetadata.firstName || ''} ${paymentMetadata.lastName || ''}`.trim() || "Client",
+              amountTotal: session.amount_total,
+              currency: session.currency || 'eur',
+              sessionId: sessionId,
+              paymentMethod: session.payment_method_types?.[0] || 'card',
+              metadata: paymentMetadata,
+              reservationDetails: reservationDetails,
+              paymentId: payment?._id,
+              reservationId: payment?.reservation?._id,
+              createdAt: session.created ? new Date(session.created * 1000).toISOString() : new Date().toISOString(),
+              verifiedAt: new Date().toISOString(),
+              stripeSession: session
             });
+            console.log("✅ Infos Stripe complètes récupérées:", stripeResponse.data);
             toast.success("Paiement vérifié avec succès !");
           } else {
-            throw new Error(paymentResponse.error || "Échec de la vérification");
+            // Fallback: essayer de récupérer depuis la BD
+            const paymentResponse = await api.getPaymentBySessionId(sessionId);
+            if (paymentResponse.success && paymentResponse.data?.payment) {
+              const payment = paymentResponse.data.payment;
+              const paymentMetadata = payment.metadata || {};
+              const reservationDetails = typeof paymentMetadata.reservationDetails === 'string' 
+                ? JSON.parse(paymentMetadata.reservationDetails)
+                : paymentMetadata.reservationDetails || {};
+              
+              setPaymentDetails({
+                success: true,
+                paymentStatus: payment.status || 'paid',
+                customerEmail: payment.userEmail || payment.customerEmail || "client@example.com",
+                customerName: payment.customerName || `${paymentMetadata.firstName || ''} ${paymentMetadata.lastName || ''}`.trim(),
+                amountTotal: payment.amount * 100,
+                currency: payment.currency || 'eur',
+                sessionId: sessionId,
+                paymentMethod: payment.paymentMethod || 'card',
+                metadata: paymentMetadata,
+                reservationDetails: reservationDetails,
+                paymentId: payment._id,
+                reservationId: payment.reservation?._id,
+                createdAt: payment.createdAt,
+                verifiedAt: new Date().toISOString()
+              });
+              console.log("✅ Paiement récupéré depuis la BD:", paymentResponse.data.payment);
+              toast.success("Paiement vérifié avec succès !");
+            } else {
+              throw new Error(paymentResponse.error || "Échec de la vérification");
+            }
           }
         }
         
@@ -77,16 +125,21 @@ const PaymentSuccess = () => {
         
         // En cas d'erreur, utiliser les données de localStorage comme fallback
         if (sessionId) {
-          setPaymentDetails({
+          const fallbackDetails = {
             success: true,
             paymentStatus: "pending_verification",
             customerEmail: reservationData?.customerEmail || localStorage.getItem('userEmail') || "client@example.com",
+            customerName: reservationData?.customerName || localStorage.getItem('userName') || "Client",
             amountTotal: reservationData?.total ? reservationData.total * 100 : 0,
             currency: "eur",
+            sessionId: sessionId,
+            verifiedAt: new Date().toISOString(),
             metadata: {
-              sessionId: sessionId
+              reservationDetails: reservationData || {}
             }
-          });
+          };
+          setPaymentDetails(fallbackDetails);
+          console.log("⚠️ Utilisation des données de fallback:", fallbackDetails);
         }
       } finally {
         setLoading(false);
@@ -328,14 +381,34 @@ const PaymentSuccess = () => {
                 
                 {/* Numéro de session */}
                 <div className="flex items-start gap-3">
-                  <User className="text-primary shrink-0 mt-1" size={20} />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Référence de paiement</p>
-                    <p className="font-mono text-sm bg-muted px-2 py-1 rounded inline-block break-all">
-                      {sessionId}
-                    </p>
+                  <FileText className="text-primary shrink-0 mt-1" size={20} />
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">Référence de paiement Stripe</p>
+                    <div className="mt-2 bg-muted px-3 py-2 rounded text-xs break-all font-mono hover:bg-secondary transition-colors">
+                      <code className="text-foreground">{sessionId || 'N/A'}</code>
+                    </div>
                   </div>
                 </div>
+
+                {/* ID de paiement local si disponible */}
+                {paymentDetails?.paymentId && (
+                  <div className="flex items-start gap-3">
+                    <FileText className="text-primary shrink-0 mt-1" size={20} />
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground">ID de paiement local</p>
+                      <div className="mt-2 bg-muted px-3 py-2 rounded text-xs break-all font-mono">
+                        <code className="text-foreground">{paymentDetails.paymentId}</code>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Timestamp de vérification */}
+                {paymentDetails?.verifiedAt && (
+                  <div className="flex items-start gap-3 text-xs text-muted-foreground">
+                    <span>✓ Vérifié le {formatDate(paymentDetails.verifiedAt)}</span>
+                  </div>
+                )}
               </div>
             </div>
             
@@ -359,62 +432,211 @@ const PaymentSuccess = () => {
               
               <button 
                 onClick={() => {
-                  // Fonction pour générer un reçu
+                  // Fonction pour générer un reçu complet avec toutes les infos Stripe
                   const receiptWindow = window.open('', '_blank');
                   if (receiptWindow) {
-                    receiptWindow.document.write(`
+                    const receiptHTML = `
                       <!DOCTYPE html>
-                      <html>
+                      <html lang="fr">
                       <head>
-                        <title>Reçu de paiement</title>
+                        <meta charset="UTF-8">
+                        <title>Reçu de paiement - ${sessionId?.substring(0, 15)}</title>
                         <style>
-                          body { font-family: Arial, sans-serif; padding: 40px; max-width: 600px; margin: 0 auto; }
-                          .header { text-align: center; margin-bottom: 30px; }
-                          .details { margin: 20px 0; }
-                          .detail-row { display: flex; justify-content: space-between; margin: 10px 0; }
-                          .total { font-size: 1.2em; font-weight: bold; border-top: 2px solid #000; padding-top: 10px; }
-                          .footer { margin-top: 30px; text-align: center; font-size: 0.8em; color: #666; }
+                          * { margin: 0; padding: 0; box-sizing: border-box; }
+                          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px 20px; max-width: 800px; margin: 0 auto; color: #333; }
+                          .container { background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                          .header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid #f0f0f0; padding-bottom: 30px; }
+                          .header img { max-width: 180px; margin-bottom: 20px; }
+                          .header h1 { font-size: 28px; color: #000; margin-bottom: 10px; }
+                          .header p { color: #666; font-size: 14px; }
+                          .section { margin-bottom: 30px; }
+                          .section-title { font-size: 16px; font-weight: 600; text-transform: uppercase; color: #FF2E63; margin-bottom: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
+                          .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f5f5f5; }
+                          .detail-row:last-child { border-bottom: none; }
+                          .detail-label { font-weight: 500; color: #666; }
+                          .detail-value { font-weight: 600; color: #000; text-align: right; }
+                          .detail-value.important { font-size: 18px; color: #FF2E63; }
+                          .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+                          @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+                          .total-section { background: #f9f9f9; padding: 20px; border-radius: 6px; margin-top: 20px; }
+                          .total-row { display: flex; justify-content: space-between; font-size: 18px; font-weight: 700; color: #000; padding: 10px 0; }
+                          .total-amount { color: #FF2E63; font-size: 24px; }
+                          .footer { margin-top: 40px; padding-top: 30px; border-top: 2px solid #f0f0f0; text-align: center; color: #999; font-size: 12px; }
+                          .badge { display: inline-block; padding: 4px 12px; background: #e8f5e9; color: #2e7d32; border-radius: 20px; font-size: 12px; font-weight: 600; }
+                          .badge.success { background: #e8f5e9; color: #2e7d32; }
+                          .badge.pending { background: #fff3e0; color: #e65100; }
+                          .reference-code { background: #f5f5f5; padding: 10px 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 12px; word-break: break-all; margin-top: 8px; }
+                          .separator { height: 1px; background: #e0e0e0; margin: 20px 0; }
                         </style>
                       </head>
                       <body>
-                        <div class="header">
-                          <img src="/Logo.png" alt="Logo" style="max-width:160px;margin-bottom:12px;" />
-                          <h1>Reçu de paiement</h1>
-                          <p>${formatDate(new Date().toISOString())}</p>
-                        </div>
-                        <div class="details">
-                          <div class="detail-row">
-                            <span>Montant:</span>
-                            <span>${formatAmount(paymentDetails?.amountTotal || 0, paymentDetails?.currency)}</span>
+                        <div class="container">
+                          <!-- En-tête -->
+                          <div class="header">
+                            <img src="/Logo.png" alt="Logo" onerror="this.style.display='none'" />
+                            <h1>REÇU DE PAIEMENT</h1>
+                            <p>Confirmation de votre réservation</p>
                           </div>
-                          <div class="detail-row">
-                            <span>Statut:</span>
-                            <span>${paymentDetails?.paymentStatus === 'paid' ? 'Payé' : 'En attente'}</span>
+
+                          <!-- Infos Stripe et Paiement -->
+                          <div class="section">
+                            <div class="section-title">📋 Détails du paiement</div>
+                            <div class="detail-row">
+                              <span class="detail-label">Statut</span>
+                              <span class="detail-value">
+                                <span class="badge ${paymentDetails?.paymentStatus === 'paid' ? 'success' : 'pending'}">
+                                  ${paymentDetails?.paymentStatus === 'paid' ? '✓ PAYÉ' : '⏳ EN ATTENTE'}
+                                </span>
+                              </span>
+                            </div>
+                            <div class="detail-row">
+                              <span class="detail-label">Montant payé</span>
+                              <span class="detail-value important">${formatAmount(paymentDetails?.amountTotal || 0, paymentDetails?.currency)}</span>
+                            </div>
+                            <div class="detail-row">
+                              <span class="detail-label">Devise</span>
+                              <span class="detail-value">${(paymentDetails?.currency || 'eur').toUpperCase()}</span>
+                            </div>
+                            <div class="detail-row">
+                              <span class="detail-label">Date du paiement</span>
+                              <span class="detail-value">${formatDate(paymentDetails?.verifiedAt || new Date().toISOString())}</span>
+                            </div>
+                            <div class="detail-row">
+                              <span class="detail-label">Méthode de paiement</span>
+                              <span class="detail-value">${paymentDetails?.paymentMethod === 'card' ? '💳 Carte bancaire' : 'Autre'}</span>
+                            </div>
                           </div>
-                          <div class="detail-row">
-                            <span>Référence:</span>
-                            <span>${sessionId?.substring(0, 15)}...</span>
+
+                          <div class="separator"></div>
+
+                          <!-- Infos Client -->
+                          <div class="section">
+                            <div class="section-title">👤 Informations client</div>
+                            <div class="detail-row">
+                              <span class="detail-label">Nom</span>
+                              <span class="detail-value">${paymentDetails?.customerName || 'Client'}</span>
+                            </div>
+                            <div class="detail-row">
+                              <span class="detail-label">Email</span>
+                              <span class="detail-value">${paymentDetails?.customerEmail || 'client@example.com'}</span>
+                            </div>
                           </div>
-                          ${reservationDetails.title ? `
-                          <div class="detail-row">
-                            <span>Réservation:</span>
-                            <span>${reservationDetails.title}</span>
+
+                          <div class="separator"></div>
+
+                          <!-- Infos Réservation -->
+                          ${displayedReservation?.title ? `
+                          <div class="section">
+                            <div class="section-title">🏠 Détails de la réservation</div>
+                            ${displayedReservation.title ? `
+                            <div class="detail-row">
+                              <span class="detail-label">Logement</span>
+                              <span class="detail-value">${displayedReservation.title}</span>
+                            </div>
+                            ` : ''}
+                            ${displayedReservation.apartmentNumber ? `
+                            <div class="detail-row">
+                              <span class="detail-label">Numéro d'appartement</span>
+                              <span class="detail-value">${displayedReservation.apartmentNumber}</span>
+                            </div>
+                            ` : ''}
+                            ${displayedReservation.checkIn ? `
+                            <div class="detail-row">
+                              <span class="detail-label">Check-in</span>
+                              <span class="detail-value">${new Date(displayedReservation.checkIn).toLocaleDateString('fr-FR')}</span>
+                            </div>
+                            ` : ''}
+                            ${displayedReservation.checkOut ? `
+                            <div class="detail-row">
+                              <span class="detail-label">Check-out</span>
+                              <span class="detail-value">${new Date(displayedReservation.checkOut).toLocaleDateString('fr-FR')}</span>
+                            </div>
+                            ` : ''}
+                            ${displayedReservation.nights ? `
+                            <div class="detail-row">
+                              <span class="detail-label">Durée du séjour</span>
+                              <span class="detail-value">${displayedReservation.nights} nuit(s)</span>
+                            </div>
+                            ` : ''}
+                            ${displayedReservation.guests ? `
+                            <div class="detail-row">
+                              <span class="detail-label">Nombre de personnes</span>
+                              <span class="detail-value">${displayedReservation.guests}</span>
+                            </div>
+                            ` : ''}
+                            ${displayedReservation.bedrooms ? `
+                            <div class="detail-row">
+                              <span class="detail-label">Chambres</span>
+                              <span class="detail-value">${displayedReservation.bedrooms}</span>
+                            </div>
+                            ` : ''}
                           </div>
+
+                          <div class="separator"></div>
                           ` : ''}
+
+                          <!-- Récapitulatif des coûts -->
+                          <div class="section">
+                            <div class="section-title">💰 Récapitulatif des coûts</div>
+                            ${displayedReservation?.basePrice ? `
+                            <div class="detail-row">
+                              <span class="detail-label">Coût du logement</span>
+                              <span class="detail-value">${displayedReservation.basePrice}€</span>
+                            </div>
+                            ` : ''}
+                            ${displayedReservation?.optionsPrice && displayedReservation.optionsPrice > 0 ? `
+                            <div class="detail-row">
+                              <span class="detail-label">Options supplémentaires</span>
+                              <span class="detail-value">${displayedReservation.optionsPrice}€</span>
+                            </div>
+                            ` : ''}
+                            <div class="total-section">
+                              <div class="total-row">
+                                <span>MONTANT TOTAL PAYÉ</span>
+                                <span class="total-amount">${formatAmount(paymentDetails?.amountTotal || 0, paymentDetails?.currency)}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="separator"></div>
+
+                          <!-- Références Stripe -->
+                          <div class="section">
+                            <div class="section-title">🔐 Références de paiement</div>
+                            <div class="detail-row">
+                              <span class="detail-label">ID Session Stripe</span>
+                              <span class="detail-value" style="font-size: 12px; word-break: break-all;">
+                                <code>${sessionId || 'N/A'}</code>
+                              </span>
+                            </div>
+                            ${paymentDetails?.paymentId ? `
+                            <div class="detail-row">
+                              <span class="detail-label">ID Paiement local</span>
+                              <span class="detail-value" style="font-size: 12px; word-break: break-all;">
+                                <code>${paymentDetails.paymentId}</code>
+                              </span>
+                            </div>
+                            ` : ''}
+                          </div>
+
+                          <!-- Pied de page -->
+                          <div class="footer">
+                            <p>Ce document fait office de reçu officiel pour votre réservation.</p>
+                            <p>Merci de votre confiance ! Pour toute question, contactez : support@example.com</p>
+                            <p style="margin-top: 10px; font-size: 11px;">${formatDate(new Date().toISOString())}</p>
+                          </div>
                         </div>
-                        <div class="detail-row total">
-                          <span>TOTAL</span>
-                          <span>${formatAmount(paymentDetails?.amountTotal || 0, paymentDetails?.currency)}</span>
-                        </div>
-                        <div class="footer">
-                          <p>Merci pour votre réservation !</p>
-                          <p>Ce document fait office de reçu.</p>
-                        </div>
+
+                        <script>
+                          window.addEventListener('load', () => {
+                            window.print();
+                          });
+                        </script>
                       </body>
                       </html>
-                    `);
+                    `;
+                    receiptWindow.document.write(receiptHTML);
                     receiptWindow.document.close();
-                    receiptWindow.print();
                   }
                 }}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-gray-100 font-semibold hover:bg-gray-200 transition-colors flex-1 sm:flex-none"

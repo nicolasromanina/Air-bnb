@@ -234,6 +234,71 @@ export class PaymentController {
     }
   };
 
+  // Nouvel endpoint pour récupérer les infos Stripe complètes
+  getStripeSessionDetails = async (req: Request, res: Response) => {
+    try {
+      const { sessionId } = req.params;
+      
+      logStep('GET_STRIPE_SESSION_DETAILS', { sessionId });
+
+      const session = await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ['payment_intent', 'line_items', 'customer', 'shipping_cost']
+      });
+
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+
+      // Récupérer aussi le paiement depuis notre BD pour avoir le contexte local
+      const payment = await Payment.findOne({ sessionId })
+        .populate('user', 'firstName lastName email')
+        .populate('reservation');
+
+      // Combiner les données Stripe et notre BD
+      res.json({
+        success: true,
+        session: {
+          id: session.id,
+          status: session.payment_status,
+          amount_total: session.amount_total,
+          currency: session.currency,
+          customer_email: session.customer_email,
+          customer_details: session.customer_details,
+          payment_intent: session.payment_intent,
+          payment_method_types: session.payment_method_types,
+          created: session.created,
+          expires_at: session.expires_at,
+          mode: session.mode,
+          metadata: session.metadata,
+          line_items: session.line_items,
+          customer: session.customer,
+        },
+        payment: payment ? {
+          _id: payment._id,
+          status: payment.status,
+          amount: payment.amount,
+          currency: payment.currency,
+          userEmail: payment.userEmail,
+          user: payment.user,
+          reservation: payment.reservation,
+          createdAt: payment.createdAt,
+          updatedAt: payment.updatedAt,
+        } : null
+      });
+
+    } catch (error: any) {
+      logger.error('Get Stripe session details error:', error);
+      
+      const statusCode = error.statusCode || 500;
+      const message = error.message || 'Failed to get Stripe session details';
+      
+      res.status(statusCode).json({ 
+        success: false,
+        error: message
+      });
+    }
+  };
+
   getUserPayments = async (req: AuthRequest, res: Response) => {
     try {
       const user = req.user;
