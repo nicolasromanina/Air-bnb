@@ -1,104 +1,176 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+// hooks/useAuth.ts - Version avec debug
+import { useState, useEffect, useCallback } from 'react';
+import { api } from '@/services/api';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
-interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  isLoading: boolean;
-  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signOut: () => Promise<void>;
+export interface AuthUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  stripeCustomerId?: string;
+  phone?: string;
+  createdAt?: string;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export interface UseAuthReturn {
+  user: AuthUser | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  signIn: (email: string, password: string) => Promise<{ error?: Error }>;
+  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error?: Error }>;
+  signOut: () => Promise<void>;
+  refreshUser: () => Promise<void>;
+}
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+export const useAuth = (): UseAuthReturn => {
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setIsLoading(false);
+  const loadUser = useCallback(async () => {
+    console.log('=== loadUser called ===');
+    try {
+      setIsLoading(true);
+      
+      // Vérifier d'abord si un token existe
+      const token = localStorage.getItem('auth_token');
+      console.log('Token from localStorage:', token ? 'present' : 'missing');
+      
+      if (!token) {
+        console.log('No token found, setting user to null');
+        setUser(null);
+        return;
       }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+      
+      // Vérifier si le token est expiré
+      const tokenData = parseJwt(token);
+      console.log('Token data:', tokenData);
+      
+      if (tokenData && tokenData.exp && tokenData.exp * 1000 < Date.now()) {
+        console.log('Token expired, logging out...');
+        api.clearToken();
+        setUser(null);
+        return;
+      }
+      
+      // Charger l'utilisateur depuis l'API
+      console.log('Calling api.getCurrentUser()...');
+      const response = await api.getCurrentUser();
+      console.log('API Response:', response);
+      
+      if (response.success && response.data?.user) {
+        console.log('Setting user:', response.data.user);
+        setUser(response.data.user);
+      } else {
+        // Si l'API retourne une erreur, nettoyer le token
+        console.log('API error or no user data, clearing token');
+        api.clearToken();
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('Error loading user:', error);
+      api.clearToken();
+      setUser(null);
+    } finally {
+      console.log('loadUser finished, setting isLoading to false');
       setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    }
   }, []);
 
-  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
+  // Fonction utilitaire pour parser le JWT
+  const parseJwt = (token: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: {
-            first_name: firstName,
-            last_name: lastName,
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      // Update profile with names after signup
-      if (!error) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await supabase
-            .from("profiles")
-            .update({ first_name: firstName, last_name: lastName })
-            .eq("user_id", user.id);
-        }
-      }
-
-      return { error: null };
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      console.log('Parsed JWT payload:', JSON.parse(jsonPayload));
+      return JSON.parse(jsonPayload);
     } catch (error) {
-      return { error: error as Error };
+      console.error('Error parsing JWT:', error);
+      return null;
     }
   };
 
+  useEffect(() => {
+    console.log('useAuth useEffect triggered');
+    loadUser();
+  }, [loadUser]);
+
   const signIn = async (email: string, password: string) => {
+    console.log('signIn called with:', { email });
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) throw error;
-      return { error: null };
+      setIsLoading(true);
+      const response = await api.login({ email, password });
+      console.log('Login response:', response);
+      
+      if (response.success && response.data) {
+        setUser(response.data.user);
+        toast.success('Connexion réussie !');
+        return {};
+      } else {
+        throw new Error(response.error || 'Échec de la connexion');
+      }
     } catch (error) {
-      return { error: error as Error };
+      const message = error instanceof Error ? error.message : 'Échec de la connexion';
+      console.error('Login error:', message);
+      toast.error(message);
+      return { error: error instanceof Error ? error : new Error(message) };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
+    try {
+      setIsLoading(true);
+      const response = await api.signup({ email, password, firstName, lastName });
+      
+      if (response.success && response.data) {
+        setUser(response.data.user);
+        toast.success('Inscription réussie !');
+        return {};
+      } else {
+        throw new Error(response.error || 'Échec de l\'inscription');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Échec de l\'inscription';
+      toast.error(message);
+      return { error: error instanceof Error ? error : new Error(message) };
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      setUser(null);
+      api.clearToken();
+      toast.success('Déconnexion réussie');
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
-  return (
-    <AuthContext.Provider value={{ user, session, isLoading, signUp, signIn, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+  const refreshUser = async () => {
+    await loadUser();
+  };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+  return {
+    user,
+    isLoading,
+    isAuthenticated: !!user,
+    signIn,
+    signUp,
+    signOut,
+    refreshUser,
+  };
 };

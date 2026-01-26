@@ -177,10 +177,25 @@ function useToast() {
   }, [state]);
 
   return {
-    ...state,
+    // expose toasts array
+    toasts: state.toasts,
+    // push: friendly API similar to other hook implementation
+    push: (props: Omit<ToasterToast, 'id'>) => {
+      const t = toast({ ...props });
+      return t.id;
+    },
+    // low-level raw toast creator
     toast,
-    dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
+    // dismiss will trigger the close animation
+    dismiss: (toastId?: string) => dispatch({ type: 'DISMISS_TOAST', toastId }),
+    // remove immediately from state
+    remove: (toastId?: string) => dispatch({ type: 'REMOVE_TOAST', toastId }),
   };
 }
 
 export { useToast, toast };
+
+// Re-export the provider implementation from the TSX file so imports
+// targeting `@/hooks/use-toast` (without extension) expose the provider
+// as well. This resolves bundler resolution preferring the `.ts` file.
+export { ToastProvider } from './use-toast.tsx';

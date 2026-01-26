@@ -1,157 +1,106 @@
-import React, { useState } from 'react';
+import React from "react";
+import { AdminHeader } from "@/components/admin/AdminHeader";
+import { 
+  Home, 
+  Briefcase, 
+  Building2, 
+  FileText, 
+  CreditCard, 
+  CheckCircle,
+  Tag,
+  Mail,
+  TrendingUp,
+  Edit3,
+  Image,
+  Type
+} from "lucide-react";
+import { Link } from "react-router-dom";
 
-// --- Types ---
-interface PaymentRecord {
-  id: string;
-  client: string;
-  email: string;
-  apartment: string;
-  amount: number;
-  date: string;
-  method: 'Visa' | 'Mastercard' | 'Paypal';
-  status: 'Complété' | 'En attente' | 'Remboursé';
-}
+const pages = [
+  { label: "Accueil", href: "/admin/home", icon: Home, description: "Gérer le contenu de la page d'accueil" },
+  { label: "Services", href: "/admin/services", icon: Briefcase, description: "Modifier les services proposés" },
+  { label: "Appartements", href: "/admin/apartments", icon: Building2, description: "Liste des appartements" },
+  { label: "Détails Appartement", href: "/admin/apartment-detail", icon: FileText, description: "Page de détail d'un appartement" },
+  { label: "Paiement", href: "/admin/payment", icon: CreditCard, description: "Page de paiement" },
+  { label: "Confirmation", href: "/admin/confirmation", icon: CheckCircle, description: "Confirmation de paiement" },
+  { label: "Prix", href: "/admin/pricing", icon: Tag, description: "Tarifs et forfaits" },
+  { label: "Contact", href: "/admin/contact", icon: Mail, description: "Formulaire de contact" },
+];
 
-// --- Icons (SVG Inline) ---
-const DashboardIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>;
-const PaymentIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>;
-const UsersIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+const stats = [
+  { label: "Pages gérées", value: "8", icon: Edit3, color: "bg-primary/10 text-primary" },
+  { label: "Images", value: "24+", icon: Image, color: "bg-success/10 text-success" },
+  { label: "Textes éditables", value: "50+", icon: Type, color: "bg-blue-500/10 text-blue-500" },
+];
 
 const AdminDashboard: React.FC = () => {
-  const [payments] = useState<PaymentRecord[]>([
-    { id: '1', client: 'Jon Doe Lorem', email: 'jon.doe@example.com', apartment: '205', amount: 800, date: '12 Jan 2024', method: 'Mastercard', status: 'Complété' },
-    { id: '2', client: 'Jane Smith', email: 'jane.s@example.com', apartment: '102', amount: 1200, date: '14 Jan 2024', method: 'Visa', status: 'En attente' },
-    { id: '3', client: 'Alex Martin', email: 'alex.m@example.com', apartment: '404', amount: 950, date: '15 Jan 2024', method: 'Paypal', status: 'Complété' },
-    { id: '4', client: 'Marc Durand', email: 'm.durand@test.com', apartment: '301', amount: 600, date: '16 Jan 2024', method: 'Visa', status: 'Remboursé' },
-  ]);
-
   return (
-    <div className="flex min-h-screen bg-[#F9FAFB] font-['Montserrat'] text-[#111827]">
+    <div className="min-h-screen">
+      <AdminHeader title="Dashboard" subtitle="Gérez le contenu de votre site SweetHome" />
       
-      {/* --- SIDEBAR --- */}
-      <aside className="w-[280px] bg-white border-r border-gray-100 flex flex-col fixed h-full">
-        <div className="p-8">
-          <img src="/Logo.png" alt="Logo" className="h-[35px] w-auto" />
-        </div>
-        
-        <nav className="flex-1 px-6 space-y-2 mt-4">
-          <SidebarItem icon={<DashboardIcon />} label="Vue d'ensemble" active />
-          <SidebarItem icon={<PaymentIcon />} label="Paiements" />
-          <SidebarItem icon={<UsersIcon />} label="Clients" />
-        </nav>
-
-        <div className="p-6 border-t border-gray-50">
-          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-[12px]">
-            <div className="w-10 h-10 bg-[#FF2D75] rounded-full flex items-center justify-center text-white font-bold">A</div>
-            <div>
-              <p className="text-[13px] font-bold">Admin User</p>
-              <p className="text-[11px] text-gray-400">Super Admin</p>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* --- MAIN CONTENT --- */}
-      <main className="flex-1 ml-[280px] p-10">
-        
-        {/* Top Header */}
-        <header className="flex justify-between items-center mb-10">
-          <div>
-            <h1 className="text-[28px] font-bold">Gestion des paiements</h1>
-            <p className="text-gray-400 text-[14px]">Gérez et suivez toutes les transactions de la plateforme.</p>
-          </div>
-          <button className="bg-[#FF2D75] text-white px-6 py-3 rounded-[10px] font-bold text-[14px] hover:bg-[#e62969] transition-all shadow-lg shadow-[#FF2D75]/20">
-            Exporter Rapport (CSV)
-          </button>
-        </header>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <StatCard title="Revenus Totaux" value="24,500€" change="+12.5%" />
-          <StatCard title="Paiements en attente" value="1,200€" change="-3%" color="text-orange-500" />
-          <StatCard title="Transactions" value="142" change="+18" />
+      <div className="p-6 space-y-8">
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {stats.map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <div
+                key={stat.label}
+                className="bg-card border border-border rounded-xl p-5 flex items-center gap-4"
+              >
+                <div className={`w-12 h-12 rounded-xl ${stat.color} flex items-center justify-center`}>
+                  <Icon className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        {/* Table Container */}
-        <div className="bg-white rounded-[20px] shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-50 flex justify-between items-center">
-            <h3 className="font-bold text-[18px]">Historique des transactions</h3>
-            <input 
-              type="text" 
-              placeholder="Rechercher un client ou un appartement..." 
-              className="bg-[#F3F4F6] px-4 py-2 rounded-[8px] text-[13px] w-[300px] outline-none border border-transparent focus:border-[#FF2D75]/20"
-            />
-          </div>
-
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50/50">
-                <th className="p-5 text-[12px] font-bold uppercase text-gray-400 tracking-wider">Client</th>
-                <th className="p-5 text-[12px] font-bold uppercase text-gray-400 tracking-wider">Appartement</th>
-                <th className="p-5 text-[12px] font-bold uppercase text-gray-400 tracking-wider">Montant</th>
-                <th className="p-5 text-[12px] font-bold uppercase text-gray-400 tracking-wider">Méthode</th>
-                <th className="p-5 text-[12px] font-bold uppercase text-gray-400 tracking-wider">Statut</th>
-                <th className="p-5 text-[12px] font-bold uppercase text-gray-400 tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {payments.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-50/30 transition-colors">
-                  <td className="p-5">
-                    <p className="font-bold text-[14px]">{p.client}</p>
-                    <p className="text-[12px] text-gray-400">{p.email}</p>
-                  </td>
-                  <td className="p-5 text-[14px] font-medium text-gray-600">N° {p.apartment}</td>
-                  <td className="p-5 text-[15px] font-bold">{p.amount}€</td>
-                  <td className="p-5">
-                    <span className="text-[12px] bg-gray-100 px-3 py-1 rounded-full font-medium">{p.method}</span>
-                  </td>
-                  <td className="p-5">
-                    <StatusBadge status={p.status} />
-                  </td>
-                  <td className="p-5 text-right">
-                    <button className="text-[#FF2D75] text-[13px] font-bold hover:underline">Voir détails</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          
-          <div className="p-5 border-t border-gray-50 flex justify-center">
-            <button className="text-[13px] font-bold text-gray-400 hover:text-black transition-colors">Charger plus de résultats</button>
+        {/* Pages Grid */}
+        <div>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Pages à gérer</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {pages.map((page) => {
+              const Icon = page.icon;
+              return (
+                <Link
+                  key={page.href}
+                  to={page.href}
+                  className="group bg-card border border-border rounded-xl p-5 hover:border-primary hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors">
+                      Éditer →
+                    </span>
+                  </div>
+                  <h3 className="font-semibold text-foreground mb-1">{page.label}</h3>
+                  <p className="text-sm text-muted-foreground">{page.description}</p>
+                </Link>
+              );
+            })}
           </div>
         </div>
-      </main>
+
+        {/* Quick Tips */}
+        <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-transparent border border-primary/20 rounded-xl p-6">
+          <h3 className="font-semibold text-foreground mb-2">💡 Conseils rapides</h3>
+          <ul className="text-sm text-muted-foreground space-y-2">
+            <li>• Cliquez sur une page pour modifier son contenu</li>
+            <li>• Toutes les modifications sont sauvegardées localement</li>
+            <li>• Utilisez le bouton "Prévisualiser" pour voir vos changements en temps réel</li>
+            <li>• Le bouton "Réinitialiser" restaure le contenu par défaut</li>
+          </ul>
+        </div>
+      </div>
     </div>
   );
-};
-
-// --- Sub-components ---
-
-const SidebarItem = ({ icon, label, active = false }: { icon: React.ReactNode, label: string, active?: boolean }) => (
-  <div className={`flex items-center gap-4 px-4 py-3 rounded-[12px] cursor-pointer transition-all ${active ? 'bg-[#FF2D75] text-white shadow-md shadow-[#FF2D75]/20' : 'text-gray-500 hover:bg-gray-50 hover:text-black'}`}>
-    {icon}
-    <span className="text-[14px] font-bold">{label}</span>
-  </div>
-);
-
-const StatCard = ({ title, value, change, color = "text-green-500" }: { title: string, value: string, change: string, color?: string }) => (
-  <div className="bg-white p-6 rounded-[20px] border border-gray-100 shadow-sm">
-    <p className="text-gray-400 text-[12px] font-bold uppercase tracking-wider mb-2">{title}</p>
-    <div className="flex items-end gap-3">
-      <h2 className="text-[28px] font-black leading-none">{value}</h2>
-      <span className={`text-[12px] font-bold ${color}`}>{change}</span>
-    </div>
-  </div>
-);
-
-const StatusBadge = ({ status }: { status: PaymentRecord['status'] }) => {
-  const styles = {
-    'Complété': 'bg-green-100 text-green-600',
-    'En attente': 'bg-orange-100 text-orange-600',
-    'Remboursé': 'bg-red-100 text-red-600',
-  };
-  return <span className={`text-[11px] font-bold px-3 py-1 rounded-full ${styles[status]}`}>{status}</span>;
 };
 
 export default AdminDashboard;

@@ -17,9 +17,12 @@ function OrderConfirmation() {
             
             {/* Texte de confirmation */}
             <div className="flex-1 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
-              <div className="flex items-center gap-3 mb-6">
-                <CheckCircle2 className="text-[#FF2E63] w-8 h-8" />
-                <span className="text-xs font-black uppercase tracking-[0.2em] text-black">Paiement réussi</span>
+              <div className="mb-6">
+                <img src="/Logo.png" alt="Logo" className="w-28 h-auto mb-4" />
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="text-[#FF2E63] w-8 h-8" />
+                  <span className="text-xs font-black uppercase tracking-[0.2em] text-black">Paiement réussi</span>
+                </div>
               </div>
               <h1 className="text-[42px] md:text-[56px] font-black leading-[0.9] text-black mb-8 uppercase tracking-tighter">
                 COMMANDE <br /> CONFIRMÉE

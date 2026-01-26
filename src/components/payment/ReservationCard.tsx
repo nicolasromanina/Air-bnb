@@ -11,17 +11,29 @@ interface ReservationCardProps {
   price: string;
   nights?: number;
   pricePerNight?: number;
+  basePrice?: number | string;
+  optionsPrice?: number | string;
+  selectedOptions?: Array<{
+    optionId: string;
+    name: string;
+    price: number;
+    quantity: number;
+    pricingType: string;
+  }>;
 }
 
 const ReservationCard = ({
   image,
   title,
-  includes,
+  includes = [],
   apartmentNumber,
   date,
   price,
   nights,
-  pricePerNight
+  pricePerNight,
+  basePrice,
+  optionsPrice,
+  selectedOptions = []
 }: ReservationCardProps) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -68,6 +80,43 @@ const ReservationCard = ({
               ))}
             </div>
           </div>
+
+          {/* Affichage des options sélectionnées */}
+          {selectedOptions && selectedOptions.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-border">
+              <p className="text-xs font-semibold text-green-700 mb-1">Options :</p>
+              <div className="space-y-1">
+                {selectedOptions.map((option, idx) => (
+                  <div key={idx} className="flex justify-between items-center">
+                    <span className="text-xs text-green-700">{option.name}</span>
+                    <span className="text-xs font-medium text-green-700">
+                      {(option.price * option.quantity).toFixed(2)}€
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Répartition des coûts */}
+          {basePrice && optionsPrice && (
+            <div className="mt-2 pt-2 border-t border-border">
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-muted-foreground">Logement :</span>
+                <span className="font-medium text-foreground">{basePrice}€</span>
+              </div>
+              {Number(optionsPrice) > 0 && (
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-muted-foreground">Options :</span>
+                  <span className="font-medium text-green-600">{optionsPrice}€</span>
+                </div>
+              )}
+              <div className="flex justify-between text-xs border-t border-border pt-1 mt-1">
+                <span className="font-semibold text-foreground">Total :</span>
+                <span className="font-bold text-primary">{price}</span>
+              </div>
+            </div>
+          )}
           
           <div className="flex items-center justify-between mt-3">
             <span className="text-xs text-muted-foreground">{apartmentNumber}</span>

@@ -1,3 +1,4 @@
+// components/AuthModal.tsx (version mise à jour)
 import { useState } from "react";
 import { X, Mail, Lock, User, AlertCircle, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -48,9 +49,7 @@ const AuthModal = ({ isOpen, onClose, defaultTab = "login" }: AuthModalProps) =>
   const handleLogin = async (data: LoginFormData) => {
     const { error } = await signIn(data.email, data.password);
     if (error) {
-      toast.error(error.message === "Invalid login credentials" 
-        ? "Email ou mot de passe incorrect" 
-        : error.message);
+      toast.error(error.message);
     } else {
       toast.success("Connexion réussie !");
       onClose();
@@ -62,7 +61,7 @@ const AuthModal = ({ isOpen, onClose, defaultTab = "login" }: AuthModalProps) =>
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Inscription réussie ! Vous êtes maintenant connecté.");
+      toast.success("Inscription réussie !");
       onClose();
     }
   };

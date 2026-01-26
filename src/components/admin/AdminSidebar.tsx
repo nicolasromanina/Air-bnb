@@ -13,24 +13,36 @@ import {
   LayoutDashboard,
   ChevronLeft,
   ChevronRight,
+  Menu,
+  PanelBottom,
+  Users,
+  CalendarCheck,
+  Wallet,
 } from "lucide-react";
 
 interface NavItem {
   label: string;
   href: string;
   icon: React.ElementType;
+  section?: string;
 }
 
 const navItems: NavItem[] = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  // Gestion section
+  { label: "Clients", href: "/admin/users", icon: Users, section: "Gestion" },
+  { label: "Réservations", href: "/admin/bookings", icon: CalendarCheck },
+  // CMS section
+  { label: "Navigation", href: "/admin/navbar", icon: Menu, section: "CMS" },
   { label: "Accueil", href: "/admin/home", icon: Home },
   { label: "Services", href: "/admin/services", icon: Briefcase },
   { label: "Appartements", href: "/admin/apartments", icon: Building2 },
-  { label: "Détails Appartement", href: "/admin/apartment-detail", icon: FileText },
-  { label: "Paiement", href: "/admin/payment", icon: CreditCard },
+  { label: "Détails Appart.", href: "/admin/apartment-detail", icon: FileText },
+  { label: "Paiement Page", href: "/admin/payment", icon: CreditCard },
   { label: "Confirmation", href: "/admin/confirmation", icon: CheckCircle },
   { label: "Prix", href: "/admin/pricing", icon: Tag },
   { label: "Contact", href: "/admin/contact", icon: Mail },
+  { label: "Pied de page", href: "/admin/footer", icon: PanelBottom },
 ];
 
 interface AdminSidebarProps {
@@ -50,8 +62,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, onToggle 
       {/* Header */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
         {!collapsed && (
-          
-              <img src="./Logo.png" alt="SWEETHOME" className="h-10 w-auto" />
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-sm">S</span>
+            </div>
+            <span className="font-bold text-sm tracking-wide">SWEETHOME</span>
+          </div>
         )}
         {collapsed && (
           <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center mx-auto">
@@ -74,32 +90,36 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, onToggle 
 
       {/* Navigation */}
       <nav className="p-3 space-y-1">
-        {!collapsed && (
-          <p className="text-[10px] uppercase tracking-widest text-sidebar-foreground/50 px-3 mb-3">
-            Pages
-          </p>
-        )}
-        {navItems.map((item) => {
+        {navItems.map((item, index) => {
           const isActive =
             location.pathname === item.href ||
             (item.href !== "/admin" && location.pathname.startsWith(item.href));
           const Icon = item.icon;
+          const showSection = item.section && !collapsed;
+          const prevItem = navItems[index - 1];
+          const showSectionHeader = showSection && (!prevItem || prevItem.section !== item.section);
 
           return (
-            <NavLink
-              key={item.href}
-              to={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
-                isActive
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              } ${collapsed ? "justify-center" : ""}`}
-            >
-              <Icon className="w-5 h-5 flex-shrink-0" />
-              {!collapsed && (
-                <span className="text-sm font-medium">{item.label}</span>
+            <React.Fragment key={item.href}>
+              {showSectionHeader && (
+                <p className="text-[10px] uppercase tracking-widest text-sidebar-foreground/50 px-3 mb-2 mt-4 first:mt-0">
+                  {item.section}
+                </p>
               )}
-            </NavLink>
+              <NavLink
+                to={item.href}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                  isActive
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                } ${collapsed ? "justify-center" : ""}`}
+              >
+                <Icon className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && (
+                  <span className="text-sm font-medium">{item.label}</span>
+                )}
+              </NavLink>
+            </React.Fragment>
           );
         })}
       </nav>
