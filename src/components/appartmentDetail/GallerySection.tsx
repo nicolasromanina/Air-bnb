@@ -12,7 +12,19 @@ import gallery7 from "@/assets/gallery-7.jpg";
 import gallery8 from "@/assets/gallery-8.jpg";
 import gallery9 from "@/assets/gallery-9.jpg";
 
-const galleryImages = [
+interface GalleryImage {
+  src: string;
+  alt: string;
+}
+
+interface GallerySectionProps {
+  title?: string;
+  subtitle?: string;
+  images?: GalleryImage[];
+  buttonText?: string;
+}
+
+const defaultGalleryImages = [
   { src: gallery1, alt: "Modern bedroom with artwork" },
   { src: gallery2, alt: "Open plan living space" },
   { src: gallery3, alt: "Grey toned bedroom" },
@@ -24,10 +36,23 @@ const galleryImages = [
   { src: gallery9, alt: "Luxury grey bedroom" },
 ];
 
-const GallerySection = () => {
+const GallerySection: React.FC<GallerySectionProps> = ({ 
+  title = "Nunc vulputate libero et\nvelit interdum, ac aliquet\nodio mattis.",
+  subtitle,
+  images,
+  buttonText = "Nous contacter"
+}) => {
   const fadeIn = useFadeInOnScroll();
   const stagger = useStaggerChildren(0.05);
   const childVariants = useChildFadeIn();
+
+  // Use provided images or filter out empty ones from default
+  const galleryImages = images && images.length > 0 
+    ? images.filter(img => img.src && img.alt)
+    : defaultGalleryImages;
+
+  // Parse title if it contains line breaks
+  const titleLines = title.split('\n').map(line => line.trim()).filter(line => line);
 
   return (
     <section className="section-muted py-16 lg:py-24">
@@ -37,11 +62,18 @@ const GallerySection = () => {
           {...fadeIn}
           className="heading-section text-center mb-10 lg:mb-14 italic"
         >
-          Nunc vulputate libero et
-          <br />
-          velit interdum, ac aliquet
-          <br />
-          odio mattis.
+          {titleLines.length > 1 ? (
+            <>
+              {titleLines.map((line, idx) => (
+                <span key={idx}>
+                  {line}
+                  {idx < titleLines.length - 1 && <br />}
+                </span>
+              ))}
+            </>
+          ) : (
+            title
+          )}
         </motion.h2>
 
         {/* Gallery grid with stagger */}
@@ -60,6 +92,9 @@ const GallerySection = () => {
                 alt={image.alt}
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                 loading="lazy"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22100%22 height=%22100%22/%3E%3C/svg%3E';
+                }}
               />
             </motion.div>
           ))}
@@ -67,7 +102,7 @@ const GallerySection = () => {
 
         {/* Contact button */}
         <motion.div {...fadeIn} className="flex justify-center">
-          <Button variant="contact">Nous contacter</Button>
+          <Button variant="default">{buttonText}</Button>
         </motion.div>
       </div>
     </section>

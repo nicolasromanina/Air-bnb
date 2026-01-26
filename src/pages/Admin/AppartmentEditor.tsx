@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Save, Upload, Image as ImageIcon, Trash2, Plus, 
   Eye, EyeOff, ChevronUp, ChevronDown, Settings, 
@@ -15,9 +16,10 @@ import {
   Unlock, Eye as EyeIcon, EyeOff as EyeOffIcon,
   Filter, Search, List, Grid3x3,
   BarChart3, PieChart, TrendingUp,
-  Play
+  Play, Check
 } from 'lucide-react';
 import { apartmentApi, ApartmentPageData } from '@/services/apartmentApi';
+import { roomDetailApi, RoomDetail } from '@/services/roomDetailApi';
 
 interface ApartmentPageDataState extends Omit<ApartmentPageData, 'meta'> {
   meta?: ApartmentPageData['meta'];
@@ -25,7 +27,7 @@ interface ApartmentPageDataState extends Omit<ApartmentPageData, 'meta'> {
 
 const AppartmentEditor: React.FC = () => {
   const [activeSection, setActiveSection] = useState<
-    'hero' | 'rooms' | 'features' | 'showcase' | 'perfectshow' | 
+    'hero' | 'rooms' | 'roomDetail' | 'features' | 'showcase' | 'perfectshow' | 
     'marquee' | 'video' | 'final' | 'stats' | 'newRoom'
   >('hero');
   
@@ -35,6 +37,12 @@ const AppartmentEditor: React.FC = () => {
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<{ connected: boolean; message?: string }>({ connected: true });
   const [isEditingRoom, setIsEditingRoom] = useState<number | null>(null);
+  const [selectedRoomForDetail, setSelectedRoomForDetail] = useState<number | null>(null);
+  const [roomDetail, setRoomDetail] = useState<RoomDetail | null>(null);
+  const [isLoadingRoomDetail, setIsLoadingRoomDetail] = useState(false);
+  const [roomDetailErrors, setRoomDetailErrors] = useState<string[]>([]);
+  const [heroInfoTab, setHeroInfoTab] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [newRoom, setNewRoom] = useState<any>({
     title: '',
     description: '',
@@ -245,9 +253,14 @@ const AppartmentEditor: React.FC = () => {
       const savedData = await apartmentApi.updateApartmentPage(pageData);
       setPageData(savedData);
       
-      // Notifier les autres onglets
+      // Notifier les autres onglets et composants
       try {
-        localStorage.setItem('apartment_updated', String(Date.now()));
+        const timestamp = String(Date.now());
+        localStorage.setItem('apartment_updated', timestamp);
+        // Dispatch un événement personnalisé pour forcer le rafraîchissement
+        window.dispatchEvent(new CustomEvent('apartmentDataUpdated', { 
+          detail: { timestamp, data: savedData } 
+        }));
       } catch (err) {
         // ignore
       }
@@ -375,6 +388,205 @@ const AppartmentEditor: React.FC = () => {
         rooms: newRooms
       }
     }));
+  };
+
+  // Charger les détails d'une chambre
+  const loadRoomDetail = async (roomId: number) => {
+    console.log('[ADMIN] 🔄 Starting to load room details for roomId:', roomId);
+    setIsLoadingRoomDetail(true);
+    try {
+      console.log('[ADMIN] Calling roomDetailApi.getRoomDetail...');
+      const response = await roomDetailApi.getRoomDetail(roomId);
+      console.log('[ADMIN] API Response received:', { success: response.success, hasData: !!response.data });
+      
+      if (response.success) {
+        console.log('[ADMIN] ✅ Room details loaded successfully:', {
+          roomId: response.data?.roomId,
+          title: response.data?.title,
+          price: response.data?.price,
+          guests: response.data?.guests,
+          bedrooms: response.data?.bedrooms,
+          imagesCount: response.data?.images?.length || 0,
+          includes: response.data?.includes,
+          amenities: response.data?.amenities,
+          features: response.data?.features
+        });
+        setRoomDetail(response.data);
+        setSelectedRoomForDetail(roomId);
+        setActiveSection('roomDetail');
+      } else {
+        console.warn('[ADMIN] ⚠️ API returned success: false');
+      }
+    } catch (error) {
+      console.error('[ADMIN] ❌ Error loading room details:', error);
+      setSaveMessage({ type: 'error', text: '❌ Erreur lors du chargement des détails' });
+    } finally {
+      setIsLoadingRoomDetail(false);
+      console.log('[ADMIN] 🏁 Room detail loading completed');
+    }
+  };
+
+  // Mettre à jour les détails d'une chambre
+  const saveRoomDetail = async () => {
+    console.clear();
+    console.log('%c🔴 🔴 🔴 SAVE BUTTON CLICKED! 🔴 🔴 🔴', 'color: #ff0000; font-size: 18px; font-weight: bold;');
+    console.log('[ADMIN] 💾 Starting to save room detail for roomId:', selectedRoomForDetail);
+    console.log('[ADMIN] 📋 Current roomDetail state BEFORE save:', roomDetail);
+    
+    if (!roomDetail || !selectedRoomForDetail) {
+      console.warn('[ADMIN] ⚠️ Missing roomDetail or selectedRoomForDetail');
+      return;
+    }
+    
+    // Valider les données
+    console.log('[ADMIN] 🔍 Validating room detail data...');
+    const validation = roomDetailApi.validateRoomDetail(roomDetail);
+    console.log('[ADMIN] Validation result:', { valid: validation.valid, errorCount: validation.errors.length });
+    
+    if (!validation.valid) {
+      console.error('[ADMIN] ❌ Validation errors:', validation.errors);
+      setRoomDetailErrors(validation.errors);
+      setSaveMessage({ type: 'error', text: '❌ Erreur de validation des données' });
+      return;
+    }
+    console.log('[ADMIN] ✅ Validation passed');
+    
+    setRoomDetailErrors([]);
+    setIsSaving(true);
+    try {
+      // Prepare data without MongoDB _id field
+      const { _id, ...cleanData } = roomDetail as any;
+      console.log('[ADMIN] 📤 Preparing to send update request with data:', {
+        roomId: selectedRoomForDetail,
+        title: cleanData.title,
+        price: cleanData.price,
+        guests: cleanData.guests,
+        bedrooms: cleanData.bedrooms,
+        includes: cleanData.includes,
+        amenities: cleanData.amenities,
+        featuresCount: cleanData.features?.length || 0,
+        imagesCount: cleanData.images?.length || 0
+      });
+      const response = await roomDetailApi.updateRoomDetail(selectedRoomForDetail, cleanData);
+      console.log('[ADMIN] 📥 Update response received:', { success: response.success, hasData: !!response.data });
+      
+      if (response.success) {
+        // Mettre à jour le state avec la réponse du serveur
+        const updatedData = response.data || roomDetail; // Fallback si le serveur ne retourne pas les données
+        setRoomDetail(updatedData);
+        console.log('[ADMIN] ✅ Room detail saved successfully:', {
+          roomId: selectedRoomForDetail,
+          title: updatedData.title,
+          price: updatedData.price,
+          guests: updatedData.guests,
+          bedrooms: updatedData.bedrooms,
+          includes: updatedData.includes,
+          amenities: updatedData.amenities
+        });
+        
+        setSaveMessage({ type: 'success', text: '✅ Détails de la chambre sauvegardés!' });
+        
+        // Notifier les autres composants de la mise à jour
+        try {
+          console.log('[ADMIN] 📢 Broadcasting events to other components...');
+          window.dispatchEvent(new CustomEvent('roomDetailUpdated', { 
+            detail: { 
+              roomId: selectedRoomForDetail, 
+              data: updatedData,
+              timestamp: Date.now() 
+            } 
+          }));
+          console.log('[ADMIN] ✅ Event roomDetailUpdated dispatched');
+          
+          // Aussi notifier la mise à jour générale pour le client
+          window.dispatchEvent(new CustomEvent('apartmentDataUpdated', { 
+            detail: { 
+              roomId: selectedRoomForDetail,
+              data: updatedData,
+              timestamp: Date.now() 
+            } 
+          }));
+          console.log('[ADMIN] ✅ Event apartmentDataUpdated dispatched');
+        } catch (err) {
+          console.error('[ADMIN] ❌ Error dispatching events:', err);
+        }
+        
+        // 🔍 VERIFICATION: Log the roomDetail state AFTER save
+        console.log('[ADMIN] ✅ DATABASE SAVED - Verifying persisted data:');
+        console.log('[ADMIN] roomDetail.roomId:', updatedData.roomId);
+        console.log('[ADMIN] roomDetail.title:', updatedData.title);
+        console.log('[ADMIN] roomDetail.price:', updatedData.price);
+        console.log('[ADMIN] roomDetail.guests:', updatedData.guests);
+        console.log('[ADMIN] roomDetail.bedrooms:', updatedData.bedrooms);
+        console.log('[ADMIN] roomDetail.includes:', updatedData.includes);
+        console.log('[ADMIN] roomDetail.amenities:', updatedData.amenities);
+        console.log('[ADMIN] 📦 FULL SAVED OBJECT:', updatedData);
+        
+        setTimeout(() => setSaveMessage(null), 2000);
+      } else {
+        console.error('[ADMIN] ❌ Update response success: false');
+        console.error('[ADMIN] ❌ Full response:', response);
+        setSaveMessage({ type: 'error', text: '❌ Erreur: réponse serveur invalide' });
+      }
+    } catch (error) {
+      console.error('[ADMIN] ❌ Error saving room detail:', error);
+      console.error('[ADMIN] ❌ Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : '',
+        type: typeof error
+      });
+      setSaveMessage({ type: 'error', text: '❌ Erreur lors de la sauvegarde' });
+    } finally {
+      setIsSaving(false);
+      console.log('[ADMIN] 🏁 Room detail save operation completed');
+      console.log('[ADMIN] 🔄 Current roomDetail in state AFTER save completed:', roomDetail);
+    }
+  };
+
+  // Sauvegarder et synchroniser les brouillons locaux
+  const syncRoomDetailChanges = async () => {
+    if (!roomDetail || !selectedRoomForDetail) return;
+    
+    setIsSaving(true);
+    try {
+      await roomDetailApi.saveLocalDraft(selectedRoomForDetail, roomDetail);
+      const response = await roomDetailApi.syncLocalChanges(selectedRoomForDetail);
+      if (response.success) {
+        setRoomDetail(response.data);
+        setSaveMessage({ type: 'success', text: '✅ Changements synchronisés avec succès!' });
+        setTimeout(() => setSaveMessage(null), 2000);
+      }
+    } catch (error) {
+      console.error('Erreur sync détails chambre:', error);
+      setSaveMessage({ type: 'error', text: '❌ Erreur lors de la synchronisation' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Mettre à jour un champ des détails de la chambre
+  const updateRoomDetailField = (field: string, value: any) => {
+    console.log('[ADMIN] 📝 Updating field:', field, '| new value:', value);
+    if (!roomDetail) {
+      console.warn('[ADMIN] ⚠️ roomDetail is null, cannot update field');
+      return;
+    }
+    
+    setRoomDetail(prev => {
+      if (!prev) return null;
+      const path = field.split('.');
+      const newData = JSON.parse(JSON.stringify(prev));
+      let current: any = newData;
+      
+      for (let i = 0; i < path.length - 1; i++) {
+        if (!current[path[i]]) current[path[i]] = {};
+        current = current[path[i]];
+      }
+      
+      current[path[path.length - 1]] = value;
+      
+      return newData;
+    });
   };
 
   const addCheckItem = () => {
@@ -734,6 +946,13 @@ const AppartmentEditor: React.FC = () => {
                               <Edit3 size={18} />
                             </button>
                             <button
+                              onClick={() => loadRoomDetail(room.id)}
+                              title="Éditer les détails de cette chambre"
+                              className="p-1 text-purple-500 hover:bg-purple-50 rounded border"
+                            >
+                              <Settings size={18} />
+                            </button>
+                            <button
                               onClick={() => deleteRoom(index)}
                               className="p-1 text-red-500 hover:bg-red-50 rounded border"
                             >
@@ -837,6 +1056,487 @@ const AppartmentEditor: React.FC = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeSection === 'roomDetail' && roomDetail && (
+            <div className="bg-white rounded-xl shadow-lg p-6 border">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                  <Bed size={24} />
+                  Détails Chambre #{selectedRoomForDetail}
+                </h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setHeroInfoTab(!heroInfoTab)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                      heroInfoTab ? 'bg-blue-500 text-white' : 'bg-gray-100'
+                    }`}
+                  >
+                    {heroInfoTab ? '👀 Info Hero' : 'Détails'}
+                  </button>
+                </div>
+              </div>
+
+              {isLoadingRoomDetail ? (
+                <div className="flex justify-center py-12">
+                  <Loader className="animate-spin h-8 w-8 text-blue-500" />
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Messages d'erreur de validation */}
+                  {roomDetailErrors.length > 0 && (
+                    <div className="bg-red-50 border border-red-300 rounded-lg p-4">
+                      <h4 className="font-semibold text-red-700 mb-2 flex items-center gap-2">
+                        <AlertCircle size={18} />
+                        Erreurs de validation
+                      </h4>
+                      <ul className="list-disc list-inside space-y-1 text-red-600 text-sm">
+                        {roomDetailErrors.map((error, idx) => (
+                          <li key={idx}>{error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* TAB: Informations Hero */}
+                  {heroInfoTab && (
+                    <div className="space-y-6 bg-blue-50 p-6 rounded-lg border-2 border-blue-200">
+                      <h4 className="text-lg font-bold flex items-center gap-2 text-blue-900">
+                        <Layout size={20} />
+                        Section Hero - Informations Principales
+                      </h4>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2 font-semibold">Titre (Hero)</label>
+                        <input
+                          type="text"
+                          value={roomDetail.title}
+                          onChange={(e) => updateRoomDetailField('title', e.target.value)}
+                          className="w-full border-2 border-blue-300 rounded-lg p-3 focus:outline-none focus:border-blue-500"
+                          placeholder="Ex: Aptent taciti sociosqu ad litora"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Ce titre s'affiche en grand sur la page d'accueil</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2 font-semibold">Sous-titre (Hero)</label>
+                        <input
+                          type="text"
+                          value={roomDetail.subtitle}
+                          onChange={(e) => updateRoomDetailField('subtitle', e.target.value)}
+                          className="w-full border-2 border-blue-300 rounded-lg p-3 focus:outline-none focus:border-blue-500"
+                          placeholder="Ex: Nunc vulputate libero et velit interdum..."
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Description courte pour la section héro</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2 font-semibold">Type de logement</label>
+                        <input
+                          type="text"
+                          value={roomDetail.accommodationType || ''}
+                          onChange={(e) => updateRoomDetailField('accommodationType', e.target.value)}
+                          className="w-full border-2 border-blue-300 rounded-lg p-3 focus:outline-none focus:border-blue-500"
+                          placeholder="Ex: Logement sans fumeur"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2 font-semibold">Description complète</label>
+                        <textarea
+                          value={roomDetail.description}
+                          onChange={(e) => updateRoomDetailField('description', e.target.value)}
+                          className="w-full border-2 border-blue-300 rounded-lg p-3 h-32 focus:outline-none focus:border-blue-500"
+                          placeholder="Description détaillée du logement..."
+                        />
+                      </div>
+
+                      {/* Section Images du Hero */}
+                      <div className="border-t-2 border-blue-200 pt-4">
+                        <label className="block text-sm font-medium mb-3 font-semibold">Images du Hero</label>
+                        <div className="space-y-3">
+                          {/* Preview des images */}
+                          {roomDetail.images.length > 0 && (
+                            <div className="bg-white p-3 rounded-lg border">
+                              <p className="text-xs font-semibold text-gray-600 mb-2">Aperçu : Image #{currentImageIndex + 1}/{roomDetail.images.length}</p>
+                              <div className="flex gap-2">
+                                {roomDetail.images[currentImageIndex] && (
+                                  <div className="flex-1">
+                                    {roomDetail.images[currentImageIndex].startsWith('/uploads/') ? (
+                                      <img 
+                                        src={`http://localhost:3000${roomDetail.images[currentImageIndex]}`} 
+                                        alt={`Hero ${currentImageIndex + 1}`}
+                                        className="w-full h-48 object-cover rounded border"
+                                        onError={(e) => {
+                                          (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2214%22 fill=%22%23999%22%3EErreur image%3C/text%3E%3C/svg%3E';
+                                        }}
+                                      />
+                                    ) : (
+                                      <div className="w-full h-48 bg-gray-200 rounded border flex items-center justify-center text-xs text-gray-500">
+                                        URL externe
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex gap-2 mt-2">
+                                <button
+                                  onClick={() => setCurrentImageIndex(Math.max(0, currentImageIndex - 1))}
+                                  disabled={currentImageIndex === 0}
+                                  className="px-3 py-1 bg-gray-200 rounded text-sm disabled:opacity-50"
+                                >
+                                  ← Précédente
+                                </button>
+                                <button
+                                  onClick={() => setCurrentImageIndex(Math.min(roomDetail.images.length - 1, currentImageIndex + 1))}
+                                  disabled={currentImageIndex === roomDetail.images.length - 1}
+                                  className="px-3 py-1 bg-gray-200 rounded text-sm disabled:opacity-50"
+                                >
+                                  Suivante →
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Upload Section */}
+                          <div className="border-2 border-dashed border-blue-300 rounded-lg p-4 bg-blue-50">
+                            <label className="block text-sm font-medium mb-2 text-blue-900">Télécharger des images</label>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              onChange={async (e) => {
+                                const files = e.target.files;
+                                if (!files || files.length === 0) return;
+                                
+                                try {
+                                  setIsSaving(true);
+                                  let newImages = [...roomDetail.images];
+                                  let successCount = 0;
+                                  let errorCount = 0;
+                                  
+                                  // Upload each file
+                                  for (let i = 0; i < files.length; i++) {
+                                    try {
+                                      const response = await roomDetailApi.uploadImage(files[i]);
+                                      if (response.success) {
+                                        newImages.push(response.url);
+                                        successCount++;
+                                      }
+                                    } catch (err) {
+                                      console.error(`Erreur upload fichier ${i}:`, err);
+                                      errorCount++;
+                                    }
+                                  }
+                                  
+                                  // Update images list
+                                  updateRoomDetailField('images', newImages);
+                                  
+                                  // Show result message
+                                  if (successCount > 0) {
+                                    setSaveMessage({ 
+                                      type: 'success', 
+                                      text: `✅ ${successCount} image(s) téléchargée(s) avec succès!` 
+                                    });
+                                  }
+                                  if (errorCount > 0) {
+                                    setSaveMessage({ 
+                                      type: 'error', 
+                                      text: `❌ ${errorCount} image(s) échouée(s)` 
+                                    });
+                                  }
+                                  
+                                  // Reset input
+                                  e.target.value = '';
+                                } catch (error) {
+                                  console.error('Erreur upload:', error);
+                                  setSaveMessage({ type: 'error', text: '❌ Erreur lors du téléchargement' });
+                                } finally {
+                                  setIsSaving(false);
+                                }
+                              }}
+                              className="w-full border rounded-lg p-2 text-sm cursor-pointer"
+                              disabled={isSaving}
+                            />
+                            <p className="text-xs text-gray-500 mt-2">PNG, JPG, JPEG (Max 5MB par image) - Vous pouvez sélectionner plusieurs fichiers</p>
+                          </div>
+
+                          {/* Images List */}
+                          {roomDetail.images.length > 0 && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                              {roomDetail.images.map((img, idx) => (
+                                <div 
+                                  key={idx} 
+                                  className={`border rounded-lg p-2 cursor-pointer transition-all ${
+                                    currentImageIndex === idx ? 'bg-blue-200 border-blue-500' : 'bg-gray-50'
+                                  }`}
+                                  onClick={() => setCurrentImageIndex(idx)}
+                                >
+                                  <div className="flex gap-2 mb-2">
+                                    <span className="text-xs font-semibold text-gray-600">#{idx + 1}</span>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const newImages = roomDetail.images.filter((_, i) => i !== idx);
+                                        updateRoomDetailField('images', newImages);
+                                        if (currentImageIndex >= newImages.length) {
+                                          setCurrentImageIndex(Math.max(0, newImages.length - 1));
+                                        }
+                                      }}
+                                      className="ml-auto p-1 text-red-500 hover:bg-red-100 rounded"
+                                      title="Supprimer l'image"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
+                                  {img && img.startsWith('/uploads/') && (
+                                    <img 
+                                      src={`http://localhost:3000${img}`} 
+                                      alt={`Room ${idx + 1}`}
+                                      className="w-full h-20 object-cover rounded border text-xs"
+                                      onError={(e) => {
+                                        (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22100%22 height=%22100%22/%3E%3C/svg%3E';
+                                      }}
+                                    />
+                                  )}
+                                  {img && !img.startsWith('/uploads/') && (
+                                    <div className="w-full h-20 bg-gray-200 rounded border flex items-center justify-center text-xs text-gray-500">
+                                      URL externe
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          <button
+                            onClick={() => updateRoomDetailField('images', [...roomDetail.images, ''])}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 text-sm w-full justify-center"
+                          >
+                            <Plus size={16} />
+                            Ajouter une image par URL
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB: Détails */}
+                  {!heroInfoTab && (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-yellow-50 p-4 rounded-lg border-2 border-yellow-200">
+                        <div>
+                          <label className="block text-sm font-medium mb-2 font-semibold">💰 Prix par nuit (€)</label>
+                          <input
+                            type="number"
+                            value={roomDetail.price}
+                            onChange={(e) => updateRoomDetailField('price', parseFloat(e.target.value) || 0)}
+                            className="w-full border-2 border-yellow-300 rounded-lg p-3 focus:outline-none focus:border-yellow-500 text-lg"
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2 font-semibold">👥 Nombre d'invités</label>
+                          <input
+                            type="text"
+                            value={roomDetail.guests}
+                            onChange={(e) => updateRoomDetailField('guests', e.target.value)}
+                            className="w-full border-2 border-yellow-300 rounded-lg p-3 focus:outline-none focus:border-yellow-500"
+                            placeholder="ex: jusqu'à 4 invités"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2 font-semibold">🛏️ Nombre de chambres</label>
+                          <input
+                            type="text"
+                            value={roomDetail.bedrooms}
+                            onChange={(e) => updateRoomDetailField('bedrooms', e.target.value)}
+                            className="w-full border-2 border-yellow-300 rounded-lg p-3 focus:outline-none focus:border-yellow-500"
+                            placeholder="ex: 2 chambres"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Équipements inclus */}
+                      <div className="border rounded-lg p-4 bg-green-50">
+                        <h4 className="text-lg font-semibold mb-4 flex items-center gap-2 text-green-900">
+                          <CheckCircle size={20} />
+                          Équipements inclus
+                        </h4>
+                        <div className="space-y-2">
+                          {(roomDetail.includes || []).map((item, idx) => (
+                            <div key={idx} className="flex gap-2">
+                              <input
+                                type="text"
+                                value={item}
+                                onChange={(e) => {
+                                  const newIncludes = [...(roomDetail.includes || [])];
+                                  newIncludes[idx] = e.target.value;
+                                  updateRoomDetailField('includes', newIncludes);
+                                }}
+                                className="flex-1 border rounded-lg p-2 text-sm"
+                                placeholder="ex: Thé, café"
+                              />
+                              <button
+                                onClick={() => {
+                                  const newIncludes = (roomDetail.includes || []).filter((_, i) => i !== idx);
+                                  updateRoomDetailField('includes', newIncludes);
+                                }}
+                                className="p-2 text-red-500 hover:bg-red-100 rounded border"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                          ))}
+                          <button
+                            onClick={() => updateRoomDetailField('includes', [...(roomDetail.includes || []), ''])}
+                            className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 text-sm w-full justify-center"
+                          >
+                            <Plus size={16} />
+                            Ajouter un équipement
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Équipements sécurité/confort */}
+                      <div className="border rounded-lg p-4 bg-purple-50">
+                        <h4 className="text-lg font-semibold mb-4 flex items-center gap-2 text-purple-900">
+                          <Shield size={20} />
+                          Équipements et services
+                        </h4>
+                        <div className="space-y-2">
+                          {(roomDetail.amenities || []).map((item, idx) => (
+                            <div key={idx} className="flex gap-2">
+                              <input
+                                type="text"
+                                value={item}
+                                onChange={(e) => {
+                                  const newAmenities = [...(roomDetail.amenities || [])];
+                                  newAmenities[idx] = e.target.value;
+                                  updateRoomDetailField('amenities', newAmenities);
+                                }}
+                                className="flex-1 border rounded-lg p-2 text-sm"
+                                placeholder="ex: Parking sécurisé, WiFi, Climatisation"
+                              />
+                              <button
+                                onClick={() => {
+                                  const newAmenities = (roomDetail.amenities || []).filter((_, i) => i !== idx);
+                                  updateRoomDetailField('amenities', newAmenities);
+                                }}
+                                className="p-2 text-red-500 hover:bg-red-100 rounded border"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                          ))}
+                          <button
+                            onClick={() => updateRoomDetailField('amenities', [...(roomDetail.amenities || []), ''])}
+                            className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 text-sm w-full justify-center"
+                          >
+                            <Plus size={16} />
+                            Ajouter un équipement
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Caractéristiques */}
+                      <div className="border rounded-lg p-4 bg-orange-50">
+                        <h4 className="text-lg font-semibold mb-4 flex items-center gap-2 text-orange-900">
+                          <Star size={20} />
+                          Caractéristiques principales
+                        </h4>
+                        <div className="space-y-2">
+                          {roomDetail.features.map((feature, idx) => (
+                            <div key={idx} className="flex gap-2">
+                              <input
+                                type="text"
+                                value={feature}
+                                onChange={(e) => {
+                                  const newFeatures = [...roomDetail.features];
+                                  newFeatures[idx] = e.target.value;
+                                  updateRoomDetailField('features', newFeatures);
+                                }}
+                                className="flex-1 border rounded-lg p-2 text-sm"
+                                placeholder="Caractéristique"
+                              />
+                              <button
+                                onClick={() => {
+                                  const newFeatures = roomDetail.features.filter((_, i) => i !== idx);
+                                  updateRoomDetailField('features', newFeatures);
+                                }}
+                                className="p-2 text-red-500 hover:bg-red-100 rounded border"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                          ))}
+                          <button
+                            onClick={() => updateRoomDetailField('features', [...roomDetail.features, ''])}
+                            className="flex items-center gap-2 px-4 py-2 bg-orange-100 text-orange-600 rounded-lg hover:bg-orange-200 text-sm w-full justify-center"
+                          >
+                            <Plus size={16} />
+                            Ajouter une caractéristique
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Buttons */}
+                  <div className="flex gap-3 pt-6 border-t">
+                    <button
+                      onClick={saveRoomDetail}
+                      disabled={isSaving}
+                      className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 font-semibold"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader className="animate-spin w-4 h-4" />
+                          Sauvegarde...
+                        </>
+                      ) : (
+                        <>
+                          <Save size={20} />
+                          Sauvegarder
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={syncRoomDetailChanges}
+                      disabled={isSaving}
+                      className="flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 font-semibold"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader className="animate-spin w-4 h-4" />
+                          Sync...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw size={20} />
+                          Synchroniser
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveSection('rooms');
+                        setSelectedRoomForDetail(null);
+                        setRoomDetail(null);
+                        setHeroInfoTab(false);
+                        setCurrentImageIndex(0);
+                      }}
+                      className="px-6 py-3 border rounded-lg hover:bg-gray-50 font-semibold"
+                    >
+                      Retour
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

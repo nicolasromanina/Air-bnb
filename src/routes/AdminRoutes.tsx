@@ -12,6 +12,7 @@ import ServicesEditor from '@/pages/Admin/ServicesEditor';
 import ContactEditor from '@/pages/Admin/ContactEditor';
 import Appartment from '@/pages/Appartment';
 import AppartmentEditor from '@/pages/Admin/AppartmentEditor';
+import AppartmentDetailEditor from '@/pages/Admin/AppartmentDetailEditor';
 
 const AdminRoutes = () => {
   return (
@@ -25,6 +26,8 @@ const AdminRoutes = () => {
         <Route path="payments" element={<PaymentsPage />} />
         <Route path="home" element={<HomeEditor/>} />
         <Route path="services" element={<ServicesEditor />} />
+        <Route path="apartments/:id" element={<AppartmentDetailEditor />} />
+        <Route path="apartment-details" element={<AppartmentDetailEditor />} />
         <Route path="apartments" element={<AppartmentEditor />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="reservations/:id" element={<AdminReservationDetail />} />

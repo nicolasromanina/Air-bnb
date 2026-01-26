@@ -33,14 +33,11 @@ const navItems: NavItem[] = [
   { label: "Clients", href: "/admin/users", icon: Users, section: "Gestion" },
   { label: "Réservations", href: "/admin/bookings", icon: CalendarCheck },
   // CMS section
-  { label: "Navigation", href: "/admin/navbar", icon: Menu, section: "CMS" },
-  { label: "Accueil", href: "/admin/home", icon: Home },
+ 
+  { label: "Accueil", href: "/admin/home", icon: Home, section: "CMS" },
   { label: "Services", href: "/admin/services", icon: Briefcase },
   { label: "Appartements", href: "/admin/apartments", icon: Building2 },
-  { label: "Détails Appart.", href: "/admin/apartment-detail", icon: FileText },
-  { label: "Paiement Page", href: "/admin/payment", icon: CreditCard },
-  { label: "Confirmation", href: "/admin/confirmation", icon: CheckCircle },
-  { label: "Prix", href: "/admin/pricing", icon: Tag },
+  { label: "Détails Appart", href: "/admin/apartment-details", icon: FileText },
   { label: "Contact", href: "/admin/contact", icon: Mail },
   { label: "Pied de page", href: "/admin/footer", icon: PanelBottom },
 ];

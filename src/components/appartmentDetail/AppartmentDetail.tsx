@@ -1,8 +1,10 @@
-import { Users, Bed, Play, ChevronDown, Minus, Plus, ArrowLeft, Check } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Users, Bed, Play, ChevronDown, Minus, Plus, ArrowLeft, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SelectedOption } from '../reservation/AdditionalOptionsSelector';
 import { api } from '@/services/api';
+import { roomDetailApi, RoomDetail } from '@/services/roomDetailApi';
+import { formatGuests, formatBedrooms } from '@/utils/numberExtractor';
 import { toast } from 'sonner';
 
 const PINK_ACCENT = "#FF385C";
@@ -10,6 +12,7 @@ const PINK_ACCENT = "#FF385C";
 function AppartmentDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    console.log('[DETAIL] 🏠 AppartmentDetail component rendering for room ID:', id);
     
     // --- ÉTATS ET LOGIQUE ---
     const [checkInDate, setCheckInDate] = useState<string>('');
@@ -21,6 +24,119 @@ function AppartmentDetail() {
     const [allOptions, setAllOptions] = useState<Record<string, any[]>>({});
     const [loadingOptions, setLoadingOptions] = useState(true);
     const [expandedOption, setExpandedOption] = useState<string | null>(null);
+    const [roomDetail, setRoomDetail] = useState<RoomDetail | null>(null);
+    const [loadingRoomDetail, setLoadingRoomDetail] = useState(true);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    // Fetch room details from API
+    const fetchRoomDetail = useCallback(async () => {
+        try {
+            if (!id || isNaN(parseInt(id))) {
+                console.error('[DETAIL] ❌ Invalid room ID:', id);
+                setLoadingRoomDetail(false);
+                return;
+            }
+            
+            console.log('[DETAIL] 🔄 Fetching room detail for room ID:', id);
+            const response = await roomDetailApi.getRoomDetail(parseInt(id));
+            console.log('[DETAIL] 📥 API Response received:', { success: response.success, hasData: !!response.data });
+            
+            if (response.success && response.data) {
+                console.log('[DETAIL] ✅ Room detail fetched successfully:', {
+                    roomId: response.data.roomId,
+                    title: response.data.title,
+                    subtitle: response.data.subtitle,
+                    price: response.data.price,
+                    guests: response.data.guests,
+                    bedrooms: response.data.bedrooms,
+                    imagesCount: response.data.images?.length || 0,
+                    includes: response.data.includes,
+                    amenities: response.data.amenities,
+                    features: response.data.features
+                });
+                setRoomDetail(response.data);
+            } else {
+                console.warn('[DETAIL] ⚠️ API returned no data, using fallback');
+                // Fallback to hardcoded data if API fails
+                setRoomDetail({
+                    id: parseInt(id),
+                    roomId: parseInt(id),
+                    title: "Aptent taciti sociosqu ad litora",
+                    subtitle: "Nunc vulputate libero et velit interdum, ac aliquet odio mattis.",
+                    description: "Sed dignissim, metus nec fringilla accumsan, risus sem sollicitudin lacus, ut interdum tellus elit sed risus.",
+                    price: 300,
+                    guests: "jusqu'à 4 invitées",
+                    bedrooms: "2 chambres à coucher",
+                    images: [
+                        "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200",
+                        "https://picsum.photos/400/400?random=11",
+                        "https://picsum.photos/400/400?random=12"
+                    ],
+                    features: ["Feature 1", "Feature 2", "Feature 3"]
+                } as any);
+            }
+        } catch (error) {
+                console.error('[FETCH] Error fetching room detail:', error);
+                // Fallback to hardcoded data
+                setRoomDetail({
+                    id: parseInt(id || '0'),
+                    roomId: parseInt(id || '0'),
+                    title: "Aptent taciti sociosqu ad litora",
+                    subtitle: "Nunc vulputate libero et velit interdum, ac aliquet odio mattis.",
+                    description: "Sed dignissim, metus nec fringilla accumsan, risus sem sollicitudin lacus, ut interdum tellus elit sed risus.",
+                    price: 300,
+                    guests: "jusqu'à 4 invitées",
+                    bedrooms: "2 chambres à coucher",
+                    images: [
+                        "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200"
+                    ],
+                    features: ["Feature 1", "Feature 2"]
+                } as any);
+            } finally {
+                setLoadingRoomDetail(false);
+            }
+    }, [id]);
+
+    // Listener for room detail updates
+    useEffect(() => {
+        console.log('[DETAIL] 🚀 Component mounted, fetching initial room detail for room:', id);
+        fetchRoomDetail();
+
+        // Écouter les mises à jour de données
+        const handleDataUpdate = (event: Event) => {
+            const customEvent = event as CustomEvent;
+            const updatedRoomId = customEvent.detail?.roomId;
+            const updatedData = customEvent.detail?.data;
+            const timestamp = customEvent.detail?.timestamp;
+            
+            console.log('[DETAIL] 📢 Data update event received:', {
+                eventType: (event as any).type,
+                updatedRoomId,
+                currentRoomId: parseInt(id || '0'),
+                hasData: !!updatedData,
+                timestamp: new Date(timestamp).toLocaleTimeString()
+            });
+            
+            // Si c'est la chambre actuelle ou une mise à jour générale
+            if (!updatedRoomId || updatedRoomId === parseInt(id || '0')) {
+                console.log('[DETAIL] 🔄 Refetching room detail for room:', id, '| Updated at:', new Date(timestamp).toLocaleTimeString());
+                fetchRoomDetail();
+            } else {
+                console.log('[DETAIL] ℹ️ Update is for a different room:', updatedRoomId, '| Current room:', id);
+            }
+        };
+
+        window.addEventListener('roomDetailUpdated', handleDataUpdate);
+        window.addEventListener('apartmentDataUpdated', handleDataUpdate);
+
+        console.log('[DETAIL] ✅ Event listeners attached for room:', id);
+
+        return () => {
+            window.removeEventListener('roomDetailUpdated', handleDataUpdate);
+            window.removeEventListener('apartmentDataUpdated', handleDataUpdate);
+            console.log('[DETAIL] 🗑️ Event listeners removed for room:', id);
+        };
+    }, [id, fetchRoomDetail]);
 
     // Initialisation dates
     useEffect(() => {
@@ -56,7 +172,7 @@ function AppartmentDetail() {
         fetchOptions();
     }, []);
 
-    const apartment = { 
+    const apartment = roomDetail || { 
         title: "Aptent taciti sociosqu ad litora",
         subtitle: "Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra.",
         price: 300,
@@ -114,7 +230,9 @@ function AppartmentDetail() {
             apartmentId: aptIdNum,
             apartmentNumber: apartment.title || `Appartement ${aptIdNum}`,
             title: apartment.title || 'Réservation',
-            image: 'https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200',
+            image: roomDetail?.images?.[0]?.startsWith('/uploads/') 
+                ? `http://localhost:3000${roomDetail.images[0]}`
+                : roomDetail?.images?.[0] || 'https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200',
             includes: [],
             checkIn: checkInDate,
             checkOut: checkOutDate,
@@ -145,39 +263,113 @@ function AppartmentDetail() {
                 
                 {/* --- SECTION VIDEO & INFOS --- */}
                 <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+                    {/* Galerie d'images */}
                     <div className="space-y-4">
-                        <div className="relative rounded-sm overflow-hidden aspect-[4/3] bg-gray-100">
-                            <img src="https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200" className="w-full h-full object-cover" alt="Main" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-xl cursor-pointer hover:scale-110 transition-transform">
-                                    <Play size={24} fill="black" className="ml-1" />
+                        {/* Image principale */}
+                        <div className="relative rounded-sm overflow-hidden aspect-[4/3] bg-gray-100 group">
+                            {loadingRoomDetail ? (
+                                <div className="flex items-center justify-center h-full bg-gray-200">
+                                    <div className="text-gray-400">Chargement...</div>
                                 </div>
+                            ) : (
+                                <>
+                                    <img 
+                                        src={
+                                            roomDetail?.images?.[currentImageIndex] 
+                                                ? (roomDetail.images[currentImageIndex].startsWith('/uploads/') 
+                                                    ? `http://localhost:3000${roomDetail.images[currentImageIndex]}`
+                                                    : roomDetail.images[currentImageIndex])
+                                                : "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200"
+                                        } 
+                                        className="w-full h-full object-cover" 
+                                        alt={`Room detail ${currentImageIndex + 1}`}
+                                        onError={(e) => {
+                                            (e.currentTarget as HTMLImageElement).src = "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200";
+                                        }}
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
+                                        <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-xl cursor-pointer hover:scale-110 transition-transform">
+                                            <Play size={24} fill="black" className="ml-1" />
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Navigation arrows */}
+                                    {roomDetail?.images && roomDetail.images.length > 1 && (
+                                        <>
+                                            <button
+                                                onClick={() => setCurrentImageIndex((prev) => (prev - 1 + roomDetail.images.length) % roomDetail.images.length)}
+                                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 transition-all"
+                                            >
+                                                <ChevronLeft size={20} />
+                                            </button>
+                                            <button
+                                                onClick={() => setCurrentImageIndex((prev) => (prev + 1) % roomDetail.images.length)}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 transition-all"
+                                            >
+                                                <ChevronRight size={20} />
+                                            </button>
+                                            
+                                            {/* Image counter */}
+                                            <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium">
+                                                {currentImageIndex + 1} / {roomDetail.images.length}
+                                            </div>
+                                        </>
+                                    )}
+                                </>
+                            )}
+                        </div>
+
+                        {/* Miniatures */}
+                        {roomDetail?.images && roomDetail.images.length > 1 && (
+                            <div className="grid grid-cols-3 gap-4">
+                                {roomDetail.images.map((img, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => setCurrentImageIndex(i)}
+                                        className={`aspect-square rounded-sm overflow-hidden border-2 transition-all ${
+                                            currentImageIndex === i ? 'border-black' : 'border-gray-100 hover:border-gray-300'
+                                        }`}
+                                    >
+                                        <img 
+                                            src={
+                                                img.startsWith('/uploads/') 
+                                                    ? `http://localhost:3000${img}`
+                                                    : img
+                                            }
+                                            className="w-full h-full object-cover" 
+                                            alt={`Thumbnail ${i + 1}`}
+                                            onError={(e) => {
+                                                (e.currentTarget as HTMLImageElement).src = "https://via.placeholder.com/150?text=Image+Error";
+                                            }}
+                                        />
+                                    </button>
+                                ))}
                             </div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4">
-                            {[1, 2, 3].map(i => (
-                                <div key={i} className="aspect-square rounded-sm overflow-hidden border border-gray-100">
-                                    <img src={`https://picsum.photos/400/400?random=${i+10}`} className="w-full h-full object-cover" alt="" />
-                                </div>
-                            ))}
-                        </div>
+                        )}
                     </div>
 
                     <div className="space-y-6">
                         <h1 className="text-[42px] font-black leading-tight tracking-tight">{apartment.title}</h1>
                         <p className="text-gray-600 text-[15px] leading-relaxed">{apartment.subtitle}</p>
                         <div className="flex gap-3">
-                            <span className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-[12px] font-bold text-gray-700 bg-gray-50 uppercase tracking-tight"><Users size={14} /> {apartment.guests}</span>
-                            <span className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-[12px] font-bold text-gray-700 bg-gray-50 uppercase tracking-tight"><Bed size={14} /> {apartment.bedrooms}</span>
+                            <span className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-[12px] font-bold text-gray-700 bg-gray-50 uppercase tracking-tight"><Users size={14} /> {formatGuests(apartment.guests)}</span>
+                            <span className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-[12px] font-bold text-gray-700 bg-gray-50 uppercase tracking-tight"><Bed size={14} /> {formatBedrooms(apartment.bedrooms)}</span>
                         </div>
-                        <div className="bg-[#F3F4F6] py-6 px-8 rounded-sm text-center text-sm font-medium text-gray-600">Class aptent taciti per inceptos himenaeos.</div>
+                        <div className="bg-[#F3F4F6] py-6 px-8 rounded-sm text-center text-sm font-medium text-gray-600">{roomDetail?.subtitle || 'Class aptent taciti per inceptos himenaeos.'}</div>
                         <div className="pt-4 border-t border-gray-100">
                             <h3 className="text-[17px] font-bold mb-4 uppercase tracking-tighter">Information générale</h3>
-                            <InfoRow label="Prix standard" value={`${apartment.price}€`} isBold />
-                            <InfoRow label="Nombre de personne" value={guests} />
-                            <InfoRow label="Type de logement" value="Logement sans fumeur" />
-                            <InfoRow label="Offert" value="Thé, café, petit déjeuné" isPink />
-                            <InfoRow label="Sécurité" value="Parking sécurisé" />
+                            <InfoRow label="Prix standard" value={`${apartment.price}€ / nuit`} isBold />
+                            <InfoRow label="Nombre de personnes" value={formatGuests(apartment.guests)} />
+                            <InfoRow label="Nombre de chambres" value={formatBedrooms(apartment.bedrooms)} />
+                            {roomDetail?.accommodationType && (
+                                <InfoRow label="Type de logement" value={roomDetail.accommodationType} />
+                            )}
+                            {roomDetail?.includes && roomDetail.includes.length > 0 && (
+                                <InfoRow label="Inclus" value={roomDetail.includes.join(', ')} isPink />
+                            )}
+                            {roomDetail?.amenities && roomDetail.amenities.length > 0 && (
+                                <InfoRow label="Équipements et services" value={roomDetail.amenities.join(', ')} />
+                            )}
                         </div>
 
                         {/* Date picker for reservation */}
@@ -193,6 +385,21 @@ function AppartmentDetail() {
                         </div>
 
                         <button onClick={handleReservation} className="w-full mt-4 bg-black text-white py-5 rounded-md font-bold text-[16px] uppercase tracking-widest hover:bg-zinc-800 transition-all">Reserver maintenant</button>
+
+                        {/* Caractéristiques de la chambre */}
+                        {roomDetail?.features && roomDetail.features.length > 0 && (
+                            <div className="mt-6 pt-6 border-t border-gray-100">
+                                <h3 className="text-[17px] font-bold mb-4 uppercase tracking-tighter">Caractéristiques</h3>
+                                <div className="space-y-2">
+                                    {roomDetail.features.map((feature, idx) => (
+                                        <div key={idx} className="flex items-center gap-2">
+                                            <Check size={18} className="text-green-500" />
+                                            <span className="text-[14px] text-gray-700">{feature}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </section>
 
@@ -201,13 +408,97 @@ function AppartmentDetail() {
                     <div className="space-y-8">
                         <div>
                             <h2 className="text-[32px] font-bold mb-1">Détails de l’appartement</h2>
-                            <p className="text-gray-500 text-sm">Class aptent taciti per inceptos himenaeos.</p>
+                            <p className="text-gray-500 text-sm">{roomDetail?.accommodationType || 'Détails complets du logement'}</p>
                         </div>
-                        <div className="bg-white border border-gray-200 py-5 px-6 rounded-md text-center text-[15px] font-medium text-gray-800 italic">Appartement lorem ipsum dolor sit amet</div>
                         <div>
                             <h3 className="text-[20px] font-bold mb-4">Description</h3>
-                            <div className="bg-[#F8F9FA] p-10 rounded-[32px] text-gray-700 leading-relaxed text-[15px]">{apartment.description}</div>
+                            <div className="bg-[#F8F9FA] p-10 rounded-[32px] text-gray-700 leading-relaxed text-[15px]">
+                                {apartment.description}
+                            </div>
                         </div>
+
+                        {/* Informations de capacité */}
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 p-6 rounded-lg border border-blue-200">
+                            <h3 className="text-[17px] font-bold mb-4 uppercase tracking-tighter flex items-center gap-2 text-blue-900">
+                                <span>👥</span> Capacité
+                            </h3>
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center py-2">
+                                    <span className="text-blue-900 font-medium">Nombre d'invités:</span>
+                                    <span className="font-bold text-lg text-blue-700">{formatGuests(roomDetail?.guests)}</span>
+                                </div>
+                                <div className="flex justify-between items-center py-2">
+                                    <span className="text-blue-900 font-medium">Nombre de chambres:</span>
+                                    <span className="font-bold text-lg text-blue-700">{formatBedrooms(roomDetail?.bedrooms)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Tarification */}
+                        {roomDetail?.price && (
+                            <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 p-6 rounded-lg border border-amber-300">
+                                <h3 className="text-[17px] font-bold mb-4 uppercase tracking-tighter flex items-center gap-2 text-amber-900">
+                                    <span>💰</span> Tarification
+                                </h3>
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-sm text-amber-900">À partir de</span>
+                                    <span className="text-5xl font-bold text-amber-700">{roomDetail.price}</span>
+                                    <span className="text-xl text-amber-900">€</span>
+                                    <span className="text-sm text-amber-900">par nuit</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Inclusions */}
+                        {roomDetail?.includes && roomDetail.includes.length > 0 && (
+                            <div className="space-y-3">
+                                <h3 className="text-[17px] font-bold uppercase tracking-tighter flex items-center gap-2 text-green-900">
+                                    <span>✓</span> Inclus dans le tarif
+                                </h3>
+                                <div className="space-y-2">
+                                    {roomDetail.includes.map((item, idx) => (
+                                        <div key={idx} className="flex items-center gap-3 p-2 hover:bg-green-50 rounded transition-colors">
+                                            <Check size={18} className="text-green-600 flex-shrink-0" />
+                                            <span className="text-[14px] text-green-900">{item}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Équipements */}
+                        {roomDetail?.amenities && roomDetail.amenities.length > 0 && (
+                            <div className="space-y-3">
+                                <h3 className="text-[17px] font-bold uppercase tracking-tighter flex items-center gap-2 text-purple-900">
+                                    <span>🛠️</span> Équipements & Services
+                                </h3>
+                                <div className="space-y-2">
+                                    {roomDetail.amenities.map((item, idx) => (
+                                        <div key={idx} className="flex items-center gap-3 p-2 hover:bg-purple-50 rounded transition-colors">
+                                            <Check size={18} className="text-purple-600 flex-shrink-0" />
+                                            <span className="text-[14px] text-purple-900">{item}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Caractéristiques principales */}
+                        {roomDetail?.features && roomDetail.features.length > 0 && (
+                            <div className="space-y-3">
+                                <h3 className="text-[17px] font-bold uppercase tracking-tighter flex items-center gap-2 text-orange-900">
+                                    <span>⭐</span> Caractéristiques principales
+                                </h3>
+                                <div className="space-y-2">
+                                    {roomDetail.features.map((feature, idx) => (
+                                        <div key={idx} className="flex items-center gap-3 p-2 hover:bg-orange-50 rounded transition-colors">
+                                            <Check size={18} className="text-orange-600 flex-shrink-0" />
+                                            <span className="text-[14px] text-orange-900">{feature}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Bloc Incluses et sur demande (API) */}

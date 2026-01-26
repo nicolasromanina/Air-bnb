@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { formatGuests, formatBedrooms, extractNumber } from "@/utils/numberExtractor";
 import heroRoom from "@/assets/hero-room.jpg";
 import room1 from "@/assets/room-1.jpg";
 import room2 from "@/assets/room-2.jpg";
@@ -275,11 +276,11 @@ const RoomCard = memo(({
         <div className="flex flex-wrap gap-2 mb-5">
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-border rounded-full text-sm font-montserrat">
             <Users className="w-4 h-4" />
-            {guests}
+            {formatGuests(guests)}
           </span>
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-border rounded-full text-sm font-montserrat">
             <Bed className="w-4 h-4" />
-            {bedrooms}
+            {formatBedrooms(bedrooms)}
           </span>
         </div>
         

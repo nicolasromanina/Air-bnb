@@ -12,6 +12,8 @@ import adminRoutes from './routes/admin.routes';
 import home from './routes/home.routes';
 import serviceRoutes from './routes/service.routes';
 import apartmentRoutes from './routes/apartment.routes';
+import apartmentDetailRoutes from './routes/apartmentDetail.routes';
+import roomDetailRoutes from './routes/roomDetail.routes';
 import contactRoutes from './routes/contact.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { logger } from './utils/logger';
@@ -85,6 +87,8 @@ export const createApp = () => {
   app.use('/api/home', home);
   app.use('/api/services', serviceRoutes);
   app.use('/api/apartment', apartmentRoutes);
+  app.use('/api/apartment-details', apartmentDetailRoutes);
+  app.use('/api/room-details', roomDetailRoutes);
   app.use('/api/contact', contactRoutes);
   // Serve uploaded files from backend/public/uploads (one level above src)
   // Serve uploaded files and allow cross-origin embedding from the frontend
