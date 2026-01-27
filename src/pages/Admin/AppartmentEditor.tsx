@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { 
   Save, Upload, Image as ImageIcon, Trash2, Plus, 
   Eye, EyeOff, ChevronUp, ChevronDown, Settings, 
