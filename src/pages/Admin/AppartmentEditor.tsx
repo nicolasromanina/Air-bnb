@@ -415,9 +415,9 @@ const AppartmentEditor: React.FC = () => {
     try {
       console.log('[ADMIN] Calling roomDetailApi.getRoomDetail...');
       const response = await roomDetailApi.getRoomDetail(roomId);
-      console.log('[ADMIN] API Response received:', { success: response.success, hasData: !!response.data });
+      console.log('[ADMIN] API Response received:', { success: response.success, hasData: !!response.data, response });
       
-      if (response.success) {
+      if (response.success && response.data) {
         console.log('[ADMIN] ✅ Room details loaded successfully:', {
           roomId: response.data?.roomId,
           title: response.data?.title,
@@ -433,7 +433,8 @@ const AppartmentEditor: React.FC = () => {
         setSelectedRoomForDetail(roomId);
         setActiveSection('roomDetail');
       } else {
-        console.warn('[ADMIN] ⚠️ API returned success: false');
+        console.warn('[ADMIN] ⚠️ API returned invalid response:', { success: response.success, hasData: !!response.data });
+        setSaveMessage({ type: 'error', text: '❌ Impossible de charger les détails' });
       }
     } catch (error) {
       console.error('[ADMIN] ❌ Error loading room details:', error);

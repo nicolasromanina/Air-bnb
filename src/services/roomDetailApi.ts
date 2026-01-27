@@ -1,7 +1,6 @@
-// services/roomDetailApi.ts
 import { api } from './api';
 
-const BACKEND_URL = 'https://airbnb-backend.onrender.com/api';
+const BACKEND_URL = 'https://airbnb-backend-l640.onrender.com/api';
 
 export interface RoomDetail {
   _id?: string;
@@ -162,11 +161,15 @@ export const roomDetailApi = {
         return result;
       } catch (e) {
         // Fallback vers apartment-details
-        console.log('[roomDetailApi] ⚠️ /room-details failed, fallback to /apartment-details');
-        console.log('[roomDetailApi] Error from /room-details:', e instanceof Error ? e.message : String(e));
+        console.log('[roomDetailApi] ⚠️ /room-details failed, attempting fallback');
+        console.error('[roomDetailApi] Error details:', {
+          message: e instanceof Error ? e.message : String(e),
+          type: typeof e,
+          errorObj: e
+        });
         
         // Vérifier si c'est une erreur CORS
-        if (e instanceof Error && e.message.includes('Failed to fetch') || e.message.includes('CORS')) {
+        if (e instanceof Error && (e.message.includes('Failed to fetch') || e.message.includes('CORS'))) {
           console.log('[roomDetailApi] ⚠️ CORS error detected, trying with CORS proxy');
           // Essayer avec un proxy CORS temporaire
           const proxyResult = await fetch(`https://cors-anywhere.herokuapp.com/${BACKEND_URL}/room-details/${roomId}`, {
@@ -178,10 +181,12 @@ export const roomDetailApi = {
           
           if (proxyResult.ok) {
             const proxyData = await proxyResult.json();
+            console.log('[roomDetailApi] ✅ CORS proxy succeeded');
             return proxyData;
           }
         }
         
+        console.log('[roomDetailApi] 📡 Attempting fallback /apartment-details/' + roomId);
         const result = await makeRequest<{ success: boolean; data: RoomDetail }>(
           `/apartment-details/${roomId}`
         );
