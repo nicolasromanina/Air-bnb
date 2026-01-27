@@ -523,7 +523,149 @@ L'équipe de gestion`,
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Informations principales */}
         <div className="lg:col-span-2 space-y-6">
-          {/* ... (le reste du code reste inchangé) ... */}
+          {/* Informations client */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Informations Client
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Prénom</p>
+                  <p className="font-medium">{reservation.user?.firstName || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Nom</p>
+                  <p className="font-medium">{reservation.user?.lastName || 'N/A'}</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Email</p>
+                <p className="font-medium">{reservation.user?.email || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Téléphone</p>
+                <p className="font-medium">{reservation.user?.phone || 'N/A'}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Détails du séjour */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Détails du Séjour
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Arrivée</p>
+                  <p className="font-medium">{format(new Date(reservation.checkIn), 'dd/MM/yyyy')}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Départ</p>
+                  <p className="font-medium">{format(new Date(reservation.checkOut), 'dd/MM/yyyy')}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Nuits</p>
+                  <p className="font-medium">{reservation.nights || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Guests</p>
+                  <p className="font-medium">{reservation.guests || 'N/A'}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Informations appartement */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building className="h-5 w-5" />
+                Appartement
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Titre</p>
+                <p className="font-medium">{reservation.title || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Numéro</p>
+                <p className="font-medium">{reservation.apartmentNumber || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Adresse</p>
+                <p className="font-medium">{reservation.address || 'N/A'}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Chambres</p>
+                  <p className="font-medium">{reservation.bedrooms || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Capacité</p>
+                  <p className="font-medium">{reservation.capacity || 'N/A'}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tarification */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Tarification
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Prix par nuit</span>
+                <span className="font-medium">{reservation.pricePerNight || '0'}€</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Nuits</span>
+                <span className="font-medium">× {reservation.nights || '0'}</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Options supplémentaires</span>
+                <span className="font-medium">{reservation.optionsPrice || '0'}€</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between text-lg">
+                <span className="font-bold">Total</span>
+                <span className="font-bold text-pink-600">{reservation.totalPrice || '0'}€</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Paiement */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileSpreadsheet className="h-5 w-5" />
+                Statut de Paiement
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3">
+                <div className={`h-3 w-3 rounded-full ${reservation.paymentStatus === 'paid' ? 'bg-green-500' : 'bg-amber-500'}`} />
+                <span className="font-medium capitalize">
+                  {reservation.paymentStatus === 'paid' ? 'Payé' : 'En attente'}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Sidebar actions */}
