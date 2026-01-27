@@ -274,30 +274,63 @@ function HeroSection({ data }: { data?: IHeroSection | null }) {
   );
 }
 
+/* ================= VIDEO MODAL COMPONENT ================= */
+const VideoModal = ({ isOpen, videoUrl, onClose }: { isOpen: boolean; videoUrl?: string; onClose: () => void }) => {
+  if (!isOpen || !videoUrl) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="relative w-full max-w-4xl aspect-video bg-black rounded-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 bg-white/90 hover:bg-white text-black rounded-full w-10 h-10 flex items-center justify-center z-10 transition-colors"
+        >
+          ✕
+        </button>
+        <iframe
+          width="100%"
+          height="100%"
+          src={`${videoUrl}?autoplay=1`}
+          title="YouTube video player"
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="w-full h-full"
+        />
+      </div>
+    </div>
+  );
+};
+
 /* ================= WELCOME SECTION ================= */
 const WelcomeSection = ({ data }: { data?: IWelcomeSection | null }) => {
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const containerStyles =
     "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
 
   return (
-    <section className="bg-white py-20 lg:py-32" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-      <div className={containerStyles}>
+    <>
+      <section className="bg-white py-20 lg:py-32" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+        <div className={containerStyles}>
 
-        {/* ================= MOBILE MEDIA ================= */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10 lg:hidden">
-          {/* VIDEO */}
-          <div className="relative aspect-square w-full overflow-hidden rounded-xl">
-            <img
-              src={data?.videoImage ?? welcomeRoom1}
-              className="w-full h-full object-cover"
-              alt="Welcome video"
-            />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/10">
-              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-xl">
-                <Play className="w-5 h-5 text-black fill-black ml-1" />
+          {/* ================= MOBILE MEDIA ================= */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10 lg:hidden">
+            {/* VIDEO */}
+            <div 
+              className="relative aspect-square w-full overflow-hidden rounded-xl cursor-pointer group"
+              onClick={() => data?.videoUrl && setIsVideoModalOpen(true)}
+            >
+              <img
+                src={data?.videoImage ?? welcomeRoom1}
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                alt="Welcome video"
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/20 transition-colors">
+                <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+                  <Play className="w-5 h-5 text-black fill-black ml-1" />
+                </div>
               </div>
             </div>
-          </div>
 
           {/* IMAGE 1 */}
           <div className="relative aspect-square w-full overflow-hidden rounded-xl">
@@ -360,13 +393,16 @@ const WelcomeSection = ({ data }: { data?: IWelcomeSection | null }) => {
         <div className="hidden lg:grid grid-cols-[auto_auto_1fr] gap-12 items-start">
 
           {/* VIDEO */}
-          <div className="relative aspect-square w-full max-w-[420px] overflow-hidden rounded-xl group cursor-pointer">
+          <div 
+            className="relative aspect-square w-full max-w-[420px] overflow-hidden rounded-xl group cursor-pointer"
+            onClick={() => data?.videoUrl && setIsVideoModalOpen(true)}
+          >
             <img
               src={data?.videoImage ?? welcomeRoom1}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               alt="Welcome video"
             />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/20 transition-colors">
               <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-xl transition-transform group-hover:scale-110">
                 <Play className="w-5 h-5 text-black fill-black ml-1" />
               </div>
@@ -433,6 +469,12 @@ const WelcomeSection = ({ data }: { data?: IWelcomeSection | null }) => {
 
       </div>
     </section>
+      <VideoModal 
+        isOpen={isVideoModalOpen} 
+        videoUrl={data?.videoUrl}
+        onClose={() => setIsVideoModalOpen(false)}
+      />
+    </>
   );
 };
 
@@ -863,6 +905,7 @@ const MarqueeBlackSection = ({ data }: { data?: any | null }) => {
 /* ================= VIDEO SECTION ================= */
 const VideoSection = ({ data }: { data?: any | null }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const sliderRef = useRef(null);
   
   const galleryImages = data?.galleryImages ?? [bedroom1, bedroom2, bedroom3];
@@ -879,62 +922,64 @@ const VideoSection = ({ data }: { data?: any | null }) => {
   };
 
   return (
-    <section className="w-full bg-white py-8 xs:py-10 sm:py-12 md:py-16 lg:py-20" 
-             style={{ fontFamily: "'Montserrat', sans-serif" }}>
-      <div className={gridContainer}>
-        
-        {/* INNER BOX : Le fond gris et les éléments décoratifs sont limités ici */}
-        <div className="relative bg-[#E5E5E5] rounded-sm py-10 xs:py-12 sm:py-14 md:py-16 lg:py-20 xl:py-24 
-                       px-4 xs:px-5 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16 overflow-hidden">
-          
-          {/* Blocs décoratifs alignés aux coins de l'INNER BOX (pas de l'écran) */}
-          <div className="absolute top-0 left-0 w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 xl:w-32 xl:h-32 bg-black z-0" />
-          <div className="absolute bottom-0 right-0 w-14 h-14 xs:w-16 xs:h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 bg-[#FF1B7C] z-0" />
-
-          {/* Header Text */}
-          <div className="text-center mb-8 xs:mb-10 sm:mb-12 md:mb-14 lg:mb-16 relative z-10">
-            <h2 
-              className="mb-4 xs:mb-5 sm:mb-6 font-bold text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl 
-                       leading-[1.1] sm:leading-[1.05] tracking-tighter uppercase"
-              style={{
-                color: 'hsl(0 0% 8%)',
-                fontFamily: "'Montserrat', sans-serif"
-              }}
-            >
-              {data?.title ?? ''}<br />{data?.subtitle ?? ''}
-            </h2>
-            <p className="text-xs xs:text-sm sm:text-base leading-relaxed max-w-xs xs:max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl 
-                        mx-auto text-gray-600 font-medium px-2 xs:px-0"
+    <>
+      <section className="w-full bg-white py-8 xs:py-10 sm:py-12 md:py-16 lg:py-20" 
                style={{ fontFamily: "'Montserrat', sans-serif" }}>
-              {data?.description ?? ''}
-            </p>
-          </div>
-
-          {/* Gallery Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 xs:gap-5 sm:gap-6 mb-8 xs:mb-10 sm:mb-12 md:mb-14 lg:mb-16 relative z-10">
+        <div className={gridContainer}>
+          
+          {/* INNER BOX : Le fond gris et les éléments décoratifs sont limités ici */}
+          <div className="relative bg-[#E5E5E5] rounded-sm py-10 xs:py-12 sm:py-14 md:py-16 lg:py-20 xl:py-24 
+                         px-4 xs:px-5 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16 overflow-hidden">
             
-            {/* Main Video Block */}
-            <div className="lg:col-span-3 relative aspect-video xs:aspect-[16/10] overflow-hidden rounded-sm group shadow-lg sm:shadow-xl bg-gray-200">
-              <img
-                src={data?.mainImage ?? bedroomMain}
-                alt={data?.mainImageAlt ?? 'Chambre luxueuse'}
-                className="w-full h-full object-cover grayscale group-hover:grayscale-0 
-                         transition-all duration-1000 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <button 
-                  className="w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 
-                           rounded-full border border-white/40 flex items-center justify-center 
-                           backdrop-blur-md bg-white/10 transition-all duration-500 
-                           hover:scale-110 hover:bg-[#FF1B7C] hover:border-[#FF1B7C]"
-                  aria-label="Lire la vidéo"
-                  style={{ fontFamily: "'Montserrat', sans-serif" }}
-                >
-                  <Play className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 
-                                 text-white fill-white ml-0.5 xs:ml-1" />
-                </button>
-              </div>
+            {/* Blocs décoratifs alignés aux coins de l'INNER BOX (pas de l'écran) */}
+            <div className="absolute top-0 left-0 w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 xl:w-32 xl:h-32 bg-black z-0" />
+            <div className="absolute bottom-0 right-0 w-14 h-14 xs:w-16 xs:h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 bg-[#FF1B7C] z-0" />
+
+            {/* Header Text */}
+            <div className="text-center mb-8 xs:mb-10 sm:mb-12 md:mb-14 lg:mb-16 relative z-10">
+              <h2 
+                className="mb-4 xs:mb-5 sm:mb-6 font-bold text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl 
+                         leading-[1.1] sm:leading-[1.05] tracking-tighter uppercase"
+                style={{
+                  color: 'hsl(0 0% 8%)',
+                  fontFamily: "'Montserrat', sans-serif"
+                }}
+              >
+                {data?.title ?? ''}<br />{data?.subtitle ?? ''}
+              </h2>
+              <p className="text-xs xs:text-sm sm:text-base leading-relaxed max-w-xs xs:max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl 
+                          mx-auto text-gray-600 font-medium px-2 xs:px-0"
+                 style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                {data?.description ?? ''}
+              </p>
             </div>
+
+            {/* Gallery Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 xs:gap-5 sm:gap-6 mb-8 xs:mb-10 sm:mb-12 md:mb-14 lg:mb-16 relative z-10">
+              
+              {/* Main Video Block */}
+              <div className="lg:col-span-3 relative aspect-video xs:aspect-[16/10] overflow-hidden rounded-sm group shadow-lg sm:shadow-xl bg-gray-200 cursor-pointer"
+                   onClick={() => data?.videoUrl && setIsVideoModalOpen(true)}>
+                <img
+                  src={data?.mainImage ?? bedroomMain}
+                  alt={data?.mainImageAlt ?? 'Chambre luxueuse'}
+                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 
+                           transition-all duration-1000 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <button 
+                    className="w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 
+                             rounded-full border border-white/40 flex items-center justify-center 
+                             backdrop-blur-md bg-white/10 transition-all duration-500 
+                             hover:scale-110 hover:bg-[#FF1B7C] hover:border-[#FF1B7C]"
+                    aria-label="Lire la vidéo"
+                    style={{ fontFamily: "'Montserrat', sans-serif" }}
+                  >
+                    <Play className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 
+                                   text-white fill-white ml-0.5 xs:ml-1" />
+                  </button>
+                </div>
+              </div>
 
             {/* Side Gallery - DESKTOP (inchangé) */}
             <div className="hidden lg:flex flex-col gap-3 xs:gap-4">
@@ -1040,6 +1085,12 @@ const VideoSection = ({ data }: { data?: any | null }) => {
         </div>
       </div>
     </section>
+      <VideoModal 
+        isOpen={isVideoModalOpen} 
+        videoUrl={data?.videoUrl}
+        onClose={() => setIsVideoModalOpen(false)}
+      />
+    </>
   );
 };
 

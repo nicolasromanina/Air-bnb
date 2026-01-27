@@ -38,15 +38,8 @@ interface HeroSectionData {
 
 interface WelcomeSectionData {
   videoImage: string;
+  videoUrl: string; // YouTube URL
   image1: string;
-  image2: string;
-  title: string;
-  description: string;
-  features: {
-    feature1: string;
-    feature2: string;
-  };
-  buttonText: string;
   image2: string;
   title: string;
   description: string;
@@ -101,6 +94,7 @@ interface VideoSectionData {
   title: string;
   description: string;
   mainImage: string;
+  videoUrl: string; // YouTube URL
   galleryImages: string[];
   buttonText: string;
   accentColor: string;
@@ -234,6 +228,7 @@ const HomeEditor: React.FC = () => {
     },
     welcomeSection: {
       videoImage: '/assets/video-bg-welcome.png',
+      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Default YouTube URL
       image1: '/assets/photo-welcome1.png',
       image2: '/assets/photo-welcome2.png',
       title: 'Welcome to lorem consectetur',
@@ -296,6 +291,7 @@ const HomeEditor: React.FC = () => {
       title: 'Adipiscing elit amet, consectetur.',
       description: 'Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra.',
       mainImage: '/assets/bedroom-main.png',
+      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Default YouTube URL
       galleryImages: [
         '/assets/image-above.png',
         '/assets/image-center.png',
@@ -1341,6 +1337,21 @@ const HomeEditor: React.FC = () => {
                 </div>
 
                 <div>
+                  <label className="block text-sm font-medium mb-2">URL Vidéo YouTube</label>
+                  <input
+                    type="text"
+                    placeholder="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                    value={pageData.welcomeSection.videoUrl}
+                    onChange={(e) => setPageData(prev => ({
+                      ...prev,
+                      welcomeSection: { ...prev.welcomeSection, videoUrl: e.target.value }
+                    }))}
+                    className="w-full border rounded-lg p-3 font-mono text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">Utilisez l'URL YouTube en format embed (avec /embed/)</p>
+                </div>
+
+                <div>
                   <h4 className="text-lg font-medium mb-4">Images</h4>
                   <div className="space-y-4">
                     <ImageEditor
@@ -1881,6 +1892,21 @@ const HomeEditor: React.FC = () => {
                       className="flex-1 border rounded-lg p-2 font-mono"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">URL Vidéo YouTube</label>
+                  <input
+                    type="text"
+                    placeholder="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                    value={pageData.videoSection.videoUrl}
+                    onChange={(e) => setPageData(prev => ({
+                      ...prev,
+                      videoSection: { ...prev.videoSection, videoUrl: e.target.value }
+                    }))}
+                    className="w-full border rounded-lg p-3 font-mono text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">Utilisez l'URL YouTube en format embed (avec /embed/)</p>
                 </div>
 
                 <div>
