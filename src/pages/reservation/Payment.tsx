@@ -6,14 +6,14 @@ import ReservationCard from "@/components/payment/ReservationCard";
 import PaymentForm from "@/components/payment/PaymentForm";
 import PromoSection from "@/components/payment/PromoSection";
 import Footer from "@/components/Footer";
-import AuthModal from "@/components/payment/AuthModal"; // Importer AuthModal
+import AuthModal from "@/components/payment/AuthModal";
 
 const Payment = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [reservation, setReservation] = useState(null);
-  const [showAuthModal, setShowAuthModal] = useState(false); // État pour AuthModal
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login'); // Mode d'authentification
+  const [reservation, setReservation] = useState<any>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 
   useEffect(() => {
     // Récupérer les données de réservation
@@ -33,13 +33,11 @@ const Payment = () => {
     const checkAuth = () => {
       const token = localStorage.getItem('auth_token');
       if (!token) {
-        // Si pas de token, afficher le modal d'authentification
         setShowAuthModal(true);
         setAuthMode('login');
       }
     };
 
-    // Délai pour laisser le temps au hook useAuth de s'initialiser
     const timer = setTimeout(checkAuth, 1000);
     return () => clearTimeout(timer);
   }, [location, navigate]);
@@ -51,6 +49,79 @@ const Payment = () => {
       </div>
     );
   }
+
+  // CORRECTION IMPORTANTE : Calculer les montants correctement
+  const calculateAmounts = () => {
+    const nights = Number(reservation.nights) || 1;
+    
+    // 1. Déterminer le PRIX PAR NUIT
+    let pricePerNight = 0;
+    
+    // Priorité 1: reservation.pricePerNight
+    if (reservation.pricePerNight !== undefined && reservation.pricePerNight !== null) {
+      pricePerNight = typeof reservation.pricePerNight === 'string' 
+        ? parseFloat(reservation.pricePerNight) 
+        : reservation.pricePerNight;
+    }
+    // Priorité 2: reservation.price
+    else if (reservation.price !== undefined && reservation.price !== null) {
+      pricePerNight = typeof reservation.price === 'string' 
+        ? parseFloat(reservation.price) 
+        : reservation.price;
+    }
+    // Priorité 3: reservation.basePrice (c'est le prix par nuit)
+    else if (reservation.basePrice !== undefined && reservation.basePrice !== null) {
+      pricePerNight = typeof reservation.basePrice === 'string' 
+        ? parseFloat(reservation.basePrice) 
+        : reservation.basePrice;
+    }
+    
+    if (isNaN(pricePerNight) || pricePerNight <= 0) {
+      pricePerNight = 300; // Valeur par défaut
+    }
+    
+    // 2. Calculer le TOTAL DU LOGEMENT
+    const basePriceTotal = pricePerNight * nights;
+    
+    // 3. Calculer le PRIX DES OPTIONS
+    let optionsPriceTotal = 0;
+    if (reservation.optionsPrice !== undefined && reservation.optionsPrice !== null) {
+      optionsPriceTotal = typeof reservation.optionsPrice === 'string' 
+        ? parseFloat(reservation.optionsPrice) 
+        : reservation.optionsPrice;
+    } else if (reservation.selectedOptions && Array.isArray(reservation.selectedOptions)) {
+      optionsPriceTotal = reservation.selectedOptions.reduce((sum: number, option: any) => {
+        const optionPrice = typeof option.price === 'string' ? parseFloat(option.price) : option.price;
+        const quantity = option.quantity || 1;
+        return sum + (optionPrice * quantity);
+      }, 0);
+    }
+    
+    // 4. TOTAL FINAL
+    const totalAmount = basePriceTotal + optionsPriceTotal;
+    
+    console.log("🔢 Payment.tsx - Calculs:", {
+      nights,
+      pricePerNight,
+      basePriceTotal,
+      optionsPriceTotal,
+      totalAmount,
+      reservationData: {
+        pricePerNightProp: reservation.pricePerNight,
+        priceProp: reservation.price,
+        basePriceProp: reservation.basePrice
+      }
+    });
+    
+    return {
+      pricePerNight,
+      basePrice: basePriceTotal, // C'est le TOTAL pour le séjour
+      optionsPrice: optionsPriceTotal,
+      total: totalAmount
+    };
+  };
+
+  const { pricePerNight, basePrice, optionsPrice, total } = calculateAmounts();
 
   // Formater la date actuelle
   const formatDate = (daysToAdd = 0) => {
@@ -64,46 +135,37 @@ const Payment = () => {
   };
 
   // Créer la réservation au format attendu par ReservationCard
-  // Normalize reservation fields (support multiple possible keys)
-  const total = reservation.total ?? reservation.totalPrice ?? ((Number(reservation.basePrice || reservation.pricePerNight || 0) * Number(reservation.nights || 1)) + Number(reservation.optionsPrice || reservation.additionalOptionsPrice || 0));
-  const pricePerNight = reservation.pricePerNight ?? reservation.price ?? reservation.basePrice ?? 0;
-  const basePrice = reservation.basePrice ?? pricePerNight ?? 0;
-  const optionsPrice = reservation.optionsPrice ?? reservation.additionalOptionsPrice ?? 0;
-  const selectedOptions = reservation.selectedOptions ?? reservation.additionalOptions ?? [];
-
-  const aptNumber = reservation.apartmentNumber || (reservation.apartmentId ? `Appartement n° ${String(reservation.apartmentId).padStart(3, '0')}` : 'Appartement');
+  const aptNumber = reservation.apartmentNumber || 
+    (reservation.apartmentId ? `Appartement n° ${String(reservation.apartmentId).padStart(3, '0')}` : 'Appartement');
 
   const dateDisplay = reservation.checkIn && reservation.checkOut
     ? `Du ${new Date(reservation.checkIn).toLocaleDateString('fr-FR')} au ${new Date(reservation.checkOut).toLocaleDateString('fr-FR')}`
     : `Du ${formatDate()} au ${formatDate(reservation.nights)}`;
 
   const reservationData = {
-    image: reservation.image,
-    title: reservation.title,
-    includes: reservation.includes,
+    image: reservation.image || 'https://images.unsplash.com/photo-1560184897-e6270f3f322f?auto=format&fit=crop&w=1200&q=80',
+    title: reservation.title || "Réservation",
+    includes: reservation.includes || [],
     apartmentNumber: aptNumber,
     date: dateDisplay,
     price: `${Number(total).toFixed(2)}€`,
-    nights: reservation.nights,
+    nights: reservation.nights || 1,
     pricePerNight: pricePerNight,
     basePrice: basePrice,
     optionsPrice: optionsPrice,
-    selectedOptions: selectedOptions
+    selectedOptions: reservation.selectedOptions || []
   };
 
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
-    // Rafraîchir la page pour que useAuth détecte le nouveau token
     window.location.reload();
   };
 
   const handleSuggestDate = (newCheckInIso: string, newCheckOutIso: string) => {
-    // Update reservation state and localStorage
     try {
       const updated = { ...reservation, checkIn: newCheckInIso, checkOut: newCheckOutIso };
-      setReservation(updated as any);
+      setReservation(updated);
       localStorage.setItem('currentReservation', JSON.stringify(updated));
-      // Optionally scroll to form or focus
     } catch (e) {
       console.error('Failed to apply suggested date', e);
     }
@@ -120,11 +182,7 @@ const Payment = () => {
       {/* AuthModal pour l'authentification */}
       <AuthModal 
         isOpen={showAuthModal}
-        onClose={() => {
-          // Si l'utilisateur ferme le modal sans s'authentifier
-          // On pourrait rediriger vers l'accueil ou laisser continuer
-          setShowAuthModal(false);
-        }}
+        onClose={() => setShowAuthModal(false)}
         defaultTab={authMode}
       />
 
@@ -170,36 +228,36 @@ const Payment = () => {
           <div>
             <h1 className="text-2xl font-bold mb-2">Réservation en cours</h1>
             <p className="text-sm text-muted-foreground mb-8">
-              {reservation.description}
+              {reservation.description || "Vérifiez les détails de votre réservation avant de procéder au paiement."}
             </p>
 
             <div className="space-y-4">
               <ReservationCard {...reservationData} />
               
-              {/* Détails supplémentaires */}
+              {/* Détails supplémentaires - CORRIGÉ */}
               <div className="bg-card rounded-lg p-6 mt-6">
                 <h3 className="font-semibold mb-4">Détails de la réservation</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Durée du séjour</span>
-                    <span className="font-medium">{reservation.nights} nuit(s)</span>
+                    <span className="font-medium">{reservation.nights || 1} nuit(s)</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Nombre de personnes</span>
-                    <span className="font-medium">{reservation.guests}</span>
+                    <span className="font-medium">{reservation.guests || 1}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Prix par nuit</span>
-                    <span className="font-medium">{reservation.price}€</span>
+                    <span className="font-medium">{pricePerNight.toFixed(2)}€</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Chambres</span>
-                    <span className="font-medium">{reservation.bedrooms}</span>
+                    <span className="font-medium">{reservation.bedrooms || 1}</span>
                   </div>
                   <div className="border-t pt-3 mt-3">
                     <div className="flex justify-between font-bold text-lg">
-                      <span>Sous-total</span>
-                      <span className="text-primary">{reservation.basePrice || reservation.total}€</span>
+                      <span>Sous-total logement</span>
+                      <span className="text-primary">{basePrice.toFixed(2)}€</span>
                     </div>
                   </div>
                 </div>
@@ -215,18 +273,20 @@ const Payment = () => {
                         <div>
                           <p className="text-sm font-medium text-green-900">{option.name}</p>
                           <p className="text-xs text-green-700">
-                            {option.pricingType === 'per_day' ? `${option.price}€/nuit × ${option.quantity}` :
-                             option.pricingType === 'per_guest' ? `${option.price}€/pers × ${option.quantity}` :
+                            {option.pricingType === 'per_day' ? `${option.price}€/nuit × ${option.quantity || 1}` :
+                             option.pricingType === 'per_guest' ? `${option.price}€/pers × ${option.quantity || 1}` :
                              `${option.price}€`}
                           </p>
                         </div>
-                        <span className="font-semibold text-green-900 ml-4">{(option.price * option.quantity).toFixed(2)}€</span>
+                        <span className="font-semibold text-green-900 ml-4">
+                          {(option.price * (option.quantity || 1)).toFixed(2)}€
+                        </span>
                       </div>
                     ))}
                     <div className="border-t border-green-200 pt-2 mt-2">
                       <div className="flex justify-between">
                         <span className="font-semibold text-green-900">Coût des options</span>
-                        <span className="font-bold text-green-900">{reservation.optionsPrice || 0}€</span>
+                        <span className="font-bold text-green-900">{optionsPrice.toFixed(2)}€</span>
                       </div>
                     </div>
                   </div>
@@ -234,26 +294,26 @@ const Payment = () => {
               )}
 
               {/* Total avec répartition des coûts */}
-              {(reservation.basePrice && reservation.optionsPrice) && (
-                <div className="bg-primary/10 border border-primary/20 rounded-lg p-6 mt-6">
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Coût du logement</span>
-                      <span className="font-medium">{reservation.basePrice}€</span>
-                    </div>
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-6 mt-6">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Coût du logement</span>
+                    <span className="font-medium">{basePrice.toFixed(2)}€</span>
+                  </div>
+                  {optionsPrice > 0 && (
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">Options supplémentaires</span>
-                      <span className="font-medium text-green-600">{reservation.optionsPrice}€</span>
+                      <span className="font-medium text-green-600">{optionsPrice.toFixed(2)}€</span>
                     </div>
-                    <div className="border-t border-primary/20 pt-2 mt-2">
-                      <div className="flex justify-between font-bold text-lg">
-                        <span>TOTAL À PAYER</span>
-                        <span className="text-primary">{reservation.total}€</span>
-                      </div>
+                  )}
+                  <div className="border-t border-primary/20 pt-2 mt-2">
+                    <div className="flex justify-between font-bold text-lg">
+                      <span>TOTAL À PAYER</span>
+                      <span className="text-primary">{total.toFixed(2)}€</span>
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
@@ -261,27 +321,26 @@ const Payment = () => {
           <div className="lg:pt-0">
             <div className="bg-card rounded-xl p-6 lg:p-8 shadow-sm border border-border">
               <PaymentForm 
-                totalAmount={reservation.total}
-                basePrice={reservation.basePrice}
-                optionsPrice={reservation.optionsPrice}
+                totalAmount={total}
+                basePrice={pricePerNight} // CORRECTION : Passer le prix par nuit
+                optionsPrice={optionsPrice}
                 selectedOptions={reservation.selectedOptions}
                 onSuggestDate={handleSuggestDate}
                 reservationDetails={{
-                  title: reservation.title,
-                  apartmentNumber: `Appartement n° ${reservation.apartmentId.toString().padStart(3, '0')}`,
-                  date: `Du ${formatDate()} au ${formatDate(reservation.nights)}`,
-                  apartmentId: reservation.apartmentId,
-                  nights: reservation.nights,
-                  guests: reservation.guests,
-                  bedrooms: reservation.bedrooms,
-                  pricePerNight: reservation.price,
-                  image: reservation.image,
-                  includes: reservation.includes,
+                  title: reservation.title || "Réservation",
+                  apartmentNumber: `Appartement n° ${(reservation.apartmentId || 0).toString().padStart(3, '0')}`,
+                  apartmentId: reservation.apartmentId || 0,
+                  nights: reservation.nights || 1,
+                  guests: reservation.guests || 1,
+                  bedrooms: reservation.bedrooms || 1,
+                  pricePerNight: pricePerNight, // CORRECTION : Passer le prix par nuit calculé
+                  image: reservation.image || 'https://images.unsplash.com/photo-1560184897-e6270f3f322f?auto=format&fit=crop&w=1200&q=80',
+                  includes: reservation.includes || [],
                   checkIn: reservation.checkIn,
                   checkOut: reservation.checkOut,
-                  basePrice: reservation.basePrice,
-                  optionsPrice: reservation.optionsPrice,
-                  selectedOptions: reservation.selectedOptions
+                  basePrice: basePrice, // CORRECTION : Passer le total du logement
+                  optionsPrice: optionsPrice,
+                  selectedOptions: reservation.selectedOptions || []
                 }}
               />
             </div>
