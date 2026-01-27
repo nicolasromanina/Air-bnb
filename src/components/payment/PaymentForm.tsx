@@ -70,7 +70,7 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
   const [isRedirecting, setIsRedirecting] = useState(false);
   const { user, isAuthenticated } = useAuth();
   
-  // SIMPLIFICATION RADICALE DU CALCUL
+  // CORRECTION : basePrice est le PRIX PAR NUIT, pas le total
   const calculateFinalAmount = () => {
     const nights = reservationDetails?.nights || 1;
     
@@ -83,50 +83,48 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
       optionsPriceProp: optionsPrice
     });
     
-    // 1. DÉTERMINER LE PRIX PAR NUIT
+    // 1. DÉTERMINER LE PRIX PAR NUIT - CORRECTION IMPORTANTE
     let pricePerNightValue = 0;
     
-    // Si pricePerNight est fourni dans reservationDetails
-    if (reservationDetails?.pricePerNight) {
+    // Priorité 1: Si pricePerNight est fourni dans reservationDetails
+    if (reservationDetails?.pricePerNight !== undefined && reservationDetails?.pricePerNight !== null) {
       const pn = typeof reservationDetails.pricePerNight === 'string' 
         ? parseFloat(reservationDetails.pricePerNight) 
         : reservationDetails.pricePerNight;
       if (!isNaN(pn) && pn > 0) {
         pricePerNightValue = pn;
-        console.log("✅ Prix par nuit depuis reservationDetails.pricePerNight:", pn);
+        console.log("✅ PRIX PAR NUIT depuis reservationDetails.pricePerNight:", pn);
       }
     }
-    // Si basePrice est fourni et qu'on a le nombre de nuits, calculer le prix par nuit
-    else if (basePrice !== undefined && basePrice !== null && nights > 0) {
+    // Priorité 2: SI basePrice EST FOURNI, C'EST LE PRIX PAR NUIT (pas le total)
+    else if (basePrice !== undefined && basePrice !== null) {
       const bp = typeof basePrice === 'string' ? parseFloat(basePrice) : basePrice;
       if (!isNaN(bp) && bp > 0) {
-        pricePerNightValue = bp / nights;
-        console.log("✅ Prix par nuit calculé depuis basePrice:", bp, "/", nights, "=", pricePerNightValue);
+        // IMPORTANT : basePrice est le prix par nuit, pas besoin de diviser
+        pricePerNightValue = bp;
+        console.log("✅ PRIX PAR NUIT depuis basePrice (c'est déjà le prix par nuit):", bp);
       }
     }
     // Fallback
     else {
-      pricePerNightValue = 150; // Par défaut
+      pricePerNightValue = 300; // Par défaut
       console.log("⚠️ Prix par nuit par défaut:", pricePerNightValue);
     }
     
-    // 2. CALCULER LE TOTAL DU LOGEMENT
+    // 2. CALCULER LE TOTAL DU LOGEMENT : prix par nuit × nombre de nuits
     const calculatedBasePrice = pricePerNightValue * nights;
-    console.log("💰 Total logement:", pricePerNightValue, "×", nights, "=", calculatedBasePrice);
+    console.log("💰 CALCUL FINAL:", pricePerNightValue, "€/nuit ×", nights, "nuits =", calculatedBasePrice, "€");
     
     // 3. CALCULER LE PRIX DES OPTIONS
     let calculatedOptionsPrice = 0;
     
-    // Priorité 1: optionsPrice fourni
     if (optionsPrice !== undefined && optionsPrice !== null) {
       const op = typeof optionsPrice === 'string' ? parseFloat(optionsPrice) : optionsPrice;
       if (!isNaN(op) && op > 0) {
         calculatedOptionsPrice = op;
         console.log("✅ OptionsPrice direct:", op);
       }
-    }
-    // Priorité 2: Calculer à partir des selectedOptions
-    else {
+    } else {
       const opts = selectedOptions || reservationDetails?.selectedOptions || [];
       if (opts.length > 0) {
         calculatedOptionsPrice = opts.reduce((sum, option) => {
@@ -147,12 +145,12 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
       basePriceTotal: calculatedBasePrice,
       optionsPrice: calculatedOptionsPrice,
       finalTotal,
-      formule: `${pricePerNightValue} × ${nights} = ${calculatedBasePrice} + ${calculatedOptionsPrice} = ${finalTotal}`
+      formule: `${pricePerNightValue}€/nuit × ${nights} nuits = ${calculatedBasePrice}€ + ${calculatedOptionsPrice}€ (options) = ${finalTotal}€`
     });
     
     return {
       finalAmount: finalTotal,
-      basePrice: calculatedBasePrice,
+      basePrice: calculatedBasePrice, // C'est le TOTAL pour le séjour
       optionsPrice: calculatedOptionsPrice,
       nights,
       pricePerNight: pricePerNightValue
@@ -162,7 +160,13 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
   const { finalAmount, basePrice: calculatedBasePrice, optionsPrice: calculatedOptionsPrice, nights, pricePerNight } = calculateFinalAmount();
 
   useEffect(() => {
-    console.log("📊 PaymentForm monté avec:", { calculatedBasePrice, pricePerNight, nights, finalAmount });
+    console.log("📊 PaymentForm monté avec:", { 
+      prixParNuit: pricePerNight, 
+      nuits: nights, 
+      totalLogement: calculatedBasePrice,
+      options: calculatedOptionsPrice,
+      totalFinal: finalAmount 
+    });
   }, []);
   
   const {
@@ -330,7 +334,9 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
             </div>
             <div className="col-span-2 mt-2 pt-2 border-t border-border">
               <p className="text-xs text-muted-foreground font-semibold mb-1">Durée du séjour</p>
-              <p className="text-sm font-medium">{nights} nuit{nights > 1 ? 's' : ''} × {pricePerNight.toFixed(2)}€/nuit = {calculatedBasePrice.toFixed(2)}€</p>
+              <p className="text-sm font-medium">
+                {nights} nuit{nights > 1 ? 's' : ''} × {pricePerNight.toFixed(2)}€/nuit = {calculatedBasePrice.toFixed(2)}€
+              </p>
             </div>
           </div>
         )}
