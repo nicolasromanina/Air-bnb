@@ -126,7 +126,7 @@ const ContactEditor: React.FC = () => {
 
   const fetchPageData = async () => {
     try {
-      const response = await fetch('https://airbnb-backend.onrender.com/api/contact');
+      const response = await fetch('https://airbnb-backend-l640.onrender.com/api/contact');
       if (response.ok) {
         const data = await response.json();
         setPageData(data);
@@ -144,7 +144,7 @@ const ContactEditor: React.FC = () => {
     setSaveMessage(null);
 
     try {
-      const response = await fetch('https://airbnb-backend.onrender.com/api/contact', {
+      const response = await fetch('https://airbnb-backend-l640.onrender.com/api/contact', {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
