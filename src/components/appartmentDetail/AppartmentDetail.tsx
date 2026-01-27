@@ -359,7 +359,7 @@ function AppartmentDetail() {
                         </div>
                         <div className="bg-[#F3F4F6] py-6 px-8 rounded-sm text-center text-sm font-medium text-gray-600">{roomDetail?.subtitle || 'Class aptent taciti per inceptos himenaeos.'}</div>
                         <div className="pt-4 border-t border-gray-100">
-                            <h3 className="text-[17px] font-bold mb-4 uppercase tracking-tighter">Information générale</h3>
+                            <h3 className="text-[17px] font-bold mb-4  tracking-tighter">Information générale</h3>
                             <InfoRow label="Prix standard" value={`${apartment.price}€ / nuit`} isBold />
                             <InfoRow label="Nombre de personnes" value={formatGuests(apartment.guests)} />
                             <InfoRow label="Nombre de chambres" value={formatBedrooms(apartment.bedrooms)} />
@@ -419,71 +419,8 @@ function AppartmentDetail() {
                             </div>
                         </div>
 
-                        {/* Informations de capacité */}
-                        <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 p-6 rounded-lg border border-blue-200">
-                            <h3 className="text-[17px] font-bold mb-4 uppercase tracking-tighter flex items-center gap-2 text-blue-900">
-                                <span>👥</span> Capacité
-                            </h3>
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center py-2">
-                                    <span className="text-blue-900 font-medium">Nombre d'invités:</span>
-                                    <span className="font-bold text-lg text-blue-700">{formatGuests(roomDetail?.guests)}</span>
-                                </div>
-                                <div className="flex justify-between items-center py-2">
-                                    <span className="text-blue-900 font-medium">Nombre de chambres:</span>
-                                    <span className="font-bold text-lg text-blue-700">{formatBedrooms(roomDetail?.bedrooms)}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Tarification */}
-                        {roomDetail?.price && (
-                            <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 p-6 rounded-lg border border-amber-300">
-                                <h3 className="text-[17px] font-bold mb-4 uppercase tracking-tighter flex items-center gap-2 text-amber-900">
-                                    <span>💰</span> Tarification
-                                </h3>
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-sm text-amber-900">À partir de</span>
-                                    <span className="text-5xl font-bold text-amber-700">{roomDetail.price}</span>
-                                    <span className="text-xl text-amber-900">€</span>
-                                    <span className="text-sm text-amber-900">par nuit</span>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Inclusions */}
-                        {roomDetail?.includes && roomDetail.includes.length > 0 && (
-                            <div className="space-y-3">
-                                <h3 className="text-[17px] font-bold uppercase tracking-tighter flex items-center gap-2 text-green-900">
-                                    <span>✓</span> Inclus dans le tarif
-                                </h3>
-                                <div className="space-y-2">
-                                    {roomDetail.includes.map((item, idx) => (
-                                        <div key={idx} className="flex items-center gap-3 p-2 hover:bg-green-50 rounded transition-colors">
-                                            <Check size={18} className="text-green-600 flex-shrink-0" />
-                                            <span className="text-[14px] text-green-900">{item}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Équipements */}
-                        {roomDetail?.amenities && roomDetail.amenities.length > 0 && (
-                            <div className="space-y-3">
-                                <h3 className="text-[17px] font-bold uppercase tracking-tighter flex items-center gap-2 text-purple-900">
-                                    <span>🛠️</span> Équipements & Services
-                                </h3>
-                                <div className="space-y-2">
-                                    {roomDetail.amenities.map((item, idx) => (
-                                        <div key={idx} className="flex items-center gap-3 p-2 hover:bg-purple-50 rounded transition-colors">
-                                            <Check size={18} className="text-purple-600 flex-shrink-0" />
-                                            <span className="text-[14px] text-purple-900">{item}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                   
+                
 
                         {/* Caractéristiques principales */}
                         {roomDetail?.features && roomDetail.features.length > 0 && (
@@ -509,12 +446,34 @@ function AppartmentDetail() {
                             <h3 className="text-[22px] font-bold mb-1">Incluses et sur demande</h3>
                             <p className="text-gray-500 text-sm">Class aptent taciti per inceptos himenaeos.</p>
                         </div>
-                        <div className="flex justify-center gap-3 mb-10">
-                            {[1, 2, 3, 4].map(i => (
-                                <div key={i} className="w-20 h-20 rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm">
-                                    <img src={`https://picsum.photos/200/200?random=${i+50}`} className="w-full h-full object-cover" alt="" />
-                                </div>
-                            ))}
+                        
+                        {/* Affichage dynamique des images des options sélectionnées */}
+                        <div className="flex justify-center gap-3 mb-10 flex-wrap">
+                            {loadingOptions ? (
+                                <div className="text-gray-400 text-sm">Chargement...</div>
+                            ) : (
+                                Object.values(allOptions).flat()
+                                    .filter((option: any) => option.image || option.icon)
+                                    .slice(0, 4)
+                                    .map((option: any, i: number) => (
+                                        <div key={i} className="w-20 h-20 rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md transition">
+                                            {option.image ? (
+                                                <img 
+                                                    src={option.image} 
+                                                    className="w-full h-full object-cover" 
+                                                    alt={option.name}
+                                                    onError={(e) => {
+                                                        (e.currentTarget as HTMLImageElement).src = `https://picsum.photos/200/200?random=${i+50}`;
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-2xl bg-gray-50">
+                                                    {option.icon || '✨'}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))
+                            )}
                         </div>
 
                         {/* BOUCLE DYNAMIQUE SUR LES OPTIONS DE L'API */}
@@ -526,9 +485,26 @@ function AppartmentDetail() {
                                     <div key={option._id} className={`bg-white border border-gray-200 rounded-xl overflow-hidden transition-all ${expandedOption === option._id ? 'shadow-xl ring-1 ring-black/5' : ''}`}>
                                         <button 
                                             onClick={() => setExpandedOption(expandedOption === option._id ? null : option._id)} 
-                                            className="w-full p-5 flex justify-between items-center group"
+                                            className="w-full p-5 flex justify-between items-center group gap-4"
                                         >
-                                            <span className={`text-[15px] font-bold flex-1 text-center transition-colors ${selectedOptions.some(o => o.optionId === option._id) ? 'text-[#FF385C]' : 'text-gray-800'}`}>
+                                            {/* Option thumbnail image */}
+                                            <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                                                {option.image ? (
+                                                    <img 
+                                                        src={option.image} 
+                                                        alt={option.name}
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-xl">
+                                                        {option.icon || '✨'}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <span className={`text-[15px] font-bold flex-1 transition-colors ${selectedOptions.some(o => o.optionId === option._id) ? 'text-[#FF385C]' : 'text-gray-800'}`}>
                                                 {option.name}
                                                 {selectedOptions.some(o => o.optionId === option._id) && <Check size={14} className="inline ml-2" />}
                                             </span>
@@ -540,6 +516,19 @@ function AppartmentDetail() {
                                         {expandedOption === option._id && (
                                             <div className="p-8 pt-0 border-t border-gray-50 grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-top-2 duration-300">
                                                 <div className="space-y-4">
+                                                    {/* Large image for expanded option */}
+                                                    {option.image && (
+                                                        <div className="rounded-lg overflow-hidden h-48 bg-gray-100 mb-4">
+                                                            <img 
+                                                                src={option.image} 
+                                                                alt={option.name}
+                                                                className="w-full h-full object-cover"
+                                                                onError={(e) => {
+                                                                    (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    )}
                                                     <h4 className="text-[12px] font-black uppercase text-black tracking-widest">{option.name}</h4>
                                                     <p className="text-[13px] text-gray-400 leading-relaxed font-medium">{option.description || "Service exclusif pour votre séjour."}</p>
                                                     <div className="text-2xl font-black text-gray-900">{option.price}€</div>
@@ -579,7 +568,7 @@ function AppartmentDetail() {
                                Total options : {optionsPrice}€
                            </div>
                         )}
-                    </div>
+                    </div> 
                 </section>
             </div>
         </div>

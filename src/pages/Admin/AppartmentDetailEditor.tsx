@@ -54,6 +54,8 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: string; index: number } | null>(null);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [editingOptionImages, setEditingOptionImages] = useState<Record<string, string>>({}); // Store option images being edited
+  const [optionImageUploading, setOptionImageUploading] = useState<string | null>(null); // Track which option image is uploading
   
   const [detailData, setDetailData] = useState<ApartmentDetailData>({
     apartmentId: finalApartmentId,
@@ -308,6 +310,46 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
     }));
     
     setHasUnsavedChanges(true);
+  };
+
+  // Handle option image upload
+  const handleOptionImageUpload = async (optionId: string, file: File) => {
+    setOptionImageUploading(optionId);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://airbnb-backend-l640.onrender.com/api'}/upload/image`, {
+        method: 'POST',
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const imageUrl = data.data?.imageUrl || data.imageUrl || '';
+      
+      if (imageUrl) {
+        // Update the editing state with the image URL
+        setEditingOptionImages(prev => ({
+          ...prev,
+          [optionId]: imageUrl
+        }));
+        toast.success('Image de l\'option téléchargée avec succès');
+      }
+    } catch (error) {
+      console.error('Erreur upload image option:', error);
+      toast.error('Erreur lors du téléchargement de l\'image');
+    } finally {
+      setOptionImageUploading(null);
+    }
   };
 
   const handleToggleOption = (optionId: string) => {
@@ -844,34 +886,85 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
                   {allOptions.map((option) => (
                     <div
                       key={option._id}
-                      className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                      className={`border rounded-lg p-4 transition-all ${
                         detailData.additionalOptions?.includes(option._id)
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
-                      onClick={() => handleToggleOption(option._id)}
                     >
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h5 className="font-medium text-gray-900">{option.name}</h5>
-                          <p className="text-sm text-gray-600 mt-1">{option.description}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-gray-900">
-                            {option.price}€
+                      {/* Image section */}
+                      <div className="mb-3">
+                        {editingOptionImages[option._id] || option.image ? (
+                          <div className="relative rounded-lg overflow-hidden bg-gray-100 h-32 mb-2">
+                            <img 
+                              src={editingOptionImages[option._id] || option.image} 
+                              alt={option.name}
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setEditingOptionImages(prev => {
+                                const { [option._id]: _, ...rest } = prev;
+                                return rest;
+                              })}
+                              className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded hover:bg-red-600"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="bg-gray-100 h-32 rounded-lg mb-2 flex items-center justify-center">
+                            <ImageIcon size={24} className="text-gray-400" />
+                          </div>
+                        )}
+                        <label className="relative block">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={optionImageUploading === option._id}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleOptionImageUpload(option._id, file);
+                            }}
+                          />
+                          <span className={`block text-center py-2 px-3 rounded text-sm font-medium transition cursor-pointer ${
+                            optionImageUploading === option._id
+                              ? 'bg-gray-300 text-gray-600'
+                              : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                          }`}>
+                            {optionImageUploading === option._id ? 'Upload...' : 'Ajouter une image'}
                           </span>
-                          {detailData.additionalOptions?.includes(option._id) && (
-                            <Check className="text-blue-500" size={18} />
-                          )}
-                        </div>
+                        </label>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-500 mt-3">
-                        <span className="px-2 py-1 bg-gray-100 rounded">
-                          {option.category}
-                        </span>
-                        <span className="px-2 py-1 bg-gray-100 rounded">
-                          {option.pricingType}
-                        </span>
+
+                      {/* Option details */}
+                      <div 
+                        className="cursor-pointer"
+                        onClick={() => handleToggleOption(option._id)}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <h5 className="font-medium text-gray-900">{option.name}</h5>
+                            <p className="text-sm text-gray-600 mt-1">{option.description}</p>
+                          </div>
+                          <div className="flex items-center gap-2 ml-2">
+                            <span className="text-sm font-semibold text-gray-900 whitespace-nowrap">
+                              {option.price}€
+                            </span>
+                            {detailData.additionalOptions?.includes(option._id) && (
+                              <Check className="text-blue-500" size={18} />
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-500 mt-3">
+                          <span className="px-2 py-1 bg-gray-100 rounded">
+                            {option.category}
+                          </span>
+                          <span className="px-2 py-1 bg-gray-100 rounded">
+                            {option.pricingType}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))}

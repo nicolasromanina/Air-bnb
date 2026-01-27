@@ -11,6 +11,7 @@ export interface AdditionalOption {
   price: number;
   pricingType: 'fixed' | 'per_day' | 'per_guest';
   icon?: string;
+  image?: string; // URL of the option image
   isActive: boolean;
   apartmentIds?: number[];
   createdAt: string;
