@@ -230,9 +230,11 @@ function AppartmentDetail() {
             apartmentId: aptIdNum,
             apartmentNumber: apartment.title || `Appartement ${aptIdNum}`,
             title: apartment.title || 'Réservation',
-            image: roomDetail?.images?.[0]?.startsWith('/uploads/') 
-                ? `https://airbnb-backend.onrender.com${roomDetail.images[0]}`
-                : roomDetail?.images?.[0] || 'https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200',
+            image: roomDetail?.images?.[0] 
+                ? (roomDetail.images[0].includes('cloudinary.com') || roomDetail.images[0].includes('airbnb-backend')
+                    ? roomDetail.images[0]
+                    : `https://airbnb-backend.onrender.com${roomDetail.images[0]}`)
+                : 'https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200',
             includes: [],
             checkIn: checkInDate,
             checkOut: checkOutDate,
@@ -276,9 +278,9 @@ function AppartmentDetail() {
                                     <img 
                                         src={
                                             roomDetail?.images?.[currentImageIndex] 
-                                                ? (roomDetail.images[currentImageIndex].startsWith('/uploads/') 
-                                                    ? `https://airbnb-backend.onrender.com${roomDetail.images[currentImageIndex]}`
-                                                    : roomDetail.images[currentImageIndex])
+                                                ? (roomDetail.images[currentImageIndex].includes('cloudinary.com') || roomDetail.images[currentImageIndex].includes('airbnb-backend')
+                                                    ? roomDetail.images[currentImageIndex]
+                                                    : `https://airbnb-backend.onrender.com${roomDetail.images[currentImageIndex]}`)
                                                 : "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200"
                                         } 
                                         className="w-full h-full object-cover" 
@@ -332,9 +334,9 @@ function AppartmentDetail() {
                                     >
                                         <img 
                                             src={
-                                                img.startsWith('/uploads/') 
-                                                    ? `https://airbnb-backend.onrender.com${img}`
-                                                    : img
+                                                img.includes('cloudinary.com') || img.includes('airbnb-backend')
+                                                    ? img
+                                                    : `https://airbnb-backend.onrender.com${img}`
                                             }
                                             className="w-full h-full object-cover" 
                                             alt={`Thumbnail ${i + 1}`}

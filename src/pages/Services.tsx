@@ -58,6 +58,11 @@ const normalizeImageUrl = (url: string | any): string => {
   // Convertir en string si c'est un objet importé par Vite
   const urlStr = typeof url === 'string' ? url : String(url);
   
+  // Si c'est une URL Cloudinary, la retourner telle quelle
+  if (urlStr.includes('cloudinary.com')) {
+    return urlStr;
+  }
+  
   // Si c'est une URL complète, la retourner telle quelle
   if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
     return urlStr;

@@ -50,6 +50,11 @@ const normalizeImageUrl = (url: string | any): string => {
   
   const urlStr = typeof url === 'string' ? url : String(url);
   
+  // Si c'est une URL Cloudinary, la retourner telle quelle
+  if (urlStr.includes('cloudinary.com')) {
+    return urlStr;
+  }
+  
   if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
     return urlStr;
   }
