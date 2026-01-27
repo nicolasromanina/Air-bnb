@@ -352,7 +352,7 @@ const AuthPage: React.FC = () => {
       </div>
 
       <p className="mt-8 text-[12px] text-gray-400 tracking-widest font-medium">
-        © 2024 SweetHome App
+        © 2026 SweetHome App
       </p>
     </div>
   );
