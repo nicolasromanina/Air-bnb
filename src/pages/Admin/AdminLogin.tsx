@@ -16,9 +16,18 @@ const AdminLogin: React.FC = () => {
     try {
       const res = await api.login({ email, password });
       if (res.success && res.data?.token) {
-        toast.push({ title: 'Connexion réussie', description: 'Bienvenue dans l\'admin.' });
-        // api.login already saves token
-        navigate('/admin');
+        // Verify admin role
+        if (res.data?.user?.role === 'superadmin' || res.data?.user?.role === 'admin') {
+          toast.push({ title: 'Connexion réussie', description: 'Bienvenue dans l\'admin.' });
+          // Redirect to admin dashboard (replace history to prevent going back to login)
+          navigate('/admin', { replace: true });
+        } else {
+          toast.push({ 
+            title: 'Accès refusé', 
+            description: 'Vous n\'avez pas les droits administrateur.',
+            variant: 'destructive'
+          });
+        }
       } else {
         toast.push({ title: 'Erreur', description: res.error || res.data?.message || 'Échec de la connexion', variant: 'destructive' });
       }
