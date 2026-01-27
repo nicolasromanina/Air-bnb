@@ -1,7 +1,7 @@
 // services/additionalOptionsApi.ts
 import { api } from './api';
 
-const BACKEND_URL = 'https://airbnb-backend.onrender.com/api/options';
+const BACKEND_URL = 'https://airbnb-backend-l640.onrender.com/api/options';
 
 export interface AdditionalOption {
   _id: string;

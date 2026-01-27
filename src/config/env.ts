@@ -1,7 +1,7 @@
 // config/env.ts
 export const config = {
   // API Base URL
-  apiBaseUrl: import.meta.env.VITE_API_URL || 'https://airbnb-backend.onrender.com/api',
+  apiBaseUrl: import.meta.env.VITE_API_URL || 'https://airbnb-backend-l640.onrender.com/api',
   
   // Stripe Configuration
   stripePublishableKey: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '',

@@ -6,12 +6,12 @@ import { HomePageData, IHomePage } from '../types/home.types';
 // Use `process.env` when available (node envs) otherwise fall back to Vite's `import.meta.env`.
 const API_BASE_URL = (
   typeof process !== 'undefined' && (process as any)?.env?.NEXT_PUBLIC_API_URL
-) || (import.meta as any)?.env?.VITE_API_URL || 'https://airbnb-backend.onrender.com/api';
+) || (import.meta as any)?.env?.VITE_API_URL || 'https://airbnb-backend-l640.onrender.com/api';
 
 const HOME_ENDPOINT = `${API_BASE_URL}/home`;
 
 /**
- * Gestion des erreurs HTTP
+ * Gestion des erreurs HTTP 
  */
 class HttpError extends Error {
   constructor(

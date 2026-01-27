@@ -1,7 +1,7 @@
 // services/apartmentDetailApi.ts
 import { api } from './api';
 
-const BACKEND_URL = 'https://airbnb-backend.onrender.com/api/apartment-details';
+const BACKEND_URL = 'https://airbnb-backend-l640.onrender.com/api/apartment-details';
 
 export interface GalleryImage {
   src: string;
