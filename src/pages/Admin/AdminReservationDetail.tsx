@@ -546,7 +546,7 @@ L'équipe de gestion`,
                         <SelectValue placeholder="Sélectionner un modèle" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Personnalisé</SelectItem>
+                        <SelectItem value="custom">Personnalisé</SelectItem>
                         {emailTemplates.map(template => (
                           <SelectItem key={template.id} value={template.id}>
                             <div className="flex items-center gap-2">
