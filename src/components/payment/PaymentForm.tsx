@@ -70,59 +70,51 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
   const [isRedirecting, setIsRedirecting] = useState(false);
   const { user, isAuthenticated } = useAuth();
   
-  // NOUVELLE FONCTION DE CALCUL - CORRIGÉE
+  // SIMPLIFICATION RADICALE DU CALCUL
   const calculateFinalAmount = () => {
-    // Extraire le nombre de nuits
     const nights = reservationDetails?.nights || 1;
     
-    console.log("🔢 Données pour calcul:", {
+    console.log("🔢 DONNÉES D'ENTRÉE:", {
       nights,
-      basePrice,
-      pricePerNight: reservationDetails?.pricePerNight,
+      basePriceProp: basePrice,
+      reservationDetailsPricePerNight: reservationDetails?.pricePerNight,
+      reservationDetailsBasePrice: reservationDetails?.basePrice,
       selectedOptionsCount: selectedOptions?.length || reservationDetails?.selectedOptions?.length || 0,
-      optionsPrice
+      optionsPriceProp: optionsPrice
     });
     
-    // 1. CALCULER LE PRIX DU LOGEMENT
-    let calculatedBasePrice = 0;
+    // 1. DÉTERMINER LE PRIX PAR NUIT
     let pricePerNightValue = 0;
     
-    // LOGIQUE PRINCIPALE : Si nous avons pricePerNight, multiplier par le nombre de nuits
+    // Si pricePerNight est fourni dans reservationDetails
     if (reservationDetails?.pricePerNight) {
-      // Convertir pricePerNight en nombre
       const pn = typeof reservationDetails.pricePerNight === 'string' 
         ? parseFloat(reservationDetails.pricePerNight) 
         : reservationDetails.pricePerNight;
-      
       if (!isNaN(pn) && pn > 0) {
         pricePerNightValue = pn;
-        calculatedBasePrice = pn * nights;
-        console.log("✅ Calcul avec pricePerNight:", { pn, nights, total: calculatedBasePrice });
+        console.log("✅ Prix par nuit depuis reservationDetails.pricePerNight:", pn);
       }
     }
-    // Sinon, utiliser basePrice fourni (déjà le total)
-    else if (basePrice !== undefined && basePrice !== null) {
+    // Si basePrice est fourni et qu'on a le nombre de nuits, calculer le prix par nuit
+    else if (basePrice !== undefined && basePrice !== null && nights > 0) {
       const bp = typeof basePrice === 'string' ? parseFloat(basePrice) : basePrice;
       if (!isNaN(bp) && bp > 0) {
-        calculatedBasePrice = bp;
         pricePerNightValue = bp / nights;
-        console.log("✅ Calcul avec basePrice:", { bp, nights, pricePerNight: pricePerNightValue });
+        console.log("✅ Prix par nuit calculé depuis basePrice:", bp, "/", nights, "=", pricePerNightValue);
       }
     }
-    // Sinon, utiliser totalAmount comme fallback
+    // Fallback
     else {
-      const ta = typeof totalAmount === 'string' ? parseFloat(totalAmount) : totalAmount;
-      if (!isNaN(ta) && ta > 0) {
-        calculatedBasePrice = ta;
-        pricePerNightValue = ta / nights;
-        console.log("⚠️ Fallback avec totalAmount:", { ta, nights, pricePerNight: pricePerNightValue });
-      } else {
-        calculatedBasePrice = 800;
-        pricePerNightValue = 800;
-      }
+      pricePerNightValue = 150; // Par défaut
+      console.log("⚠️ Prix par nuit par défaut:", pricePerNightValue);
     }
     
-    // 2. CALCULER LE PRIX DES OPTIONS
+    // 2. CALCULER LE TOTAL DU LOGEMENT
+    const calculatedBasePrice = pricePerNightValue * nights;
+    console.log("💰 Total logement:", pricePerNightValue, "×", nights, "=", calculatedBasePrice);
+    
+    // 3. CALCULER LE PRIX DES OPTIONS
     let calculatedOptionsPrice = 0;
     
     // Priorité 1: optionsPrice fourni
@@ -135,30 +127,27 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
     }
     // Priorité 2: Calculer à partir des selectedOptions
     else {
-      // Utiliser selectedOptions des props OU de reservationDetails
       const opts = selectedOptions || reservationDetails?.selectedOptions || [];
       if (opts.length > 0) {
         calculatedOptionsPrice = opts.reduce((sum, option) => {
           const optionPrice = typeof option.price === 'string' ? parseFloat(option.price) : option.price;
           const quantity = option.quantity || 1;
-          const optionTotal = optionPrice * quantity;
-          console.log(`📦 Option: ${option.name}, prix: ${optionPrice}, quantité: ${quantity}, total: ${optionTotal}`);
-          return sum + optionTotal;
+          return sum + (optionPrice * quantity);
         }, 0);
-        console.log("✅ Calcul options:", opts, "Total:", calculatedOptionsPrice);
+        console.log("✅ Options calculées:", calculatedOptionsPrice);
       }
     }
     
-    // 3. TOTAL FINAL
+    // 4. TOTAL FINAL
     const finalTotal = calculatedBasePrice + calculatedOptionsPrice;
     
-    console.log("💰 RÉSULTAT FINAL:", {
+    console.log("🎯 RÉSULTAT FINAL:", {
       nights,
-      calculatedBasePrice,
-      calculatedOptionsPrice,
-      finalTotal,
       pricePerNight: pricePerNightValue,
-      détail: `${calculatedBasePrice} (logement) + ${calculatedOptionsPrice} (options) = ${finalTotal}`
+      basePriceTotal: calculatedBasePrice,
+      optionsPrice: calculatedOptionsPrice,
+      finalTotal,
+      formule: `${pricePerNightValue} × ${nights} = ${calculatedBasePrice} + ${calculatedOptionsPrice} = ${finalTotal}`
     });
     
     return {
@@ -172,19 +161,9 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
 
   const { finalAmount, basePrice: calculatedBasePrice, optionsPrice: calculatedOptionsPrice, nights, pricePerNight } = calculateFinalAmount();
 
-  // Vérification de débogage
   useEffect(() => {
-    console.log("🔍 DEBOGAGE PaymentForm - Données complètes:", {
-      reservationDetails,
-      nights,
-      pricePerNight: reservationDetails?.pricePerNight,
-      basePriceProp: basePrice,
-      selectedOptions: selectedOptions || reservationDetails?.selectedOptions,
-      calculatedBasePrice,
-      calculatedOptionsPrice,
-      finalAmount
-    });
-  }, [totalAmount, basePrice, optionsPrice, reservationDetails, selectedOptions]);
+    console.log("📊 PaymentForm monté avec:", { calculatedBasePrice, pricePerNight, nights, finalAmount });
+  }, []);
   
   const {
     register,
@@ -214,9 +193,8 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
     setIsRedirecting(true);
     
     try {
-      console.log("🔧 Initialisation du paiement avec montant:", finalAmount);
+      console.log("🔧 Paiement pour:", finalAmount, "€");
 
-      // Helper function to extract number from string
       const extractNumber = (value: any): number => {
         if (typeof value === 'number' && !isNaN(value)) return value;
         if (typeof value === 'string') {
@@ -226,7 +204,6 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
         return 1;
       };
 
-      // Préparer les dates
       const checkInDate = reservationDetails?.checkIn 
         ? new Date(reservationDetails.checkIn)
         : new Date();
@@ -235,10 +212,8 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
         ? new Date(reservationDetails.checkOut)
         : new Date(checkInDate.getTime() + nights * 24 * 60 * 60 * 1000);
 
-      // Récupérer les options sélectionnées
       const finalSelectedOptions = selectedOptions || reservationDetails?.selectedOptions || [];
 
-      // Préparer les données pour le backend
       const paymentRequest: PaymentRequest = {
         amount: finalAmount,
         reservationDetails: {
@@ -265,9 +240,8 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
       const response = await api.createPayment(paymentRequest);
 
       if (response.success && response.data?.url) {
-        console.log("✅ Redirection vers Stripe Checkout pour:", finalAmount, "€");
+        console.log("✅ Redirection pour:", finalAmount, "€");
         
-        // Sauvegarder les données complètes
         const completeReservationData = {
           ...reservationDetails,
           checkIn: checkInDate.toISOString(),
@@ -283,18 +257,14 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
           customerName: `${data.firstName} ${data.lastName}`,
         };
         localStorage.setItem('currentReservation', JSON.stringify(completeReservationData));
-        console.log("💾 Données sauvegardées avec total:", finalAmount, "€");
         
-        toast.success(`Redirection vers le paiement de ${finalAmount}€...`);
-        
-        // Rediriger immédiatement
+        toast.success(`Paiement de ${finalAmount}€...`);
         window.location.href = response.data.url;
       } else {
         const suggested = response.data?.availableFrom || response.data?.nextAvailable || response.data?.availableFrom;
         if (suggested) {
           setSuggestedDate(new Date(suggested));
         }
-
         throw new Error(response.error || "URL de paiement non reçue");
       }
     } catch (err) {
@@ -308,18 +278,14 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
 
   const handleUseSuggested = () => {
     if (!suggestedDate || !reservationDetails) return;
-
     const originalCheckIn = reservationDetails.checkIn ? new Date(reservationDetails.checkIn) : new Date();
     const originalCheckOut = reservationDetails.checkOut ? new Date(reservationDetails.checkOut) : new Date(originalCheckIn.getTime() + (reservationDetails.nights || 1) * 24 * 60 * 60 * 1000);
     const durationMs = originalCheckOut.getTime() - originalCheckIn.getTime();
-
     const newCheckIn = new Date(suggestedDate);
     const newCheckOut = new Date(newCheckIn.getTime() + durationMs);
-
     if (typeof onSuggestDate === 'function') {
       onSuggestDate(newCheckIn.toISOString(), newCheckOut.toISOString());
     }
-
     setSuggestedDate(null);
     toast.success('Dates mises à jour avec la suggestion');
   };
@@ -335,17 +301,14 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
   };
 
   const isLoading = isSubmitting || isRedirecting;
-
-  // Récupérer les options à afficher
   const displaySelectedOptions = selectedOptions || reservationDetails?.selectedOptions || [];
 
   return (
     <form onSubmit={handleSubmit(handlePayment)} className="space-y-4">
-      {/* RÉCAPITULATIF COMPLET DE LA RÉSERVATION */}
+      {/* RÉCAPITULATIF */}
       <div className="bg-card rounded-lg border border-border p-6 space-y-4">
         <h3 className="font-bold text-foreground">Récapitulatif de votre réservation</h3>
         
-        {/* Titre du logement */}
         {reservationDetails?.title && (
           <div className="pb-4 border-b border-border">
             <h4 className="font-semibold text-lg text-foreground">{reservationDetails.title}</h4>
@@ -355,7 +318,6 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
           </div>
         )}
 
-        {/* Dates et durée */}
         {reservationDetails?.checkIn && reservationDetails?.checkOut && (
           <div className="grid grid-cols-2 gap-4 py-2">
             <div>
@@ -366,18 +328,13 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
               <p className="text-xs text-muted-foreground font-semibold mb-1">Départ</p>
               <p className="text-sm font-medium">{new Date(reservationDetails.checkOut).toLocaleDateString('fr-FR')}</p>
             </div>
-            {/* Affichage de la durée */}
             <div className="col-span-2 mt-2 pt-2 border-t border-border">
               <p className="text-xs text-muted-foreground font-semibold mb-1">Durée du séjour</p>
-              <p className="text-sm font-medium">
-                {nights} nuit{nights > 1 ? 's' : ''}
-                {pricePerNight > 0 && ` × ${pricePerNight.toFixed(2)}€/nuit`}
-              </p>
+              <p className="text-sm font-medium">{nights} nuit{nights > 1 ? 's' : ''} × {pricePerNight.toFixed(2)}€/nuit = {calculatedBasePrice.toFixed(2)}€</p>
             </div>
           </div>
         )}
 
-        {/* Personnes et chambres */}
         {(reservationDetails?.guests || reservationDetails?.bedrooms) && (
           <div className="grid grid-cols-2 gap-4 py-2 border-t border-border">
             {reservationDetails.guests && (
@@ -395,7 +352,6 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
           </div>
         )}
 
-        {/* Inclusions */}
         {reservationDetails?.includes && reservationDetails.includes.length > 0 && (
           <div className="py-2 border-t border-border">
             <p className="text-xs text-muted-foreground font-semibold mb-2">Inclus</p>
@@ -411,10 +367,10 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
         )}
       </div>
 
-      {/* Résumé des options sélectionnées */}
+      {/* OPTIONS */}
       {displaySelectedOptions.length > 0 && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <h4 className="font-semibold text-green-900 mb-3">Options incluses dans cette réservation</h4>
+          <h4 className="font-semibold text-green-900 mb-3">Options incluses</h4>
           <div className="space-y-2">
             {displaySelectedOptions.map((option, idx) => {
               const optionTotal = option.price * (option.quantity || 1);
@@ -422,13 +378,9 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
                 <div key={idx} className="flex justify-between items-start text-sm">
                   <div>
                     <span className="text-green-900">{option.name}</span>
-                    {option.quantity > 1 && (
-                      <span className="text-green-700 ml-2">×{option.quantity}</span>
-                    )}
+                    {option.quantity > 1 && <span className="text-green-700 ml-2">×{option.quantity}</span>}
                   </div>
-                  <span className="font-semibold text-green-900">
-                    {optionTotal.toFixed(2)}€
-                  </span>
+                  <span className="font-semibold text-green-900">{optionTotal.toFixed(2)}€</span>
                 </div>
               );
             })}
@@ -442,32 +394,23 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
         </div>
       )}
 
-      {/* Répartition des coûts - IMPORTANT */}
+      {/* RÉPARTITION DES COÛTS */}
       <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 rounded-lg p-5 text-sm">
         <div className="space-y-2.5">
           <div className="flex justify-between items-start">
             <div>
               <span className="text-foreground font-medium">Coût du logement</span>
-              {nights > 1 && pricePerNight > 0 && (
-                <div className="text-xs text-muted-foreground mt-1">
-                  {pricePerNight.toFixed(2)}€ par nuit
-                </div>
-              )}
+              <div className="text-xs text-muted-foreground mt-1">
+                {pricePerNight.toFixed(2)}€ par nuit
+              </div>
             </div>
             <div className="text-right">
               <div className="font-semibold text-foreground">
                 {calculatedBasePrice.toFixed(2)}€
               </div>
-              {nights > 1 && pricePerNight > 0 && (
-                <div className="text-xs text-muted-foreground">
-                  ({pricePerNight.toFixed(2)}€ × {nights} nuits)
-                </div>
-              )}
-              {nights === 1 && pricePerNight > 0 && (
-                <div className="text-xs text-muted-foreground">
-                  (1 nuit)
-                </div>
-              )}
+              <div className="text-xs text-muted-foreground">
+                ({pricePerNight.toFixed(2)}€ × {nights} nuit{nights > 1 ? 's' : ''})
+              </div>
             </div>
           </div>
           
@@ -487,7 +430,7 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
         </div>
       </div>
 
-      {/* Prénom */}
+      {/* FORMULAIRE */}
       <div>
         <label className="block text-sm font-medium mb-1.5 text-foreground">
           Prénom(s) <span className="text-primary">*</span>
@@ -506,7 +449,6 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
         <ErrorMessage message={errors.firstName?.message} />
       </div>
 
-      {/* Nom */}
       <div>
         <label className="block text-sm font-medium mb-1.5 text-foreground">
           Nom <span className="text-primary">*</span>
@@ -525,7 +467,6 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
         <ErrorMessage message={errors.lastName?.message} />
       </div>
 
-      {/* Email */}
       <div>
         <label className="block text-sm font-medium mb-1.5 text-foreground">
           Adresse Email <span className="text-primary">*</span>
@@ -544,7 +485,6 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
         <ErrorMessage message={errors.email?.message} />
       </div>
 
-      {/* Message de connexion requise */}
       {!isAuthenticated && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
           <p className="font-medium">Connexion requise</p>
@@ -552,32 +492,18 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
         </div>
       )}
 
-      {/* Mode de Paiement */}
       <div className="pt-2">
         <label className="block text-sm font-medium mb-1.5 text-center text-foreground">
           Mode de Paiement
         </label>
         <div className="flex items-center justify-center gap-6 py-3">
-          <img 
-            src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" 
-            alt="Visa" 
-            className="h-5"
-          />
-          <img 
-            src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" 
-            alt="Mastercard" 
-            className="h-6"
-          />
-          <img 
-            src="https://upload.wikimedia.org/wikipedia/commons/f/fa/American_Express_logo_%282018%29.svg" 
-            alt="American Express" 
-            className="h-5"
-          />
+          <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-5" />
+          <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-6" />
+          <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/American_Express_logo_%282018%29.svg" alt="American Express" className="h-5" />
           <span className="font-bold text-xs tracking-wider text-foreground">DISCOVER</span>
         </div>
       </div>
 
-      {/* Stripe Info Notice */}
       <div className="bg-secondary/50 rounded-lg p-4 flex items-start gap-3">
         <CreditCard className="text-primary shrink-0 mt-0.5" size={20} />
         <div className="text-sm text-muted-foreground">
@@ -586,7 +512,6 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
         </div>
       </div>
 
-      {/* Total Amount */}
       <div className="border-t border-border pt-4 mt-4">
         <div className="flex justify-between items-center text-lg font-bold">
           <span className="text-foreground">Total à payer</span>
@@ -597,7 +522,6 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
         </p>
       </div>
 
-      {/* Submit Button */}
       {suggestedDate && (
         <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-sm text-yellow-800 mb-2">Les dates sélectionnées sont réservées.</p>
@@ -613,6 +537,7 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
           </div>
         </div>
       )}
+      
       <button
         type="submit"
         disabled={isLoading || !isAuthenticated}
