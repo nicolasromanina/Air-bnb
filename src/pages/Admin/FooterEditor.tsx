@@ -131,12 +131,19 @@ const FooterEditor: React.FC = () => {
     if (files.length === 0) return;
 
     setIsUploading(true);
-    setUploadProgress(0);
+    setUploadProgress(10);
+
+    // Simuler une progression progressive
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        const next = prev + Math.random() * 40;
+        return next >= 90 ? 90 : next;
+      });
+    }, 300);
 
     try {
       if (files.length === 1) {
         const file = files[0];
-        setUploadProgress(50);
         const result = await footerServices.uploadGalleryImage(
           file, 
           `Image ${formData.galleryImages.length + 1}`,
@@ -144,36 +151,38 @@ const FooterEditor: React.FC = () => {
         );
         
         if (result.data?.galleryImages) {
+          clearInterval(progressInterval);
+          setUploadProgress(100);
           setFormData(prev => ({
             ...prev,
             galleryImages: result.data.galleryImages
           }));
-          setUploadProgress(100);
           setSaveMessage('✅ Image ajoutée avec succès!');
           setTimeout(() => setSaveMessage(null), 3000);
         }
       } else {
         const altTexts = files.map((_, index) => `Image ${formData.galleryImages.length + index + 1}`);
-        setUploadProgress(50);
         const result = await footerServices.uploadMultipleGalleryImages(files, altTexts);
         
         if (result.data?.galleryImages) {
+          clearInterval(progressInterval);
+          setUploadProgress(100);
           setFormData(prev => ({
             ...prev,
             galleryImages: result.data.galleryImages
           }));
-          setUploadProgress(100);
           setSaveMessage(`✅ ${files.length} image(s) ajoutée(s) avec succès!`);
           setTimeout(() => setSaveMessage(null), 3000);
         }
       }
     } catch (error) {
       console.error('Erreur lors de l\'upload d\'images:', error);
+      clearInterval(progressInterval);
       setSaveMessage('❌ Erreur lors de l\'upload');
       setTimeout(() => setSaveMessage(null), 3000);
     } finally {
       setIsUploading(false);
-      setUploadProgress(0);
+      setTimeout(() => setUploadProgress(0), 500);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
@@ -493,22 +502,30 @@ const FooterEditor: React.FC = () => {
                     }`}
                   />
                   <p className="text-lg font-semibold mb-2">
-                    {isUploading ? 'Téléchargement en cours...' : 'Glissez vos images ici'}
+                    {isUploading ? (
+                      <>
+                        Téléchargement en cours... ({Math.round(uploadProgress)}%)
+                      </>
+                    ) : (
+                      'Glissez vos images ici'
+                    )}
                   </p>
                   <p className="text-gray-500 mb-4">
                     ou cliquez sur le bouton ci-dessous pour sélectionner des fichiers
                   </p>
 
                   {/* Progress Bar */}
-                  {isUploading && uploadProgress > 0 && (
+                  {isUploading && (
                     <div className="w-full max-w-xs mx-auto mb-4">
                       <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
                         <div
-                          className="bg-pink-500 h-full transition-all duration-300"
-                          style={{ width: `${uploadProgress}%` }}
+                          className="bg-pink-500 h-full transition-all duration-200"
+                          style={{ width: `${Math.min(Math.round(uploadProgress), 100)}%` }}
                         />
                       </div>
-                      <p className="text-sm text-gray-600 mt-2">{uploadProgress}%</p>
+                      <p className="text-sm text-gray-600 mt-2 text-center font-semibold">
+                        {Math.min(Math.round(uploadProgress), 100)}%
+                      </p>
                     </div>
                   )}
 
