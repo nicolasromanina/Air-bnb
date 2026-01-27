@@ -93,22 +93,48 @@ const makeRequest = async <T>(
   
   try {
     const fullUrl = url.startsWith('http') ? url : `${BACKEND_URL}${url}`;
-    console.log(`[API] ${method} ${fullUrl}`, data ? { data } : '');
+    console.log(`[makeRequest] 📡 Starting ${method} request:`, {
+      url: fullUrl,
+      hasToken: !!token,
+      hasData: !!data,
+      dataSize: data ? Object.keys(data).length : 0
+    });
     
     const response = await fetch(fullUrl, config);
+    
+    console.log(`[makeRequest] 📥 Response received:`, {
+      url: fullUrl,
+      status: response.status,
+      statusText: response.statusText,
+      contentType: response.headers.get('content-type'),
+      corsHeaders: {
+        'access-control-allow-origin': response.headers.get('access-control-allow-origin'),
+        'access-control-allow-methods': response.headers.get('access-control-allow-methods')
+      }
+    });
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       const errorMsg = errorData.error || errorData.message || `Erreur HTTP ${response.status}`;
-      console.error(`[API ERROR] ${method} ${fullUrl}:`, errorMsg);
+      console.error(`[makeRequest] ❌ HTTP Error:`, {
+        status: response.status,
+        errorMsg,
+        errorData
+      });
       throw new Error(errorMsg);
     }
     
     const result = await response.json();
-    console.log(`[API SUCCESS] ${method} ${fullUrl}:`, result);
+    console.log(`[makeRequest] ✅ ${method} ${fullUrl} - Success:`, {
+      hasData: !!result,
+      dataKeys: result ? Object.keys(result).slice(0, 5) : []
+    });
     return result;
   } catch (error) {
-    console.error(`[API EXCEPTION] ${method} ${url}:`, error);
+    console.error(`[makeRequest] ❌ EXCEPTION ${method} ${url}:`, {
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorType: error instanceof Error ? error.constructor.name : typeof error
+    });
     throw error;
   }
 };
@@ -117,22 +143,42 @@ export const roomDetailApi = {
   // Récupérer les détails d'une chambre via l'API apartment-details
   async getRoomDetail(roomId: number): Promise<{ success: boolean; data: RoomDetail }> {
     try {
+      console.log('[roomDetailApi] 🔍 getRoomDetail called with roomId:', roomId);
+      
       // Essayer d'abord le nouvel endpoint room-details s'il existe
       try {
+        console.log('[roomDetailApi] 📡 Attempting /room-details/' + roomId);
         const result = await makeRequest<{ success: boolean; data: RoomDetail }>(
           `/room-details/${roomId}`
         );
+        console.log('[roomDetailApi] ✅ /room-details succeeded:', {
+          success: result.success,
+          hasData: !!result.data,
+          roomId: result.data?.roomId,
+          title: result.data?.title
+        });
         return result;
       } catch (e) {
         // Fallback vers apartment-details
-        console.log('Fallback vers /apartment-details');
+        console.log('[roomDetailApi] ⚠️ /room-details failed, fallback to /apartment-details');
+        console.log('[roomDetailApi] Error from /room-details:', e instanceof Error ? e.message : String(e));
         const result = await makeRequest<{ success: boolean; data: RoomDetail }>(
           `/apartment-details/${roomId}`
         );
+        console.log('[roomDetailApi] ✅ /apartment-details succeeded:', {
+          success: result.success,
+          hasData: !!result.data,
+          roomId: result.data?.roomId,
+          title: result.data?.title
+        });
         return result;
       }
     } catch (error) {
-      console.error('Erreur fetch room detail:', error);
+      console.error('[roomDetailApi] ❌ Erreur fetch room detail:', {
+        error: error instanceof Error ? error.message : String(error),
+        roomId,
+        stack: error instanceof Error ? error.stack : undefined
+      });
       throw error;
     }
   },
