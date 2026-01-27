@@ -1102,31 +1102,32 @@ const AppartmentEditor: React.FC = () => {
             </div>
           )}
 
-          {activeSection === 'roomDetail' && roomDetail && (
+          {activeSection === 'roomDetail' && (
             <div className="bg-white rounded-xl shadow-lg p-6 border">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <Bed size={24} />
-                  Détails Chambre #{selectedRoomForDetail}
-                </h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setHeroInfoTab(!heroInfoTab)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                      heroInfoTab ? 'bg-blue-500 text-white' : 'bg-gray-100'
-                    }`}
-                  >
-                    {heroInfoTab ? '👀 Info Hero' : 'Détails'}
-                  </button>
-                </div>
-              </div>
-
               {isLoadingRoomDetail ? (
                 <div className="flex justify-center py-12">
                   <Loader className="animate-spin h-8 w-8 text-blue-500" />
                 </div>
-              ) : (
-                <div className="space-y-6">
+              ) : roomDetail ? (
+                <>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold flex items-center gap-2">
+                      <Bed size={24} />
+                      Détails Chambre #{selectedRoomForDetail}
+                    </h3>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setHeroInfoTab(!heroInfoTab)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                          heroInfoTab ? 'bg-blue-500 text-white' : 'bg-gray-100'
+                        }`}
+                      >
+                        {heroInfoTab ? '👀 Info Hero' : 'Détails'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
                   {/* Messages d'erreur de validation */}
                   {roomDetailErrors.length > 0 && (
                     <div className="bg-red-50 border border-red-300 rounded-lg p-4">
@@ -1635,6 +1636,12 @@ const AppartmentEditor: React.FC = () => {
                       Retour
                     </button>
                   </div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <AlertCircle size={48} className="text-gray-400 mb-4" />
+                  <p className="text-gray-600">Aucun détail de chambre sélectionné</p>
                 </div>
               )}
             </div>
