@@ -61,16 +61,23 @@ const defaultOrigins = isProduction
   : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:8080'];
 
 const envOrigins = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(o => o.trim()) : [];
+const allowedOrigins = [...new Set([...envOrigins, ...defaultOrigins])];
 
-// Ajoutez les patterns regex pour Vercel
+logger.info(`✅ CORS allowed origins: ${allowedOrigins.join(', ')}`);
+
+// CORS patterns for Vercel and other frontend domains
 const vercelPatterns = [
   // Production
   /^https:\/\/air-frontend-neon\.vercel\.app$/,
-  // Preview URLs de Vercel
-  /^https:\/\/air-frontend-.*-nicolasromaninas-projects\.vercel\.app$/,
-  /^https:\/\/airbnb-.*-nicolasromaninas-projects\.vercel\.app$/,
-  // Lovable app
-  /^https:\/\/.*\.lovable\.app$/,
+  // Preview URLs de Vercel (any project name with any preview hash)
+  /^https:\/\/air-frontend-[a-z0-9]+-nicolasromaninas-projects\.vercel\.app$/,
+  /^https:\/\/airbnb-[a-z0-9]+-nicolasromaninas-projects\.vercel\.app$/,
+  // Lovable app (any preview)
+  /^https:\/\/id-preview-[a-z0-9-]+\.lovable\.app$/,
+  // Catch-all for any vercel.app subdomain under your account (safer for development)
+  /^https:\/\/.*-nicolasromaninas-projects\.vercel\.app$/,
+  // Localhost for development
+  /^http:\/\/localhost(:[0-9]+)?$/,
 ];
 
 app.use(cors({
