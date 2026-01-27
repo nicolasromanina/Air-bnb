@@ -627,9 +627,6 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
                             </div>
                           </div>
                         )}
-                            Supprimer
-                          </button>
-                        </div>
                       </div>
                     ))}
                   </div>
