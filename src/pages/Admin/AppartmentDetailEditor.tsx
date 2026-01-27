@@ -1,5 +1,5 @@
 // components/admin/AppartmentDetailEditor.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { 
   Save, Upload, Trash2, Plus, Eye, EyeOff, ChevronUp, ChevronDown, 
@@ -9,7 +9,8 @@ import {
   CheckCircle, XCircle, Loader, ChevronRight, Filter, Search,
   BarChart3, PieChart, TrendingUp, Users, Bed, Home, DollarSign,
   ArrowLeft, Play, Calendar, Shield, Coffee, Tv, Car, Wifi,
-  Globe, Phone, Mail, Wind, TreePine, Waves, Shield as ShieldIcon
+  Globe, Phone, Mail, Wind, TreePine, Waves, Shield as ShieldIcon,
+  AlertTriangle, Info, Clock
 } from 'lucide-react';
 import { apartmentDetailApi, ApartmentDetailData } from '@/services/apartmentDetailApi';
 import { additionalOptionsApi } from '@/services/additionalOptionsApi';
@@ -48,6 +49,11 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [allOptions, setAllOptions] = useState<any[]>([]);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ type: string; index: number } | null>(null);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   
   const [detailData, setDetailData] = useState<ApartmentDetailData>({
     apartmentId: finalApartmentId,
@@ -89,6 +95,33 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
     }
   });
 
+  // Auto-save timer
+  useEffect(() => {
+    if (!autoSaveEnabled || !hasUnsavedChanges) return;
+
+    const timer = setTimeout(async () => {
+      if (hasUnsavedChanges && !isSaving) {
+        console.log('Auto-saving changes...');
+        await handleSave(true); // Auto-save silently
+      }
+    }, 30000); // 30 secondes
+
+    return () => clearTimeout(timer);
+  }, [hasUnsavedChanges, autoSaveEnabled, isSaving]);
+
+  // Warn on page leave if unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
   useEffect(() => {
     if (finalApartmentId && finalApartmentId > 0) {
       loadData();
@@ -103,6 +136,8 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
       const detailResponse = await apartmentDetailApi.getDetailByApartmentId(finalApartmentId);
       if (detailResponse.success) {
         setDetailData(detailResponse.data);
+        setLastSavedAt(new Date());
+        setHasUnsavedChanges(false);
       }
       
       // Charger toutes les options disponibles
@@ -119,19 +154,34 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
     }
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
+  const handleSave = async (isAutoSave: boolean = false) => {
+    if (!isAutoSave) {
+      setIsSaving(true);
+    }
     setSaveMessage(null);
     
     try {
+      // Validation basique
+      if (!detailData.gallery.title.trim()) {
+        throw new Error('Le titre de la galerie est requis');
+      }
+      if (!detailData.lastSection.title.trim()) {
+        throw new Error('Le titre de la dernière section est requis');
+      }
+
       // Exclure les champs meta lors de l'envoi au backend
       const { meta, ...dataToSend } = detailData;
       const response = await apartmentDetailApi.updateDetail(finalApartmentId, dataToSend);
       
       if (response.success) {
         setDetailData(response.data);
-        setSaveMessage({ type: 'success', text: '✅ Détails sauvegardés avec succès!' });
-        toast.success('Détails sauvegardés');
+        setLastSavedAt(new Date());
+        setHasUnsavedChanges(false);
+        
+        if (!isAutoSave) {
+          setSaveMessage({ type: 'success', text: '✅ Détails sauvegardés avec succès!' });
+          toast.success('Détails sauvegardés');
+        }
         
         // Notifier les autres onglets
         try {
@@ -141,14 +191,19 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
         }
       }
     } catch (error) {
-      setSaveMessage({ type: 'error', text: '❌ Erreur lors de la sauvegarde' });
-      toast.error('Erreur lors de la sauvegarde');
+      const errorMsg = error instanceof Error ? error.message : 'Erreur lors de la sauvegarde';
+      setSaveMessage({ type: 'error', text: `❌ ${errorMsg}` });
+      if (!isAutoSave) {
+        toast.error(errorMsg);
+      }
       
       // Sauvegarder localement
       await apartmentDetailApi.saveLocalChanges(finalApartmentId, detailData);
     } finally {
-      setIsSaving(false);
-      setTimeout(() => setSaveMessage(null), 3000);
+      if (!isAutoSave) {
+        setIsSaving(false);
+        setTimeout(() => setSaveMessage(null), 3000);
+      }
     }
   };
 
@@ -175,6 +230,17 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
   };
 
   const handleImageUpload = async (fieldPath: string, file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner une image valide');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('L\'image dépasse 5 MB');
+      return;
+    }
+
+    setIsUploading(true);
     try {
       // Utiliser l'API d'upload existante
       const result = await apartmentApi.uploadImage(file);
@@ -200,11 +266,15 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
         
         return newData;
       });
-      
-      toast.success('Image téléchargée');
+
+      setHasUnsavedChanges(true);
+      toast.success('Image téléchargée avec succès');
     } catch (error) {
       console.error('Erreur upload:', error);
-      toast.error('Erreur lors du téléchargement');
+      const errorMsg = error instanceof Error ? error.message : 'Erreur lors du téléchargement';
+      toast.error(errorMsg);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -219,6 +289,8 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
         features: [...prev[section].features, newFeature]
       }
     }));
+    
+    setHasUnsavedChanges(true);
   };
 
   const handleAddGalleryImage = () => {
@@ -234,22 +306,21 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
         images: [...prev.gallery.images, newImage]
       }
     }));
+    
+    setHasUnsavedChanges(true);
   };
 
   const handleToggleOption = (optionId: string) => {
     const currentOptions = detailData.additionalOptions || [];
     
-    if (currentOptions.includes(optionId)) {
-      setDetailData(prev => ({
-        ...prev,
-        additionalOptions: currentOptions.filter(id => id !== optionId)
-      }));
-    } else {
-      setDetailData(prev => ({
-        ...prev,
-        additionalOptions: [...currentOptions, optionId]
-      }));
-    }
+    setDetailData(prev => ({
+      ...prev,
+      additionalOptions: currentOptions.includes(optionId)
+        ? currentOptions.filter(id => id !== optionId)
+        : [...currentOptions, optionId]
+    }));
+    
+    setHasUnsavedChanges(true);
   };
 
   const updateField = (fieldPath: string, value: any) => {
@@ -268,6 +339,9 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
       current[path[path.length - 1]] = value;
       return newData;
     });
+    
+    // Mark as changed
+    setHasUnsavedChanges(true);
   };
 
   if (isLoading) {
@@ -288,7 +362,7 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
               {onClose && (
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition"
                 >
                   <ArrowLeft size={20} />
                 </button>
@@ -296,31 +370,59 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
               <h1 className="text-3xl font-bold text-gray-900">
                 Éditeur Détails Appartement #{finalApartmentId}
               </h1>
+              {hasUnsavedChanges && (
+                <span className="inline-flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
+                  <AlertTriangle size={16} />
+                  Modifications non sauvegardées
+                </span>
+              )}
             </div>
-            <p className="text-gray-600">Modifiez les détails de cette page d'appartement</p>
+            <div className="flex items-center gap-4">
+              <p className="text-gray-600">Modifiez les détails de cette page d'appartement</p>
+              {lastSavedAt && (
+                <span className="text-xs text-gray-500 flex items-center gap-1">
+                  <Clock size={14} />
+                  Sauvegardé à {lastSavedAt.toLocaleTimeString()}
+                </span>
+              )}
+            </div>
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <button
               onClick={() => setIsPreview(!isPreview)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
             >
               {isPreview ? <EyeOff size={20} /> : <Eye size={20} />}
-              {isPreview ? 'Masquer aperçu' : 'Aperçu'}
+              {isPreview ? 'Masquer' : 'Aperçu'}
             </button>
             
             <button
-              onClick={handleSyncWithMain}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+              onClick={loadData}
+              disabled={isLoading}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
             >
-              <RefreshCw size={20} />
-              Synchroniser
+              <RefreshCw size={20} className={isLoading ? 'animate-spin' : ''} />
+              Recharger
             </button>
             
             <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
+              onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
+                autoSaveEnabled 
+                  ? 'bg-green-100 text-green-700 border border-green-300' 
+                  : 'bg-gray-100 text-gray-700 border border-gray-300'
+              }`}
+              title={autoSaveEnabled ? 'Auto-save activé' : 'Auto-save désactivé'}
+            >
+              {autoSaveEnabled ? <Check size={20} /> : <X size={20} />}
+              Auto-save
+            </button>
+            
+            <button
+              onClick={() => handleSave(false)}
+              disabled={isSaving || !hasUnsavedChanges}
+              className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 transition"
             >
               {isSaving ? (
                 <>
@@ -338,17 +440,15 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
         </div>
 
         {saveMessage && (
-          <div className={`p-4 rounded-lg mb-4 ${
+          <div className={`p-4 rounded-lg mb-4 flex items-center gap-2 animate-in ${
             saveMessage.type === 'success' 
               ? 'bg-green-100 text-green-700 border border-green-200' 
               : 'bg-red-100 text-red-700 border border-red-200'
           }`}>
-            <div className="flex items-center gap-2">
-              {saveMessage.type === 'success' ? 
-                <CheckCircle size={20} /> : <XCircle size={20} />
-              }
-              <span>{saveMessage.text}</span>
-            </div>
+            {saveMessage.type === 'success' ? 
+              <CheckCircle size={20} /> : <XCircle size={20} />
+            }
+            <span>{saveMessage.text}</span>
           </div>
         )}
 
@@ -476,13 +576,18 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
                           </div>
                         </div>
                         <div className="flex justify-end gap-2">
-                          <label className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 text-sm">
+                          <label className={`flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-sm transition ${
+                            isUploading 
+                              ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                          }`} style={{ pointerEvents: isUploading ? 'none' : 'auto' }}>
                             <Upload size={14} />
-                            Changer
+                            {isUploading ? 'Upload...' : 'Changer'}
                             <input
                               type="file"
                               accept="image/*"
                               className="hidden"
+                              disabled={isUploading}
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
@@ -492,12 +597,36 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
                             />
                           </label>
                           <button
-                            onClick={() => {
-                              const newImages = detailData.gallery.images.filter((_, i) => i !== index);
-                              updateField('gallery.images', newImages);
-                            }}
-                            className="px-3 py-1 text-red-500 hover:bg-red-50 rounded-lg text-sm"
+                            onClick={() => setDeleteConfirm({ type: 'galleryImage', index })}
+                            className="px-3 py-1 text-red-500 hover:bg-red-50 rounded-lg text-sm transition"
                           >
+                            <Trash2 size={14} className="inline" />
+                          </button>
+                        </div>
+
+                        {deleteConfirm?.type === 'galleryImage' && deleteConfirm?.index === index && (
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-2">
+                            <p className="text-sm text-red-800 mb-2">Confirmez la suppression de cette image?</p>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  const newImages = detailData.gallery.images.filter((_, i) => i !== index);
+                                  updateField('gallery.images', newImages);
+                                  setDeleteConfirm(null);
+                                }}
+                                className="flex-1 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                              >
+                                Supprimer
+                              </button>
+                              <button
+                                onClick={() => setDeleteConfirm(null)}
+                                className="flex-1 px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm hover:bg-gray-400"
+                              >
+                                Annuler
+                              </button>
+                            </div>
+                          </div>
+                        )}
                             Supprimer
                           </button>
                         </div>
@@ -608,16 +737,37 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
                               <ChevronDown size={18} />
                             </button>
                             <button
-                              onClick={() => {
-                                const newFeatures = detailData.lastSection.features.filter((_, i) => i !== index);
-                                updateField('lastSection.features', newFeatures);
-                              }}
-                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg border"
+                              onClick={() => setDeleteConfirm({ type: 'lastSectionFeature', index })}
+                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg border transition"
                             >
                               <Trash2 size={18} />
                             </button>
                           </div>
                         </div>
+
+                        {deleteConfirm?.type === 'lastSectionFeature' && deleteConfirm?.index === index && (
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-2">
+                            <p className="text-sm text-red-800 mb-2">Confirmez la suppression de cette caractéristique?</p>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  const newFeatures = detailData.lastSection.features.filter((_, i) => i !== index);
+                                  updateField('lastSection.features', newFeatures);
+                                  setDeleteConfirm(null);
+                                }}
+                                className="flex-1 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                              >
+                                Supprimer
+                              </button>
+                              <button
+                                onClick={() => setDeleteConfirm(null)}
+                                className="flex-1 px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm hover:bg-gray-400"
+                              >
+                                Annuler
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -647,13 +797,18 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
                         className="w-full border rounded-lg p-2 mb-2"
                         placeholder="URL de l'image"
                       />
-                      <label className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 text-sm">
+                      <label className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg cursor-pointer text-sm transition ${
+                        isUploading 
+                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                      }`} style={{ pointerEvents: isUploading ? 'none' : 'auto' }}>
                         <Upload size={16} />
-                        Télécharger
+                        {isUploading ? 'Upload...' : 'Télécharger'}
                         <input
                           type="file"
                           accept="image/*"
                           className="hidden"
+                          disabled={isUploading}
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) handleImageUpload('lastSection.image', file);
@@ -830,9 +985,9 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
               
               <div className="space-y-3">
                 <button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="w-full py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                  onClick={() => handleSave(false)}
+                  disabled={isSaving || !hasUnsavedChanges}
+                  className="w-full py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 flex items-center justify-center gap-2 transition"
                 >
                   {isSaving ? (
                     <Loader className="animate-spin" size={18} />
@@ -844,21 +999,58 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
                 
                 <button
                   onClick={loadData}
-                  className="w-full py-3 border rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2"
+                  disabled={isLoading}
+                  className="w-full py-3 border rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2 disabled:opacity-50 transition"
                 >
-                  <RefreshCw size={18} />
+                  <RefreshCw size={18} className={isLoading ? 'animate-spin' : ''} />
                   Recharger
                 </button>
                 
                 {onClose && (
                   <button
                     onClick={onClose}
-                    className="w-full py-3 border rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2"
+                    className="w-full py-3 border rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2 transition"
                   >
                     <ArrowLeft size={18} />
                     Retour
                   </button>
                 )}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-lg p-6 border">
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <Clock size={20} />
+                État d'enregistrement
+              </h3>
+              
+              <div className="space-y-3 text-sm">
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <div className="text-xs text-gray-600 mb-1">Dernière sauvegarde</div>
+                  <div className="font-medium text-gray-900">
+                    {lastSavedAt 
+                      ? lastSavedAt.toLocaleTimeString('fr-FR')
+                      : 'Jamais sauvegardé'
+                    }
+                  </div>
+                </div>
+
+                {hasUnsavedChanges && (
+                  <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-2">
+                    <AlertTriangle size={16} className="text-orange-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <div className="font-medium text-orange-900">Modifications non sauvegardées</div>
+                      <div className="text-xs text-orange-800 mt-1">
+                        L'auto-save sauvegardеra dans {autoSaveEnabled ? '30s' : 'jamais'}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <div className="text-xs text-blue-600 mb-1">Version</div>
+                  <div className="font-medium text-blue-900">v{detailData.meta.version}</div>
+                </div>
               </div>
             </div>
 

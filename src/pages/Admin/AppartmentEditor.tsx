@@ -43,6 +43,10 @@ const AppartmentEditor: React.FC = () => {
   const [roomDetailErrors, setRoomDetailErrors] = useState<string[]>([]);
   const [heroInfoTab, setHeroInfoTab] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [roomDetailHasChanges, setRoomDetailHasChanges] = useState(false);
+  const [roomDetailLastSaved, setRoomDetailLastSaved] = useState<Date | null>(null);
+  const [deleteConfirmImage, setDeleteConfirmImage] = useState<number | null>(null);
+  const [autoSaveRoomDetail, setAutoSaveRoomDetail] = useState(true);
   const [newRoom, setNewRoom] = useState<any>({
     title: '',
     description: '',
@@ -192,6 +196,20 @@ const AppartmentEditor: React.FC = () => {
     checkConnection();
     fetchPageData();
   }, []);
+
+  // Auto-save roomDetail
+  useEffect(() => {
+    if (!autoSaveRoomDetail || !roomDetailHasChanges || isSaving) return;
+
+    const timer = setTimeout(async () => {
+      if (roomDetailHasChanges && !isSaving) {
+        console.log('[ADMIN] 🔄 Auto-saving room detail...');
+        await saveRoomDetail(true); // Auto-save silently
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearTimeout(timer);
+  }, [roomDetailHasChanges, autoSaveRoomDetail, isSaving]);
 
   const checkConnection = async () => {
     try {
@@ -427,14 +445,19 @@ const AppartmentEditor: React.FC = () => {
   };
 
   // Mettre à jour les détails d'une chambre
-  const saveRoomDetail = async () => {
-    console.clear();
-    console.log('%c🔴 🔴 🔴 SAVE BUTTON CLICKED! 🔴 🔴 🔴', 'color: #ff0000; font-size: 18px; font-weight: bold;');
+  const saveRoomDetail = async (isAutoSave: boolean = false) => {
+    if (!isAutoSave) {
+      console.clear();
+      console.log('%c🔴 🔴 🔴 SAVE BUTTON CLICKED! 🔴 🔴 🔴', 'color: #ff0000; font-size: 18px; font-weight: bold;');
+    }
     console.log('[ADMIN] 💾 Starting to save room detail for roomId:', selectedRoomForDetail);
     console.log('[ADMIN] 📋 Current roomDetail state BEFORE save:', roomDetail);
     
     if (!roomDetail || !selectedRoomForDetail) {
       console.warn('[ADMIN] ⚠️ Missing roomDetail or selectedRoomForDetail');
+      if (!isAutoSave) {
+        toast.error('Erreur: données manquantes');
+      }
       return;
     }
     
@@ -446,13 +469,18 @@ const AppartmentEditor: React.FC = () => {
     if (!validation.valid) {
       console.error('[ADMIN] ❌ Validation errors:', validation.errors);
       setRoomDetailErrors(validation.errors);
-      setSaveMessage({ type: 'error', text: '❌ Erreur de validation des données' });
+      if (!isAutoSave) {
+        setSaveMessage({ type: 'error', text: '❌ Erreur de validation des données' });
+        toast.error('Erreur de validation');
+      }
       return;
     }
     console.log('[ADMIN] ✅ Validation passed');
     
     setRoomDetailErrors([]);
-    setIsSaving(true);
+    if (!isAutoSave) {
+      setIsSaving(true);
+    }
     try {
       // Prepare data without MongoDB _id field
       const { _id, ...cleanData } = roomDetail as any;
@@ -474,6 +502,8 @@ const AppartmentEditor: React.FC = () => {
         // Mettre à jour le state avec la réponse du serveur
         const updatedData = response.data || roomDetail; // Fallback si le serveur ne retourne pas les données
         setRoomDetail(updatedData);
+        setRoomDetailHasChanges(false);
+        setRoomDetailLastSaved(new Date());
         console.log('[ADMIN] ✅ Room detail saved successfully:', {
           roomId: selectedRoomForDetail,
           title: updatedData.title,
@@ -484,7 +514,10 @@ const AppartmentEditor: React.FC = () => {
           amenities: updatedData.amenities
         });
         
-        setSaveMessage({ type: 'success', text: '✅ Détails de la chambre sauvegardés!' });
+        if (!isAutoSave) {
+          setSaveMessage({ type: 'success', text: '✅ Détails de la chambre sauvegardés!' });
+          toast.success('Détails de la chambre sauvegardés');
+        }
         
         // Notifier les autres composants de la mise à jour
         try {
@@ -526,7 +559,10 @@ const AppartmentEditor: React.FC = () => {
       } else {
         console.error('[ADMIN] ❌ Update response success: false');
         console.error('[ADMIN] ❌ Full response:', response);
-        setSaveMessage({ type: 'error', text: '❌ Erreur: réponse serveur invalide' });
+        if (!isAutoSave) {
+          setSaveMessage({ type: 'error', text: '❌ Erreur: réponse serveur invalide' });
+          toast.error('Erreur serveur');
+        }
       }
     } catch (error) {
       console.error('[ADMIN] ❌ Error saving room detail:', error);
@@ -535,9 +571,14 @@ const AppartmentEditor: React.FC = () => {
         stack: error instanceof Error ? error.stack : '',
         type: typeof error
       });
-      setSaveMessage({ type: 'error', text: '❌ Erreur lors de la sauvegarde' });
+      if (!isAutoSave) {
+        setSaveMessage({ type: 'error', text: '❌ Erreur lors de la sauvegarde' });
+        toast.error('Erreur lors de la sauvegarde');
+      }
     } finally {
-      setIsSaving(false);
+      if (!isAutoSave) {
+        setIsSaving(false);
+      }
       console.log('[ADMIN] 🏁 Room detail save operation completed');
       console.log('[ADMIN] 🔄 Current roomDetail in state AFTER save completed:', roomDetail);
     }
@@ -587,6 +628,8 @@ const AppartmentEditor: React.FC = () => {
       
       return newData;
     });
+    
+    setRoomDetailHasChanges(true);
   };
 
   const addCheckItem = () => {
@@ -1278,18 +1321,45 @@ const AppartmentEditor: React.FC = () => {
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        const newImages = roomDetail.images.filter((_, i) => i !== idx);
-                                        updateRoomDetailField('images', newImages);
-                                        if (currentImageIndex >= newImages.length) {
-                                          setCurrentImageIndex(Math.max(0, newImages.length - 1));
-                                        }
+                                        setDeleteConfirmImage(idx);
                                       }}
-                                      className="ml-auto p-1 text-red-500 hover:bg-red-100 rounded"
+                                      className="ml-auto p-1 text-red-500 hover:bg-red-100 rounded transition"
                                       title="Supprimer l'image"
                                     >
                                       <Trash2 size={14} />
                                     </button>
                                   </div>
+
+                                  {deleteConfirmImage === idx && (
+                                    <div className="bg-red-50 border border-red-300 rounded p-2 mb-2 text-xs">
+                                      <p className="text-red-700 font-semibold mb-2">Supprimer cette image?</p>
+                                      <div className="flex gap-1">
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            const newImages = roomDetail.images.filter((_, i) => i !== idx);
+                                            updateRoomDetailField('images', newImages);
+                                            setDeleteConfirmImage(null);
+                                            if (currentImageIndex >= newImages.length) {
+                                              setCurrentImageIndex(Math.max(0, newImages.length - 1));
+                                            }
+                                          }}
+                                          className="flex-1 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
+                                        >
+                                          Oui
+                                        </button>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setDeleteConfirmImage(null);
+                                          }}
+                                          className="flex-1 px-2 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-xs"
+                                        >
+                                          Non
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
                                   {img && img.startsWith('/uploads/') && (
                                     <img 
                                       src={`https://airbnb-backend.onrender.com${img}`} 
@@ -1486,12 +1556,41 @@ const AppartmentEditor: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Status bar */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        {roomDetailHasChanges && (
+                          <div className="flex items-center gap-2 text-blue-700 text-sm">
+                            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                            Modifications non sauvegardées
+                          </div>
+                        )}
+                        {!roomDetailHasChanges && roomDetailLastSaved && (
+                          <div className="flex items-center gap-2 text-green-700 text-sm">
+                            <Check size={14} />
+                            Sauvegardé à {roomDetailLastSaved.toLocaleTimeString('fr-FR')}
+                          </div>
+                        )}
+                      </div>
+                      <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={autoSaveRoomDetail}
+                          onChange={(e) => setAutoSaveRoomDetail(e.target.checked)}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-gray-700">Auto-save (30s)</span>
+                      </label>
+                    </div>
+                  </div>
+
                   {/* Buttons */}
-                  <div className="flex gap-3 pt-6 border-t">
+                  <div className="flex gap-3 pt-6 border-t flex-wrap">
                     <button
-                      onClick={saveRoomDetail}
-                      disabled={isSaving}
-                      className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 font-semibold"
+                      onClick={() => saveRoomDetail(false)}
+                      disabled={isSaving || !roomDetailHasChanges}
+                      className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition"
                     >
                       {isSaving ? (
                         <>
@@ -1508,7 +1607,7 @@ const AppartmentEditor: React.FC = () => {
                     <button
                       onClick={syncRoomDetailChanges}
                       disabled={isSaving}
-                      className="flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 font-semibold"
+                      className="flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition"
                     >
                       {isSaving ? (
                         <>
@@ -1527,10 +1626,11 @@ const AppartmentEditor: React.FC = () => {
                         setActiveSection('rooms');
                         setSelectedRoomForDetail(null);
                         setRoomDetail(null);
+                        setRoomDetailHasChanges(false);
                         setHeroInfoTab(false);
                         setCurrentImageIndex(0);
                       }}
-                      className="px-6 py-3 border rounded-lg hover:bg-gray-50 font-semibold"
+                      className="px-6 py-3 border rounded-lg hover:bg-gray-50 font-semibold transition"
                     >
                       Retour
                     </button>
