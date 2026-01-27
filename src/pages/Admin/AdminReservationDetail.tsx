@@ -41,7 +41,7 @@ import {
   ArrowRightLeft,
   Send,
   History,
-  Template,
+  FileText,
   Clock,
   Check,
   AlertCircle,
@@ -498,7 +498,7 @@ L'équipe de gestion`,
                         {emailTemplates.map(template => (
                           <SelectItem key={template.id} value={template.id}>
                             <div className="flex items-center gap-2">
-                              <Template className="h-3 w-3" />
+                              <FileText className="h-3 w-3" />
                               {template.name}
                             </div>
                           </SelectItem>
