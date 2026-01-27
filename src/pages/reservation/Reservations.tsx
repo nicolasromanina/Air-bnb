@@ -244,7 +244,7 @@ const Reservations = () => {
                   }.`}
             </p>
             <Link
-              to="/appartments"
+              to="/appartement"
               className="inline-block bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
             >
               Découvrir les appartements
@@ -427,7 +427,7 @@ const Reservations = () => {
                     {/* Boutons d'action */}
                     <div className="flex gap-3 flex-wrap">
                       <Link
-                        to={`/appartments/${reservation.apartmentId}`}
+                        to={`/appartement/${reservation.apartmentId}`}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
                       >
                         <Eye className="w-4 h-4" />
