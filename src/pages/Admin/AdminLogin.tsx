@@ -11,32 +11,40 @@ const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
 
   const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await api.login({ email, password });
-      if (res.success && res.data?.token) {
-        // Verify admin role
-        if (res.data?.user?.role === 'superadmin' || res.data?.user?.role === 'admin') {
-          toast.push({ title: 'Connexion réussie', description: 'Bienvenue dans l\'admin.' });
-          // Redirect to admin dashboard (replace history to prevent going back to login)
-          navigate('/admin', { replace: true });
-        } else {
-          toast.push({ 
-            title: 'Accès refusé', 
-            description: 'Vous n\'avez pas les droits administrateur.',
-            variant: 'destructive'
-          });
-        }
+  e.preventDefault();
+  setLoading(true);
+  try {
+    const res = await api.login({ email, password });
+    if (res.success && res.data?.token) {
+      // Verify admin role
+      if (res.data?.user?.role === 'superadmin' || res.data?.user?.role === 'admin') {
+        toast.push({ title: 'Connexion réussie', description: 'Bienvenue dans l\'admin.' });
+        
+        // Stocker le token et les infos utilisateur
+        localStorage.setItem('adminToken', res.data.token);
+        localStorage.setItem('adminUser', JSON.stringify(res.data.user));
+        
+        // Rediriger vers le dashboard admin
+        navigate('/admin/dashboard', { replace: true });
+        
+        // Forcer un rechargement pour s'assurer que l'authentification est prise en compte
+        window.location.reload();
       } else {
-        toast.push({ title: 'Erreur', description: res.error || res.data?.message || 'Échec de la connexion', variant: 'destructive' });
+        toast.push({ 
+          title: 'Accès refusé', 
+          description: 'Vous n\'avez pas les droits administrateur.',
+          variant: 'destructive'
+        });
       }
-    } catch (err: any) {
-      toast.push({ title: 'Erreur', description: err?.message || 'Erreur réseau', variant: 'destructive' });
-    } finally {
-      setLoading(false);
+    } else {
+      toast.push({ title: 'Erreur', description: res.error || res.data?.message || 'Échec de la connexion', variant: 'destructive' });
     }
-  };
+  } catch (err: any) {
+    toast.push({ title: 'Erreur', description: err?.message || 'Erreur réseau', variant: 'destructive' });
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="p-6 min-h-screen bg-white flex items-center justify-center">
