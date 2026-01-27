@@ -34,6 +34,8 @@ const FooterEditor: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -128,9 +130,13 @@ const FooterEditor: React.FC = () => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
+    setIsUploading(true);
+    setUploadProgress(0);
+
     try {
       if (files.length === 1) {
         const file = files[0];
+        setUploadProgress(50);
         const result = await footerServices.uploadGalleryImage(
           file, 
           `Image ${formData.galleryImages.length + 1}`,
@@ -142,9 +148,13 @@ const FooterEditor: React.FC = () => {
             ...prev,
             galleryImages: result.data.galleryImages
           }));
+          setUploadProgress(100);
+          setSaveMessage('✅ Image ajoutée avec succès!');
+          setTimeout(() => setSaveMessage(null), 3000);
         }
       } else {
         const altTexts = files.map((_, index) => `Image ${formData.galleryImages.length + index + 1}`);
+        setUploadProgress(50);
         const result = await footerServices.uploadMultipleGalleryImages(files, altTexts);
         
         if (result.data?.galleryImages) {
@@ -152,10 +162,55 @@ const FooterEditor: React.FC = () => {
             ...prev,
             galleryImages: result.data.galleryImages
           }));
+          setUploadProgress(100);
+          setSaveMessage(`✅ ${files.length} image(s) ajoutée(s) avec succès!`);
+          setTimeout(() => setSaveMessage(null), 3000);
         }
       }
     } catch (error) {
       console.error('Erreur lors de l\'upload d\'images:', error);
+      setSaveMessage('❌ Erreur lors de l\'upload');
+      setTimeout(() => setSaveMessage(null), 3000);
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files || []).filter(file =>
+      file.type.startsWith('image/')
+    );
+
+    if (files.length === 0) return;
+
+    // Créer un événement synthétique pour réutiliser handleGalleryImageUpload
+    const dataTransfer = new DataTransfer();
+    files.forEach(file => dataTransfer.items.add(file));
+    
+    const input = fileInputRef.current;
+    if (input) {
+      input.files = dataTransfer.files;
+      const event = new Event('change', { bubbles: true }) as any;
+      event.target = input;
+      handleGalleryImageUpload(event);
     }
   };
 
@@ -167,9 +222,13 @@ const FooterEditor: React.FC = () => {
           ...prev,
           galleryImages: result.data.galleryImages
         }));
+        setSaveMessage('✅ Image supprimée avec succès!');
+        setTimeout(() => setSaveMessage(null), 3000);
       }
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);
+      setSaveMessage('❌ Erreur lors de la suppression');
+      setTimeout(() => setSaveMessage(null), 3000);
     }
   };
 
@@ -393,109 +452,179 @@ const FooterEditor: React.FC = () => {
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-bold flex items-center gap-2">
                   <Grid size={24} />
-                  Galerie d'images
+                  Galerie d'images ({formData.galleryImages.length})
                 </h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSaveGalleryOrder}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                  >
-                    <ArrowUpDown size={18} />
-                    Sauvegarder l'ordre
-                  </button>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    multiple
-                    onChange={handleGalleryImageUpload}
+                <button
+                  onClick={handleSaveGalleryOrder}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                  disabled={formData.galleryImages.length === 0}
+                >
+                  <ArrowUpDown size={18} />
+                  Sauvegarder l'ordre
+                </button>
+              </div>
+
+              {/* Upload Zone avec Drag & Drop */}
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`mb-8 border-2 border-dashed rounded-xl p-8 transition-all ${
+                  isDragOver
+                    ? 'border-pink-500 bg-pink-50'
+                    : 'border-gray-300 bg-gray-50 hover:border-gray-400'
+                }`}
+              >
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  multiple
+                  onChange={handleGalleryImageUpload}
+                  disabled={isUploading}
+                />
+
+                <div className="text-center">
+                  <ImagePlus
+                    size={48}
+                    className={`mx-auto mb-4 ${
+                      isDragOver ? 'text-pink-500' : 'text-gray-400'
+                    }`}
                   />
+                  <p className="text-lg font-semibold mb-2">
+                    {isUploading ? 'Téléchargement en cours...' : 'Glissez vos images ici'}
+                  </p>
+                  <p className="text-gray-500 mb-4">
+                    ou cliquez sur le bouton ci-dessous pour sélectionner des fichiers
+                  </p>
+
+                  {/* Progress Bar */}
+                  {isUploading && uploadProgress > 0 && (
+                    <div className="w-full max-w-xs mx-auto mb-4">
+                      <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="bg-pink-500 h-full transition-all duration-300"
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-sm text-gray-600 mt-2">{uploadProgress}%</p>
+                    </div>
+                  )}
+
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
+                    disabled={isUploading}
+                    className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                   >
-                    <ImagePlus size={18} />
-                    Ajouter des images
+                    {isUploading ? (
+                      <>
+                        <span className="inline-block mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Téléchargement...
+                      </>
+                    ) : (
+                      <>
+                        <ImagePlus className="inline mr-2 h-5 w-5" />
+                        Sélectionner des images
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
 
+              {/* Message de feedback */}
+              {saveMessage && (
+                <div className={`mb-6 p-4 rounded-lg ${
+                  saveMessage.includes('✅')
+                    ? 'bg-green-50 text-green-700 border border-green-200'
+                    : 'bg-red-50 text-red-700 border border-red-200'
+                }`}>
+                  {saveMessage}
+                </div>
+              )}
+
               <div className="space-y-4">
-                {formData.galleryImages.map((img, index) => (
-                  <div key={img._id || index} className="border rounded-lg p-4">
-                    <div className="flex gap-4 mb-4">
-                      <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                        <img src={img.image} alt={img.alt} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium">Image {index + 1}</h4>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleMoveImage(index, 'up')}
-                              disabled={index === 0}
-                              className="p-1 hover:bg-gray-100 rounded disabled:opacity-30"
-                            >
-                              <ChevronUp size={20} />
-                            </button>
-                            <button
-                              onClick={() => handleMoveImage(index, 'down')}
-                              disabled={index === formData.galleryImages.length - 1}
-                              className="p-1 hover:bg-gray-100 rounded disabled:opacity-30"
-                            >
-                              <ChevronDown size={20} />
-                            </button>
-                            <button
-                              onClick={() => img._id && handleDeleteGalleryImage(img._id)}
-                              className="p-1 text-red-500 hover:bg-red-50 rounded"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </div>
+                {formData.galleryImages.length > 0 ? (
+                  formData.galleryImages.map((img, index) => (
+                    <div key={img._id || index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <div className="flex gap-4 mb-4">
+                        <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                          <img src={img.image} alt={img.alt} className="w-full h-full object-cover" />
                         </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium mb-1">Texte alternatif</label>
-                            <input
-                              type="text"
-                              value={img.alt}
-                              onChange={(e) => {
-                                const newImages = [...formData.galleryImages];
-                                newImages[index].alt = e.target.value;
-                                setFormData(prev => ({ ...prev, galleryImages: newImages }));
-                              }}
-                              className="w-full border rounded-lg p-2"
-                            />
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-medium">Image {index + 1}</h4>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleMoveImage(index, 'up')}
+                                disabled={index === 0}
+                                className="p-1 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                                title="Déplacer vers le haut"
+                              >
+                                <ChevronUp size={20} />
+                              </button>
+                              <button
+                                onClick={() => handleMoveImage(index, 'down')}
+                                disabled={index === formData.galleryImages.length - 1}
+                                className="p-1 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                                title="Déplacer vers le bas"
+                              >
+                                <ChevronDown size={20} />
+                              </button>
+                              <button
+                                onClick={() => img._id && handleDeleteGalleryImage(img._id)}
+                                className="p-1 text-red-500 hover:bg-red-50 rounded"
+                                title="Supprimer l'image"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
                           </div>
-                          <div>
-                            <label className="block text-sm font-medium mb-1">Ordre</label>
-                            <input
-                              type="number"
-                              value={img.order}
-                              onChange={(e) => {
-                                const newImages = [...formData.galleryImages];
-                                newImages[index].order = parseInt(e.target.value);
-                                setFormData(prev => ({ ...prev, galleryImages: newImages }));
-                              }}
-                              className="w-full border rounded-lg p-2"
-                            />
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Texte alternatif</label>
+                              <input
+                                type="text"
+                                value={img.alt}
+                                onChange={(e) => {
+                                  const newImages = [...formData.galleryImages];
+                                  newImages[index].alt = e.target.value;
+                                  setFormData(prev => ({ ...prev, galleryImages: newImages }));
+                                }}
+                                className="w-full border rounded-lg p-2"
+                                placeholder="Description de l'image"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Ordre</label>
+                              <input
+                                type="number"
+                                value={img.order}
+                                onChange={(e) => {
+                                  const newImages = [...formData.galleryImages];
+                                  newImages[index].order = parseInt(e.target.value);
+                                  setFormData(prev => ({ ...prev, galleryImages: newImages }));
+                                }}
+                                className="w-full border rounded-lg p-2"
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-
-                {formData.galleryImages.length === 0 && (
-                  <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                    <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
-                    <p className="mt-4 text-gray-500">Aucune image dans la galerie</p>
+                  ))
+                ) : (
+                  <div className="text-center py-12 border-2 border-dashed rounded-lg bg-gray-50">
+                    <ImageIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <p className="text-gray-500 font-medium mb-4">Aucune image dans la galerie</p>
+                    <p className="text-gray-400 text-sm mb-6">Commencez par ajouter vos premières images</p>
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="mt-4 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
+                      disabled={isUploading}
+                      className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-50"
                     >
+                      <ImagePlus className="inline mr-2 h-4 w-4" />
                       Ajouter des images
                     </button>
                   </div>
