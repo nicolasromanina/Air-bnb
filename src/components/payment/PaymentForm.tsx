@@ -70,38 +70,101 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
   const [isRedirecting, setIsRedirecting] = useState(false);
   const { user, isAuthenticated } = useAuth();
   
-  // Calculer le montant correct basé sur basePrice et optionsPrice
-  // Priorité: basePrice+optionsPrice > totalAmount > 800
-  const finalAmount = (() => {
-    // Convertir à nombre si nécessaire
-    const bp = typeof basePrice === 'string' ? parseFloat(basePrice) : basePrice;
-    const op = typeof optionsPrice === 'string' ? parseFloat(optionsPrice) : optionsPrice;
-    const ta = typeof totalAmount === 'string' ? parseFloat(totalAmount) : totalAmount;
+  // Calculer le montant correct basé sur le nombre de nuits et les options
+  const calculateFinalAmount = () => {
+    // Extraire le nombre de nuits (par défaut 1)
+    const nights = reservationDetails?.nights || 1;
     
-    // Essayer d'utiliser basePrice en priorité
-    if (typeof bp === 'number' && !isNaN(bp) && bp > 0) {
-      const optPrice = typeof op === 'number' && !isNaN(op) ? op : 0;
-      return bp + optPrice;
+    // Calculer le prix du logement (prix par nuit × nombre de nuits)
+    let calculatedBasePrice = 0;
+    
+    // Si basePrice est fourni directement, l'utiliser
+    if (typeof basePrice === 'number' && !isNaN(basePrice) && basePrice > 0) {
+      calculatedBasePrice = basePrice;
+    } 
+    // Sinon, utiliser pricePerNight × nights
+    else if (reservationDetails?.pricePerNight) {
+      const pricePerNight = typeof reservationDetails.pricePerNight === 'string' 
+        ? parseFloat(reservationDetails.pricePerNight) 
+        : reservationDetails.pricePerNight;
+      if (!isNaN(pricePerNight) && pricePerNight > 0) {
+        calculatedBasePrice = pricePerNight * nights;
+      }
     }
-    // Sinon utiliser totalAmount
-    if (typeof ta === 'number' && !isNaN(ta) && ta > 0) {
-      return ta;
+    // Fallback: utiliser totalAmount ou 800€
+    else {
+      const ta = typeof totalAmount === 'string' ? parseFloat(totalAmount) : totalAmount;
+      if (typeof ta === 'number' && !isNaN(ta) && ta > 0) {
+        // Soustraction estimée des options pour trouver le prix de base
+        const optPrice = optionsPrice || reservationDetails?.optionsPrice || 0;
+        calculatedBasePrice = ta - optPrice;
+      } else {
+        calculatedBasePrice = 800; // Fallback par défaut
+      }
     }
-    // Fallback: 800
-    return 800;
-  })();
+    
+    // Calculer le prix des options
+    let calculatedOptionsPrice = 0;
+    
+    // Priorité 1: optionsPrice fourni directement
+    if (typeof optionsPrice === 'number' && !isNaN(optionsPrice) && optionsPrice > 0) {
+      calculatedOptionsPrice = optionsPrice;
+    }
+    // Priorité 2: selectedOptions fourni directement
+    else if (selectedOptions && selectedOptions.length > 0) {
+      calculatedOptionsPrice = selectedOptions.reduce((sum, option) => {
+        const optionPrice = typeof option.price === 'string' ? parseFloat(option.price) : option.price;
+        const quantity = option.quantity || 1;
+        return sum + (optionPrice * quantity);
+      }, 0);
+    }
+    // Priorité 3: selectedOptions dans reservationDetails
+    else if (reservationDetails?.selectedOptions && reservationDetails.selectedOptions.length > 0) {
+      calculatedOptionsPrice = reservationDetails.selectedOptions.reduce((sum, option) => {
+        const optionPrice = typeof option.price === 'string' ? parseFloat(option.price) : option.price;
+        const quantity = option.quantity || 1;
+        return sum + (optionPrice * quantity);
+      }, 0);
+    }
+    // Priorité 4: optionsPrice dans reservationDetails
+    else if (reservationDetails?.optionsPrice) {
+      const op = typeof reservationDetails.optionsPrice === 'string' 
+        ? parseFloat(reservationDetails.optionsPrice) 
+        : reservationDetails.optionsPrice;
+      if (!isNaN(op) && op > 0) {
+        calculatedOptionsPrice = op;
+      }
+    }
+    
+    // Total final
+    const finalTotal = calculatedBasePrice + calculatedOptionsPrice;
+    
+    return {
+      finalAmount: finalTotal,
+      basePrice: calculatedBasePrice,
+      optionsPrice: calculatedOptionsPrice,
+      nights
+    };
+  };
+
+  const { finalAmount, basePrice: calculatedBasePrice, optionsPrice: calculatedOptionsPrice, nights } = calculateFinalAmount();
 
   // Vérification de débogage
   useEffect(() => {
-    console.log("💰 Montants dans PaymentForm:", {
-      totalAmount,
-      basePrice,
-      optionsPrice,
+    console.log("💰 Calcul des montants dans PaymentForm:", {
+      nights: reservationDetails?.nights || 1,
+      pricePerNight: reservationDetails?.pricePerNight,
+      originalBasePrice: basePrice,
+      reservationDetailsBasePrice: reservationDetails?.basePrice,
+      originalOptionsPrice: optionsPrice,
+      reservationDetailsOptionsPrice: reservationDetails?.optionsPrice,
+      selectedOptionsCount: selectedOptions?.length || reservationDetails?.selectedOptions?.length || 0,
+      calculatedBasePrice,
+      calculatedOptionsPrice,
       finalAmount,
-      hasBasePrice: basePrice !== undefined && basePrice !== null,
-      reservationDetailsBasePrice: reservationDetails?.basePrice
+      calculationDetails: calculateFinalAmount()
     });
-  }, [totalAmount, basePrice, optionsPrice, reservationDetails]);
+  }, [totalAmount, basePrice, optionsPrice, reservationDetails, selectedOptions]);
   
   const {
     register,
@@ -134,8 +197,9 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
       console.log("🔧 Initialisation du paiement...", { 
         customerInfo: data,
         amount: finalAmount,
-        basePrice,
-        optionsPrice,
+        calculatedBasePrice,
+        calculatedOptionsPrice,
+        nights,
         reservationDetails 
       });
 
@@ -156,7 +220,10 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
       
       const checkOutDate = reservationDetails?.checkOut 
         ? new Date(reservationDetails.checkOut)
-        : new Date(checkInDate.getTime() + (reservationDetails?.nights || 1) * 24 * 60 * 60 * 1000);
+        : new Date(checkInDate.getTime() + nights * 24 * 60 * 60 * 1000);
+
+      // Récupérer les options sélectionnées (priorité: props > reservationDetails)
+      const finalSelectedOptions = selectedOptions || reservationDetails?.selectedOptions || [];
 
       // Préparer les données pour le backend
       const paymentRequest: PaymentRequest = {
@@ -169,16 +236,16 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
           includes: reservationDetails.includes || [],
           checkIn: checkInDate.toISOString(),
           checkOut: checkOutDate.toISOString(),
-          nights: extractNumber(reservationDetails.nights),
+          nights: nights,
           guests: extractNumber(reservationDetails.guests),
           bedrooms: extractNumber(reservationDetails.bedrooms),
           totalPrice: finalAmount,
-          pricePerNight: reservationDetails.pricePerNight || finalAmount,
+          pricePerNight: reservationDetails.pricePerNight || (calculatedBasePrice / nights),
           customerName: `${data.firstName} ${data.lastName}`,
           customerEmail: data.email,
-          basePrice: reservationDetails.basePrice,
-          optionsPrice: reservationDetails.optionsPrice,
-          selectedOptions: reservationDetails.selectedOptions,
+          basePrice: calculatedBasePrice,
+          optionsPrice: calculatedOptionsPrice,
+          selectedOptions: finalSelectedOptions,
         },
       };
 
@@ -192,13 +259,13 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
           ...reservationDetails,
           checkIn: checkInDate.toISOString(),
           checkOut: checkOutDate.toISOString(),
-          nights: extractNumber(reservationDetails.nights),
+          nights: nights,
           guests: extractNumber(reservationDetails.guests),
           bedrooms: extractNumber(reservationDetails.bedrooms),
           total: finalAmount,
-          basePrice: reservationDetails.basePrice,
-          optionsPrice: reservationDetails.optionsPrice,
-          selectedOptions: reservationDetails.selectedOptions,
+          basePrice: calculatedBasePrice,
+          optionsPrice: calculatedOptionsPrice,
+          selectedOptions: finalSelectedOptions,
           customerEmail: data.email,
           customerName: `${data.firstName} ${data.lastName}`,
         };
@@ -261,6 +328,9 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
   };
 
   const isLoading = isSubmitting || isRedirecting;
+
+  // Récupérer les options à afficher (priorité: props > reservationDetails)
+  const displaySelectedOptions = selectedOptions || reservationDetails?.selectedOptions || [];
 
   return (
     <form onSubmit={handleSubmit(handlePayment)} className="space-y-4">
@@ -327,51 +397,68 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
       </div>
 
       {/* Résumé des options sélectionnées */}
-      {reservationDetails?.selectedOptions && reservationDetails.selectedOptions.length > 0 && (
+      {displaySelectedOptions.length > 0 && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <h4 className="font-semibold text-green-900 mb-3">Options incluses dans cette réservation</h4>
           <div className="space-y-2">
-            {reservationDetails.selectedOptions.map((option, idx) => (
-              <div key={idx} className="flex justify-between items-start text-sm">
-                <span className="text-green-900">{option.name}</span>
-                <span className="font-semibold text-green-900">{(option.price * option.quantity).toFixed(2)}€</span>
-              </div>
-            ))}
-            {reservationDetails.optionsPrice && reservationDetails.optionsPrice > 0 && (
-              <div className="border-t border-green-200 pt-2 mt-2">
-                <div className="flex justify-between font-semibold text-green-900">
-                  <span>Total options</span>
-                  <span>{reservationDetails.optionsPrice}€</span>
+            {displaySelectedOptions.map((option, idx) => {
+              const optionTotal = option.price * (option.quantity || 1);
+              return (
+                <div key={idx} className="flex justify-between items-start text-sm">
+                  <div>
+                    <span className="text-green-900">{option.name}</span>
+                    {option.quantity > 1 && (
+                      <span className="text-green-700 ml-2">×{option.quantity}</span>
+                    )}
+                  </div>
+                  <span className="font-semibold text-green-900">
+                    {optionTotal.toFixed(2)}€
+                  </span>
                 </div>
+              );
+            })}
+            <div className="border-t border-green-200 pt-2 mt-2">
+              <div className="flex justify-between font-semibold text-green-900">
+                <span>Total options</span>
+                <span>{calculatedOptionsPrice.toFixed(2)}€</span>
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}
 
       {/* Répartition des coûts - IMPORTANT */}
-      {reservationDetails?.basePrice && (
-        <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 rounded-lg p-5 text-sm">
-          <div className="space-y-2.5">
-            <div className="flex justify-between">
-              <span className="text-foreground font-medium">Coût du logement</span>
-              <span className="font-semibold text-foreground">{reservationDetails.basePrice}€</span>
+      <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 rounded-lg p-5 text-sm">
+        <div className="space-y-2.5">
+          <div className="flex justify-between">
+            <span className="text-foreground font-medium">Coût du logement</span>
+            <div className="text-right">
+              <div className="font-semibold text-foreground">
+                {calculatedBasePrice.toFixed(2)}€
+              </div>
+              {nights > 1 && reservationDetails?.pricePerNight && (
+                <div className="text-xs text-muted-foreground">
+                  ({reservationDetails.pricePerNight.toFixed(2)}€ × {nights} nuits)
+                </div>
+              )}
             </div>
-            {reservationDetails.optionsPrice && reservationDetails.optionsPrice > 0 && (
-              <div className="flex justify-between">
-                <span className="text-foreground font-medium">Options supplémentaires</span>
-                <span className="font-semibold text-green-600">{reservationDetails.optionsPrice}€</span>
-              </div>
-            )}
-            <div className="border-t border-primary/20 pt-2.5">
-              <div className="flex justify-between">
-                <span className="text-foreground font-bold text-base">MONTANT TOTAL</span>
-                <span className="text-primary font-bold text-lg">{finalAmount}€</span>
-              </div>
+          </div>
+          
+          {calculatedOptionsPrice > 0 && (
+            <div className="flex justify-between">
+              <span className="text-foreground font-medium">Options supplémentaires</span>
+              <span className="font-semibold text-green-600">{calculatedOptionsPrice.toFixed(2)}€</span>
+            </div>
+          )}
+          
+          <div className="border-t border-primary/20 pt-2.5">
+            <div className="flex justify-between">
+              <span className="text-foreground font-bold text-base">MONTANT TOTAL</span>
+              <span className="text-primary font-bold text-lg">{finalAmount.toFixed(2)}€</span>
             </div>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Prénom */}
       <div>
@@ -476,7 +563,7 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
       <div className="border-t border-border pt-4 mt-4">
         <div className="flex justify-between items-center text-lg font-bold">
           <span className="text-foreground">Total à payer</span>
-          <span className="text-primary">{finalAmount}€</span>
+          <span className="text-primary">{finalAmount.toFixed(2)}€</span>
         </div>
         <p className="text-xs text-muted-foreground text-center mt-2">
           En cliquant sur "Effectuer le paiement", vous acceptez nos conditions générales de vente
@@ -512,7 +599,7 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
         ) : !isAuthenticated ? (
           "Connexion requise"
         ) : (
-          `Effectuer le paiement de ${finalAmount}€`
+          `Effectuer le paiement de ${finalAmount.toFixed(2)}€`
         )}
       </button>
     </form>
