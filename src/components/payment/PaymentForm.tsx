@@ -79,13 +79,19 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
     let calculatedBasePrice = 0;
     let pricePerNightValue = 0;
     
-    // Si basePrice est fourni directement, l'utiliser
+    // Si basePrice est fourni directement, vérifier s'il est pour une nuit ou pour le séjour complet
     if (typeof basePrice === 'number' && !isNaN(basePrice) && basePrice > 0) {
-      calculatedBasePrice = basePrice;
-      // Calculer le prix par nuit si possible
-      pricePerNightValue = calculatedBasePrice / nights;
+      // Si basePrice semble être un prix par nuit (typiquement moins de 1000€), multiplier par le nombre de nuits
+      if (basePrice < 1000) {
+        pricePerNightValue = basePrice;
+        calculatedBasePrice = basePrice * nights;
+      } else {
+        // Sinon, considérer que c'est déjà le total
+        calculatedBasePrice = basePrice;
+        pricePerNightValue = calculatedBasePrice / nights;
+      }
     } 
-    // Sinon, utiliser pricePerNight × nights
+    // Utiliser pricePerNight × nights si disponible
     else if (reservationDetails?.pricePerNight) {
       pricePerNightValue = typeof reservationDetails.pricePerNight === 'string' 
         ? parseFloat(reservationDetails.pricePerNight) 
@@ -94,7 +100,7 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
         calculatedBasePrice = pricePerNightValue * nights;
       }
     }
-    // Fallback: utiliser totalAmount ou 800€
+    // Fallback: utiliser totalAmount
     else {
       const ta = typeof totalAmount === 'string' ? parseFloat(totalAmount) : totalAmount;
       if (typeof ta === 'number' && !isNaN(ta) && ta > 0) {
@@ -165,7 +171,8 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
       reservationDetailsBasePrice: reservationDetails?.basePrice,
       calculatedBasePrice,
       calculatedOptionsPrice,
-      finalAmount
+      finalAmount,
+      selectedOptionsCount: selectedOptions?.length || reservationDetails?.selectedOptions?.length || 0
     });
   }, [totalAmount, basePrice, optionsPrice, reservationDetails, selectedOptions]);
   
@@ -444,9 +451,9 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
           <div className="flex justify-between items-start">
             <div>
               <span className="text-foreground font-medium">Coût du logement</span>
-              {nights > 1 && (
+              {nights > 1 && pricePerNight > 0 && (
                 <div className="text-xs text-muted-foreground mt-1">
-                  {pricePerNight > 0 ? `${pricePerNight.toFixed(2)}€ par nuit` : ''}
+                  {pricePerNight.toFixed(2)}€ par nuit
                 </div>
               )}
             </div>
@@ -454,11 +461,9 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
               <div className="font-semibold text-foreground">
                 {calculatedBasePrice.toFixed(2)}€
               </div>
-              {nights > 1 && (
+              {nights > 1 && pricePerNight > 0 && (
                 <div className="text-xs text-muted-foreground">
-                  {pricePerNight > 0 
-                    ? `(${pricePerNight.toFixed(2)}€ × ${nights} nuits)`
-                    : `(${nights} nuits)`}
+                  ({pricePerNight.toFixed(2)}€ × {nights} nuits)
                 </div>
               )}
             </div>
