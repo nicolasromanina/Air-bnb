@@ -433,6 +433,10 @@ class ApiService {
     return this.request(`/admin/bookings/${id}/cancel`, { method: 'POST' });
   }
 
+  async getBookingCommunications(bookingId: string): Promise<ApiResponse<any>> {
+    return this.request(`/admin/bookings/${bookingId}/communications`);
+  }
+
   exportBookingsUrl(paramsObj: Record<string,string|number|undefined> = {}) {
     const params = new URLSearchParams();
     Object.entries(paramsObj).forEach(([k,v]) => { if (v !== undefined) params.set(k, String(v)); });

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import footerController from '../controllers/footerController';
 import { authenticate } from '../middleware/auth.middleware';
-import { upload, uploadMultiple, uploadToCloudinary } from '../middleware/cloudinary.middleware';
+import { upload, uploadToCloudinary } from '../middleware/cloudinary.middleware';
 
 const router = Router();
 
@@ -33,7 +33,7 @@ router.post(
 router.post(
   '/gallery/multiple',
   authenticate,
-  uploadMultiple,
+  upload.array('images'),
   uploadToCloudinary,
   async (req: any, res: any) => {
     try {
@@ -83,7 +83,7 @@ router.post(
 );
 
 // Supprimer une image
-router.delete('/gallery/:imageId', authenticate, footerController.deleteGalleryImage.bind(footerController));
+router.delete('/gallery/:id', authenticate, footerController.deleteGalleryImage.bind(footerController));
 
 // Mettre à jour l'ordre
 router.put('/gallery/order', authenticate, footerController.updateGalleryOrder.bind(footerController));

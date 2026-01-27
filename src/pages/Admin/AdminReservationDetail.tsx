@@ -349,6 +349,58 @@ L'équipe de gestion`,
     }
   };
 
+  const performAction = async () => {
+    if (!reservation) return;
+
+    setLoading(true);
+    try {
+      if (showConfirm.type === 'confirm') {
+        const res = await api.confirmBooking(reservation._id);
+        if (res.success) {
+          toast({
+            title: 'Réservation confirmée',
+            description: 'Le client a reçu un email de confirmation.',
+            duration: 3000,
+          });
+          // Recharger les données
+          const updated = await api.getAdminBooking(reservation._id);
+          if (updated.success) {
+            setReservation(updated.data);
+          }
+        } else {
+          throw new Error(res.error || 'Erreur lors de la confirmation');
+        }
+      } else if (showConfirm.type === 'cancel') {
+        const res = await api.cancelBooking(reservation._id);
+        if (res.success) {
+          toast({
+            title: 'Réservation annulée',
+            description: 'Le client a reçu une notification d\'annulation.',
+            duration: 3000,
+          });
+          // Recharger les données
+          const updated = await api.getAdminBooking(reservation._id);
+          if (updated.success) {
+            setReservation(updated.data);
+          }
+        } else {
+          throw new Error(res.error || 'Erreur lors de l\'annulation');
+        }
+      }
+      setShowConfirm({ open: false, type: 'confirm' });
+    } catch (error: any) {
+      console.error('Erreur action:', error);
+      toast({
+        title: 'Erreur',
+        description: error.message || 'Une erreur est survenue',
+        variant: 'destructive',
+        duration: 5000,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
       pending: { label: 'En attente', variant: 'secondary' },

@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import * as Sentry from '@sentry/node';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
 import paymentRoutes from './routes/payment.routes';
 import reservationRoutes from './routes/reservation.routes';
 import authRoutes from './routes/auth.routes';
@@ -26,6 +28,51 @@ import ContactMessage from './models/ContactMessage';
 
 dotenv.config();
 
+// Initialize Sentry
+const initSentry = () => {
+  const sentryDsn = process.env.SENTRY_DSN;
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  if (!sentryDsn) {
+    logger.info('Sentry DSN not provided. Error tracking disabled.');
+    return;
+  }
+
+  try {
+    Sentry.init({
+      dsn: sentryDsn,
+      environment: process.env.NODE_ENV || 'development',
+      tracesSampleRate: isProduction ? 0.1 : 1.0,
+      integrations: [
+        nodeProfilingIntegration(),
+      ],
+      maxBreadcrumbs: 50,
+      attachStacktrace: true,
+      release: process.env.APP_VERSION || '1.0.0',
+      beforeSend(event, hint) {
+        if (event.request?.url?.includes('/health')) {
+          return null;
+        }
+        if (event.request?.headers) {
+          delete event.request.headers['authorization'];
+          delete event.request.headers['cookie'];
+        }
+        return event;
+      },
+      denyUrls: [
+        /extensions\//i,
+        /^chrome:\/\//i,
+      ],
+    });
+
+    logger.info('✅ Sentry initialized successfully');
+  } catch (error) {
+    logger.error('Failed to initialize Sentry:', error);
+  }
+};
+
+initSentry();
+
 export const createApp = () => {
   const app = express();
   const isProduction = process.env.NODE_ENV === 'production';
@@ -39,6 +86,14 @@ export const createApp = () => {
     },
     contentSecurityPolicy: false, // Configure based on your needs
   }));
+
+  // Sentry Error Boundary - Only if initialized
+  if (process.env.SENTRY_DSN) {
+    app.use((req, res, next) => {
+      Sentry.captureMessage(`${req.method} ${req.path}`, 'debug');
+      next();
+    });
+  }
 
   // Trust proxy for production (needed for load balancers, reverse proxies)
   if (isProduction) {
@@ -165,9 +220,17 @@ app.use(cors({
   }, express.static(path.resolve(__dirname, '..', 'public', 'uploads')));
 
   app.use('*', (req, res) => res.status(404).json({ error: 'Route not found', path: req.originalUrl }));
-  app.use(errorHandler);
+  
+  // Error handling middleware
+  app.use((err: any, req: any, res: any, next: any) => {
+    // Capture error in Sentry if initialized
+    if (process.env.SENTRY_DSN) {
+      Sentry.captureException(err);
+    }
+    // Call custom error handler
+    errorHandler(err, req, res, next);
+  });
 
   return app;
 };
-
 export default createApp;
