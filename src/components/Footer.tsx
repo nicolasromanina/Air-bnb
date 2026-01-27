@@ -1,43 +1,101 @@
-import footer1 from "@/assets/footer-1.jpg";
-import footer2 from "@/assets/footer-2.jpg";
-import footer3 from "@/assets/footer-3.jpg";
-import footer4 from "@/assets/footer-4.jpg";
+import React, { useState, useEffect } from 'react';
+import { useFooterData } from '@/services/footerApi';
 
 const Footer = () => {
-  // COHÉRENCE TOTALE AVEC LE HERO : 
-  // On reprend exactement "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20"
+  const { footerData, loading, fetchFooterData } = useFooterData();
   const gridContainer = "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
+
+  // Listen for updates from editor
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === 'footer_updated') {
+        fetchFooterData();
+      }
+    };
+
+    window.addEventListener('storage', handler);
+    return () => {
+      window.removeEventListener('storage', handler);
+    };
+  }, [fetchFooterData]);
+
+  if (loading || !footerData) {
+    return (
+      <footer className="w-full bg-white pb-12 text-black">
+        <div className={gridContainer}>
+          <div className="bg-[#E5E5E5] rounded-sm pt-20 overflow-hidden">
+            <div className="px-8 md:px-12 lg:px-16">
+              <div className="animate-pulse">
+                <div className="h-10 bg-gray-300 rounded w-32 mx-auto mb-24"></div>
+                <div className="border-t border-gray-300 mb-5"></div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 pb-20">
+                  {/* Gallery skeleton */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="aspect-square bg-gray-300 rounded-sm"></div>
+                    ))}
+                  </div>
+                  {/* Spacer */}
+                  <div className="hidden lg:block" />
+                  {/* Links skeleton */}
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="space-y-3">
+                      <div className="h-4 bg-gray-300 rounded w-24"></div>
+                      {[...Array(4)].map((_, j) => (
+                        <div key={j} className="h-3 bg-gray-200 rounded w-32"></div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-gray-300 mb-5"></div>
+                <div className="py-20 lg:py-32">
+                  <div className="h-12 bg-gray-300 rounded w-full"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+    );
+  }
 
   return (
     <footer className="w-full bg-white pb-12 text-black" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-      {/* L'enveloppe ci-dessous applique la marge (gridContainer).
-          Le fond gris (#E5E5E5) s'arrête là où la grille s'arrête.
-      */}
       <div className={gridContainer}>
         <div className="bg-[#E5E5E5] rounded-sm pt-20 overflow-hidden">
-          
-          {/* Contenu interne avec un padding pour ne pas coller aux bords du bloc gris */}
           <div className="px-8 md:px-12 lg:px-16">
-            
-            {/* Bordure haute interne */}
-           
-
             {/* Logo Centré */}
             <div className="flex justify-center mb-24">
-              <img src="./Logo.png" alt="SWEETHOME" className="h-10 w-auto" />
+              <img 
+                src={footerData.logo.url} 
+                alt={footerData.logo.alt} 
+                className="h-10 w-auto"
+                onError={(e) => {
+                  e.currentTarget.src = './Logo.png';
+                }}
+              />
             </div>
+            
             <div className="border-t border-black/20 mb-5" />
-            {/* Grille de contenu 4 colonnes */}
+            
+            {/* Grille de contenu */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 pb-20">
-              
               {/* Galerie - Col 1 */}
               <div className="grid grid-cols-2 gap-2">
-                {[footer1, footer2, footer3, footer4].map((img, i) => (
-                  <div key={i} className="aspect-square overflow-hidden rounded-sm bg-black/5">
+                {footerData.galleryImages.slice(0, 4).map((img, i) => (
+                  <div key={img._id || i} className="aspect-square overflow-hidden rounded-sm bg-black/5">
                     <img 
-                      src={img} 
+                      src={img.image} 
                       className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" 
-                      alt="" 
+                      alt={img.alt} 
+                      onError={(e) => {
+                        // Fallback images
+                        const fallbacks = [
+                          'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?q=80&w=1000&auto=format&fit=crop',
+                          'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1000&auto=format&fit=crop'
+                        ];
+                        e.currentTarget.src = fallbacks[i % fallbacks.length];
+                      }}
                     />
                   </div>
                 ))}
@@ -48,16 +106,17 @@ const Footer = () => {
 
               {/* Liens Utiles - Col 3 */}
               <div className="flex flex-col">
-                <h4 className="font-bold text-[10px] tracking-[0.3em] uppercase mb-8 opacity-90"
-                    style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                  Liens Utiles
+                <h4 className="font-bold text-[10px] tracking-[0.3em] uppercase mb-8 opacity-90">
+                  {footerData.usefulLinks.title}
                 </h4>
                 <ul className="space-y-4">
-                  {["Nunc vulputate libero", "Curabitur tempus", "Vestibulum eu nisl", "Inceptos himenaeos"].map((link) => (
-                    <li key={link}>
-                      <a href="#" className="text-sm opacity-50 hover:opacity-100 transition-opacity"
-                         style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                        {link}
+                  {footerData.usefulLinks.links.map((link, index) => (
+                    <li key={index}>
+                      <a 
+                        href={link.url} 
+                        className="text-sm opacity-50 hover:opacity-100 transition-opacity"
+                      >
+                        {link.text}
                       </a>
                     </li>
                   ))}
@@ -66,16 +125,17 @@ const Footer = () => {
 
               {/* Pages Légales - Col 4 */}
               <div className="flex flex-col">
-                <h4 className="font-bold text-[10px] tracking-[0.3em] uppercase mb-8 opacity-90"
-                    style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                  Pages Légales
+                <h4 className="font-bold text-[10px] tracking-[0.3em] uppercase mb-8 opacity-90">
+                  {footerData.legalPages.title}
                 </h4>
                 <ul className="space-y-4">
-                  {["Mentions Légales", "Politique de confidentialité", "Conditions Générales", "Contact"].map((link) => (
-                    <li key={link}>
-                      <a href="#" className="text-sm opacity-50 hover:opacity-100 transition-opacity"
-                         style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                        {link}
+                  {footerData.legalPages.links.map((link, index) => (
+                    <li key={index}>
+                      <a 
+                        href={link.url} 
+                        className="text-sm opacity-50 hover:opacity-100 transition-opacity"
+                      >
+                        {link.text}
                       </a>
                     </li>
                   ))}
@@ -83,16 +143,18 @@ const Footer = () => {
               </div>
             </div>
             
-             <div className="border-t border-black/20 mb-5" />
+            <div className="border-t border-black/20 mb-5" />
 
-            {/* Bannière Visuelle - Texte Gigantesque */}
+            {/* Bannière Visuelle */}
             <div className="border-t border-black/5">
-              <div className="py-20 lg:py-32">
+              <div 
+                className="py-20 lg:py-32"
+                style={{ backgroundColor: footerData.visualBanner.backgroundColor }}
+              >
                 <h2 
-                  className="text-[10vw] lg:text-[130px] font-medium text-center leading-none tracking-tighter" 
-                  style={{ fontFamily: "'Montserrat', sans-serif" }}
+                  className="text-[10vw] lg:text-[130px] font-medium text-center leading-none tracking-tighter text-black"
                 >
-                  Adipiscing elit
+                  {footerData.visualBanner.title}
                 </h2>
               </div>
             </div>
@@ -100,11 +162,11 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* COPYRIGHT - Aligné sur la même grille extérieure */}
+      {/* COPYRIGHT */}
       <div className={`${gridContainer} mt-8`}>
         <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] tracking-[0.2em] opacity-40 px-2">
-          <p style={{ fontFamily: "'Montserrat', sans-serif" }}>© 2026 SWEETHOME. All rights reserved.</p>
-          <p style={{ fontFamily: "'Montserrat', sans-serif" }}>Designed for Excellence</p>
+          <p>{footerData.copyright.text}</p>
+          <p>{footerData.copyright.designText}</p>
         </div>
       </div>
     </footer>
