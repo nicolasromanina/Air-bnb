@@ -194,10 +194,15 @@ L'équipe de gestion`,
     try {
       const res = await api.getBookingCommunications(bookingId);
       if (res.success && res.data) {
-        setCommunicationHistory(res.data);
+        // Ensure data is always an array
+        const communications = Array.isArray(res.data) ? res.data : [];
+        setCommunicationHistory(communications);
+      } else {
+        setCommunicationHistory([]);
       }
     } catch (error) {
       console.error('Erreur chargement historique:', error);
+      setCommunicationHistory([]);
     } finally {
       setLoadingHistory(false);
     }
@@ -441,6 +446,15 @@ L'équipe de gestion`,
   };
 
   const exportCommunicationHistory = () => {
+    if (!Array.isArray(communicationHistory)) {
+      toast({
+        title: 'Erreur',
+        description: 'Aucun historique à exporter',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const csvContent = [
       ['Date', 'Type', 'Sujet', 'Statut', 'Envoyé par'],
       ...communicationHistory.map(comm => [
@@ -664,7 +678,7 @@ L'équipe de gestion`,
                     <div className="flex items-center justify-center py-8">
                       <div className="text-muted-foreground">Chargement...</div>
                     </div>
-                  ) : communicationHistory.length === 0 ? (
+                  ) : !Array.isArray(communicationHistory) || communicationHistory.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <History className="h-12 w-12 mx-auto mb-3 opacity-50" />
                       <p>Aucune communication enregistrée</p>
