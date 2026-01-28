@@ -23,7 +23,7 @@ const VideoUploader: React.FC<Props> = ({ value, onChange, label = 'Upload vidé
       return;
     }
 
-    // Validation de la taille (max 100MB pour Cloudinary)
+    // Validation de la taille (max 100MB)
     const maxSize = 100 * 1024 * 1024; // 100MB
     if (file.size > maxSize) {
       setUploadError('Le fichier dépasse 100MB. Veuillez utiliser une vidéo plus petite.');
@@ -36,25 +36,28 @@ const VideoUploader: React.FC<Props> = ({ value, onChange, label = 'Upload vidé
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'hero_showcase_videos');
+      formData.append('video', file);
       
-      const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dz62ihibb';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://airbnb-backend.onrender.com/api';
       
       const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
+        `${apiUrl}/home/upload-video`,
         {
           method: 'POST',
-          body: formData
+          body: formData,
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+          }
         }
       );
 
       if (!response.ok) {
-        throw new Error('Erreur lors de l\'upload');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de l\'upload');
       }
 
       const data = await response.json();
-      const videoUrl = data.secure_url;
+      const videoUrl = data.url;
 
       setPreview(videoUrl);
       onChange(videoUrl);
@@ -63,7 +66,7 @@ const VideoUploader: React.FC<Props> = ({ value, onChange, label = 'Upload vidé
       setTimeout(() => setUploadSuccess(false), 3000);
     } catch (error) {
       console.error('Erreur upload vidéo:', error);
-      setUploadError('Erreur lors de l\'upload. Veuillez réessayer.');
+      setUploadError(error instanceof Error ? error.message : 'Erreur lors de l\'upload. Veuillez réessayer.');
     } finally {
       setIsUploading(false);
     }
