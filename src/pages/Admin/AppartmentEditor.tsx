@@ -1435,16 +1435,14 @@ const AppartmentEditor: React.FC = () => {
                           )}
 
                           {/* Upload vidéo */}
-                          {!roomDetail.videoUrl && (
-                            <VideoUploader
-                              value={roomDetail.videoUrl}
-                              onChange={(url: string) => {
-                                updateRoomDetailField('videoUrl', url);
-                              }}
-                              uploadType="room-detail"
-                              label="Télécharger la vidéo de la chambre"
-                            />
-                          )}
+                          <VideoUploader
+                            value={roomDetail.videoUrl}
+                            onChange={(url: string) => {
+                              updateRoomDetailField('videoUrl', url);
+                            }}
+                            uploadType="room-detail"
+                            label="Télécharger la vidéo de la chambre"
+                          />
                         </div>
                       </div>
                     </div>
