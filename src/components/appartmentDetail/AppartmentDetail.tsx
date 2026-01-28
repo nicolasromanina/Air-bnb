@@ -6,7 +6,6 @@ import { api } from '@/services/api';
 import { roomDetailApi, RoomDetail } from '@/services/roomDetailApi';
 import { formatGuests, formatBedrooms } from '@/utils/numberExtractor';
 import { toast } from 'sonner';
-import VideoPlayer from '../VideoPlayer';
 
 const PINK_ACCENT = "#FF385C";
 
@@ -363,17 +362,11 @@ function AppartmentDetail() {
                                             : `https://airbnb-backend.onrender.com${roomDetail.images[0]}`)
                                             : undefined}
                                     />
-                                    <VideoPlayer
-                                        videoUrl={roomDetail.videoUrl}
-                                        posterImage={
-                                            roomDetail.images?.[0]
-                                                ? (roomDetail.images[0].includes('cloudinary.com') || roomDetail.images[0].includes('airbnb-backend')
-                                                    ? roomDetail.images[0]
-                                                    : `https://airbnb-backend.onrender.com${roomDetail.images[0]}`)
-                                                : undefined
-                                        }
-                                        playButtonSize="large"
-                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 cursor-pointer">
+                                        <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform">
+                                            <Play size={24} fill="black" className="ml-1" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
