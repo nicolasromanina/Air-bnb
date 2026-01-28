@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import VideoPlayer from "@/components/VideoPlayer";
 import { formatGuests, formatBedrooms, extractNumber } from "@/utils/numberExtractor";
 import heroRoom from "@/assets/hero-room.jpg";
 import room1 from "@/assets/room-1.jpg";
@@ -1291,18 +1292,14 @@ const VideoSection: React.FC<VideoSectionProps> = memo(({
               }}
             ></div>
             
-            {/* Play button central */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <button className="relative flex items-center justify-center">
-                {/* Effet d'onde (Ping) */}
-                <span className="absolute inline-flex h-24 w-24 rounded-full bg-white opacity-20 animate-ping"></span>
-                
-                {/* Bouton réel */}
-                <div className="relative w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-white flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform duration-300">
-                  <Play className="w-8 h-8 lg:w-10 lg:h-10 text-black fill-black ml-1" />
-                </div>
-              </button>
-            </div>
+            {/* VideoPlayer with play button */}
+            {data.videoUrl && (
+              <VideoPlayer
+                videoUrl={data.videoUrl}
+                posterImage={getImageSrc()}
+                playButtonSize="large"
+              />
+            )}
 
             {/* Légende en bas de vidéo */}
             <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end opacity-0 group-hover:opacity-100 transition-opacity duration-300">

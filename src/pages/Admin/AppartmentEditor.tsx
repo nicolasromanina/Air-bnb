@@ -19,6 +19,7 @@ import {
   BarChart3, PieChart, TrendingUp,
   Play, Check
 } from 'lucide-react';
+import VideoUploader from '@/components/admin/VideoUploader';
 import { apartmentApi, ApartmentPageData } from '@/services/apartmentApi';
 import { roomDetailApi, RoomDetail } from '@/services/roomDetailApi';
 
@@ -2053,6 +2054,28 @@ const AppartmentEditor: React.FC = () => {
                   value={pageData.videoSection.coverImage}
                   fieldPath="videoSection.coverImage"
                 />
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">URL Vidéo (YouTube ou autre URL)</label>
+                  <input
+                    type="text"
+                    placeholder="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                    value={pageData.videoSection.videoUrl}
+                    onChange={(e) => updateField('videoSection.videoUrl', e.target.value)}
+                    className="w-full border rounded-lg p-3 font-mono text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">Entrez une URL de vidéo YouTube ou un autre service vidéo</p>
+                </div>
+
+                <div>
+                  <h4 className="text-lg font-medium mb-4">Ou télécharger une vidéo Cloudinary</h4>
+                  <VideoUploader
+                    value={pageData.videoSection.videoUrl}
+                    onChange={(url) => updateField('videoSection.videoUrl', url)}
+                    label="Télécharger une vidéo"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">Vous pouvez télécharger une vidéo locale (max 100MB)</p>
+                </div>
 
                 <div>
                   <label className="block text-sm font-medium mb-2">Texte du bouton play</label>
