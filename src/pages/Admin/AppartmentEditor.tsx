@@ -1410,11 +1410,45 @@ const AppartmentEditor: React.FC = () => {
                           </button>
                         </div>
                       </div>
+
+                      {/* Section Vidéo */}
+                      <div className="border-t-2 border-blue-200 pt-4">
+                        <label className="block text-sm font-medium mb-3 font-semibold">Vidéo de la chambre</label>
+                        <div className="space-y-3">
+                          {/* Aperçu vidéo */}
+                          {roomDetail.videoUrl && (
+                            <div className="bg-white p-3 rounded-lg border">
+                              <p className="text-xs font-semibold text-gray-600 mb-2">Aperçu vidéo</p>
+                              <video
+                                src={roomDetail.videoUrl}
+                                controls
+                                className="w-full max-h-64 rounded border bg-black"
+                              />
+                              <button
+                                onClick={() => updateRoomDetailField('videoUrl', '')}
+                                className="mt-2 px-3 py-1 bg-red-100 text-red-600 rounded text-sm hover:bg-red-200 flex items-center gap-2"
+                              >
+                                <Trash2 size={14} />
+                                Supprimer la vidéo
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Upload vidéo */}
+                          {!roomDetail.videoUrl && (
+                            <VideoUploader
+                              value={roomDetail.videoUrl}
+                              onChange={(url: string) => {
+                                updateRoomDetailField('videoUrl', url);
+                              }}
+                              uploadType="room-detail"
+                              label="Télécharger la vidéo de la chambre"
+                            />
+                          )}
+                        </div>
+                      </div>
                     </div>
                   )}
-
-                  {/* TAB: Détails */}
-                  {!heroInfoTab && (
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-yellow-50 p-4 rounded-lg border-2 border-yellow-200">
                         <div>

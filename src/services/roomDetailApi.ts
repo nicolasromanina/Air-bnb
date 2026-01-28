@@ -13,6 +13,7 @@ export interface RoomDetail {
   guests: string;
   bedrooms: string;
   images: string[];
+  videoUrl?: string;
   features: string[];
   accommodationType?: string;
   includes?: string[];

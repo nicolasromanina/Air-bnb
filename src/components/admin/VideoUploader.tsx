@@ -6,7 +6,7 @@ type Props = {
   value?: string;
   onChange: (url: string) => void;
   label?: string;
-  uploadType?: 'home' | 'apartment';
+  uploadType?: 'home' | 'apartment' | 'room-detail';
 };
 
 const VideoUploader: React.FC<Props> = ({ value, onChange, label = 'Upload vidéo', uploadType = 'home' }) => {
@@ -38,9 +38,18 @@ const VideoUploader: React.FC<Props> = ({ value, onChange, label = 'Upload vidé
 
     try {
       // Choisir le service d'upload en fonction du type
-      const uploadService = uploadType === 'apartment' 
-        ? imageUploadService.uploadApartmentVideo 
-        : imageUploadService.uploadHomeVideo;
+      let uploadService;
+      switch (uploadType) {
+        case 'apartment':
+          uploadService = imageUploadService.uploadApartmentVideo;
+          break;
+        case 'room-detail':
+          uploadService = imageUploadService.uploadRoomDetailVideo;
+          break;
+        case 'home':
+        default:
+          uploadService = imageUploadService.uploadHomeVideo;
+      }
       
       const data = await uploadService(file);
       const videoUrl = data.url;
