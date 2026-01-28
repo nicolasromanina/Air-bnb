@@ -638,14 +638,14 @@ const RoomsSection: React.FC<RoomsSectionProps & { searchParams?: any; filteredR
       <div className={GRID_CONTAINER}>
         
         {/* --- BARRE DE RECHERCHE HEROE (Si aucun critère) --- */}
-        {!searchParams.destination && !searchParams.checkIn && !searchParams.travelers && (
+        {!searchParams.destination && !searchParams.checkIn && !searchParams.availableFrom && !searchParams.travelers && (
           <div className="mb-16 lg:mb-24">
             <SearchBar variant="hero" />
           </div>
         )}
         
         {/* --- BARRE DE RECHERCHE ACTIVE --- */}
-        {(searchParams.destination || searchParams.checkIn || searchParams.travelers) && (
+        {(searchParams.destination || searchParams.checkIn || searchParams.availableFrom || searchParams.travelers) && (
           <div className="mb-12 p-6 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
               <div className="flex-1">
@@ -666,6 +666,15 @@ const RoomsSection: React.FC<RoomsSectionProps & { searchParams?: any; filteredR
                       <div>
                         <p className="text-xs text-gray-500 uppercase font-semibold">Arrivée</p>
                         <p className="text-sm font-medium text-gray-900">{new Date(searchParams.checkIn).toLocaleDateString('fr-FR')}</p>
+                      </div>
+                    </div>
+                  )}
+                  {searchParams.availableFrom && (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200">
+                      <Calendar size={16} className="text-purple-500 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase font-semibold">Disponible dès</p>
+                        <p className="text-sm font-medium text-gray-900">{new Date(searchParams.availableFrom).toLocaleDateString('fr-FR')}</p>
                       </div>
                     </div>
                   )}
@@ -1566,6 +1575,7 @@ const Appartment: React.FC<AppartmentProps> = ({
   const [searchParams, setSearchParams] = useState({
     destination: '',
     checkIn: '',
+    availableFrom: '',
     travelers: ''
   });
   const [filteredRooms, setFilteredRooms] = useState<any[]>([]);
@@ -1602,10 +1612,11 @@ const Appartment: React.FC<AppartmentProps> = ({
     const params = new URLSearchParams(location.search);
     const destination = params.get('destination') || '';
     const checkIn = params.get('checkIn') || '';
+    const availableFrom = params.get('availableFrom') || '';
     const travelers = params.get('travelers') || '';
     
-    setSearchParams({ destination, checkIn, travelers });
-    console.log('🔍 Paramètres de recherche reçus:', { destination, checkIn, travelers });
+    setSearchParams({ destination, checkIn, availableFrom, travelers });
+    console.log('🔍 Paramètres de recherche reçus:', { destination, checkIn, availableFrom, travelers });
   }, [location.search]);
 
   // Filtrer les appartements en fonction des paramètres de recherche
@@ -1617,41 +1628,34 @@ const Appartment: React.FC<AppartmentProps> = ({
     console.log('🔥 FILTRAGE - Rooms source:', rooms.length, 'Params:', searchParams);
     
     // Si aucun critère de recherche, afficher tous les appartements
-    if (!searchParams.destination && !searchParams.checkIn && !searchParams.travelers) {
+    if (!searchParams.destination && !searchParams.checkIn && !searchParams.availableFrom && !searchParams.travelers) {
       console.log('✅ Pas de critères - Afficher tous les appartements');
       setFilteredRooms(rooms);
       return;
     }
 
-    // Filtrer par destination (recherche dans le titre, la description, la ville ou le lieu)
+    // Filtrer par destination - recherche par ville ou titre exacte (insensible à la casse)
     if (searchParams.destination) {
       const beforeCount = rooms.length;
+      const destination = searchParams.destination.toLowerCase().trim();
       rooms = rooms.filter((room: any) => {
-        const destination = searchParams.destination.toLowerCase();
         const title = (room.title || '').toLowerCase();
         const description = (room.description || '').toLowerCase();
         const city = (room.city || '').toLowerCase();
+        const country = (room.country || '').toLowerCase();
         const location = (room.location || '').toLowerCase();
+        
+        // Recherche exacte ou incluse
         return title.includes(destination) || 
                description.includes(destination) || 
                city.includes(destination) || 
+               country.includes(destination) ||
                location.includes(destination);
       });
       console.log(`🏘️ Filtrage destination "${searchParams.destination}": ${beforeCount} → ${rooms.length}`);
     }
 
-    // Filtrer par nombre de voyageurs (capacité)
-    if (searchParams.travelers) {
-      const beforeCount = rooms.length;
-      const requiredTravelers = parseInt(searchParams.travelers, 10);
-      rooms = rooms.filter((room: any) => {
-        const guestCount = room.capacity !== undefined ? room.capacity : extractNumber(room.guests);
-        return guestCount >= requiredTravelers;
-      });
-      console.log(`👥 Filtrage voyageurs (${requiredTravelers}+): ${beforeCount} → ${rooms.length}`);
-    }
-
-    // Filtrer par disponibilité (checkIn)
+    // Filtrer par date de check-in
     if (searchParams.checkIn) {
       const beforeCount = rooms.length;
       const checkInDate = new Date(searchParams.checkIn);
@@ -1670,7 +1674,36 @@ const Appartment: React.FC<AppartmentProps> = ({
         
         return true;
       });
-      console.log(`📅 Filtrage disponibilité depuis ${searchParams.checkIn}: ${beforeCount} → ${rooms.length}`);
+      console.log(`📅 Filtrage check-in depuis ${searchParams.checkIn}: ${beforeCount} → ${rooms.length}`);
+    }
+
+    // Filtrer par date de disponibilité minimum
+    if (searchParams.availableFrom) {
+      const beforeCount = rooms.length;
+      const requiredAvailableDate = new Date(searchParams.availableFrom);
+      
+      rooms = rooms.filter((room: any) => {
+        // Si aucune date de disponibilité n'est définie, considérer la chambre comme disponible immédiatement
+        if (!room.availableFrom) {
+          return true;
+        }
+        
+        const availableFromDate = new Date(room.availableFrom);
+        // Le logement doit être disponible à la date demandée ou avant
+        return availableFromDate <= requiredAvailableDate;
+      });
+      console.log(`🏠 Filtrage disponibilité depuis ${searchParams.availableFrom}: ${beforeCount} → ${rooms.length}`);
+    }
+
+    // Filtrer par nombre de voyageurs (capacité)
+    if (searchParams.travelers) {
+      const beforeCount = rooms.length;
+      const requiredTravelers = parseInt(searchParams.travelers, 10);
+      rooms = rooms.filter((room: any) => {
+        const guestCount = room.capacity !== undefined ? room.capacity : extractNumber(room.guests);
+        return guestCount >= requiredTravelers;
+      });
+      console.log(`👥 Filtrage voyageurs (${requiredTravelers}+): ${beforeCount} → ${rooms.length}`);
     }
 
     setFilteredRooms(rooms);

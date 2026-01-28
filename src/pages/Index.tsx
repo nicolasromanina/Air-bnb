@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PinkPowderEffect from "@/components/PinkPowderEffect";
 import VideoPlayer from "@/components/VideoPlayer";
+import ImprovedDatePicker from "@/components/ImprovedDatePicker";
 
 import { homeApi } from '@/services/homeApi';
 import type { HomePageData, IHeroSection, IWelcomeSection } from '@/types/home.types';
@@ -684,8 +685,12 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
   const [searchHover, setSearchHover] = useState(false);
   const [destination, setDestination] = useState('');
   const [checkInDate, setCheckInDate] = useState('');
+  const [availableFromDate, setAvailableFromDate] = useState('');
   const [travelers, setTravelers] = useState('');
   const [errors, setErrors] = useState({ destination: '', checkInDate: '', travelers: '' });
+  const [destinationSuggestions, setDestinationSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  
   const gridContainer = "max-w-[1440px] w-full mx-auto px-4 xs:px-5 sm:px-6 md:px-10 lg:px-16 xl:px-20";
 
   // Validation en temps réel pour destination
@@ -734,21 +739,38 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
     const value = e.target.value;
     setDestination(value);
     setErrors(prev => ({ ...prev, destination: validateDestination(value) }));
+    setShowSuggestions(value.length > 0);
+    
+    // Générer des suggestions (villes courantes)
+    if (value.length > 0) {
+      const suggestions = ['Paris', 'Lyon', 'Marseille', 'Toulouse', 'Nice', 'Bordeaux', 'Lille', 'Strasbourg']
+        .filter(city => city.toLowerCase().startsWith(value.toLowerCase()));
+      setDestinationSuggestions(suggestions);
+    }
   };
 
-  const handleCheckInDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  const handleCheckInDateChange = (value: string) => {
     setCheckInDate(value);
     setErrors(prev => ({ ...prev, checkInDate: validateCheckInDate(value) }));
   };
 
-  const handleTravelersChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvailableFromDateChange = (value: string) => {
+    setAvailableFromDate(value);
+  };
+
+  const handleTravelersChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const value = e.target.value;
     setTravelers(value);
     setErrors(prev => ({ ...prev, travelers: validateTravelers(value) }));
   };
 
-  // Valider tout avant la recherche (sans appeler setErrors)
+  const selectSuggestion = (city: string) => {
+    setDestination(city);
+    setShowSuggestions(false);
+    setErrors(prev => ({ ...prev, destination: '' }));
+  };
+
+  // Valider tout avant la recherche
   const isFormValid = (): boolean => {
     const destError = validateDestination(destination);
     const dateError = validateCheckInDate(checkInDate);
@@ -777,12 +799,12 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
     const searchParams = new URLSearchParams({
       destination: destination.trim(),
       checkIn: checkInDate,
-      travelers: travelers
+      travelers: travelers,
+      ...(availableFromDate && { availableFrom: availableFromDate })
     });
     
-    console.log('🔍 Recherche initiée:', { destination, checkInDate, travelers });
+    console.log('🔍 Recherche initiée:', { destination, checkInDate, availableFromDate, travelers });
     
-    // Utiliser navigate de React Router au lieu de window.location.href
     navigate(`/appartement?${searchParams.toString()}`);
   };
 
@@ -861,35 +883,94 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
                   {data?.description ?? ''}
                 </p>
 
-                <InputField
-                  label={data?.formLabels?.destination ?? 'Destination'}
-                  placeholder={data?.formLabels?.destination ?? 'Où allez-vous ?'}
-                  icon={Map}
-                  type="text"
-                  value={destination}
-                  onChange={handleDestinationChange}
-                  error={errors.destination}
-                />
-                <InputField
-                  label={data?.formLabels?.date ?? 'Date d\'arrivée'}
-                  placeholder={data?.formLabels?.date ?? ''}
-                  icon={CalendarDays}
-                  type="date"
-                  value={checkInDate}
-                  onChange={handleCheckInDateChange}
-                  error={errors.checkInDate}
-                  min={new Date().toISOString().split('T')[0]}
-                />
-                <InputField
-                  label={data?.formLabels?.travelers ?? 'Voyageurs'}
-                  placeholder={data?.formLabels?.travelers ?? 'Nombre de voyageurs'}
-                  icon={Users}
-                  type="number"
-                  value={travelers}
-                  onChange={handleTravelersChange}
-                  error={errors.travelers}
-                  min="1"
-                />
+                {/* Destination avec suggestions */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-tight">
+                    {data?.formLabels?.destination ?? 'Destination'}
+                  </label>
+                  <div className="relative">
+                    <div className="flex items-center gap-2 px-4 py-3 border-2 border-gray-300 rounded-lg bg-white hover:border-gray-400 transition-all">
+                      <Map size={18} className="text-gray-600 flex-shrink-0" />
+                      <input
+                        type="text"
+                        placeholder={data?.formLabels?.destination ?? 'Où allez-vous ?'}
+                        value={destination}
+                        onChange={handleDestinationChange}
+                        onFocus={() => destination.length > 0 && setShowSuggestions(true)}
+                        className="flex-1 bg-transparent outline-none text-sm font-medium"
+                      />
+                    </div>
+                    
+                    {/* Suggestions de destinations */}
+                    {showSuggestions && destinationSuggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
+                        {destinationSuggestions.map((city, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => selectSuggestion(city)}
+                            className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm font-medium text-gray-900 border-b last:border-0 transition-colors"
+                          >
+                            📍 {city}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {errors.destination && (
+                      <p className="text-red-500 text-xs mt-1 font-medium">{errors.destination}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Date d'arrivée avec ImprovedDatePicker */}
+                <div className="mb-6">
+                  <ImprovedDatePicker
+                    label={data?.formLabels?.date ?? 'Date d\'arrivée'}
+                    placeholder={data?.formLabels?.date ?? 'Sélectionner une date'}
+                    value={checkInDate}
+                    onChange={handleCheckInDateChange}
+                    minDate={new Date().toISOString().split('T')[0]}
+                    error={errors.checkInDate}
+                  />
+                </div>
+
+                {/* Date de disponibilité (optionnelle) */}
+                <div className="mb-6">
+                  <ImprovedDatePicker
+                    label="Date de disponibilité minimum"
+                    placeholder="Optionnel - filtrer par disponibilité"
+                    value={availableFromDate}
+                    onChange={handleAvailableFromDateChange}
+                    minDate={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+
+                {/* Nombre de voyageurs */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-tight">
+                    {data?.formLabels?.travelers ?? 'Voyageurs'}
+                  </label>
+                  <div className="relative">
+                    <div className="flex items-center gap-2 px-4 py-3 border-2 border-gray-300 rounded-lg bg-white hover:border-gray-400 transition-all">
+                      <Users size={18} className="text-gray-600 flex-shrink-0" />
+                      <select
+                        value={travelers}
+                        onChange={handleTravelersChange}
+                        className="flex-1 bg-transparent outline-none text-sm font-medium appearance-none cursor-pointer"
+                      >
+                        <option value="">Sélectionner le nombre</option>
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20].map((num) => (
+                          <option key={num} value={num}>
+                            {num} {num === 1 ? 'voyageur' : 'voyageurs'}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {errors.travelers && (
+                      <p className="text-red-500 text-xs mt-1 font-medium">{errors.travelers}</p>
+                    )}
+                  </div>
+                </div>
 
                 <button
                   onClick={handleSearch}

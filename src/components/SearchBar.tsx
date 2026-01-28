@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MapPin, Calendar, Users, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import ImprovedDatePicker from './ImprovedDatePicker';
 
 interface SearchBarProps {
   variant?: 'hero' | 'default';
@@ -11,7 +12,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ variant = 'default', className = 
   const navigate = useNavigate();
   const [destination, setDestination] = useState('');
   const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
+  const [availableFrom, setAvailableFrom] = useState('');
   const [travelers, setTravelers] = useState('2');
 
   const handleSearch = (e: React.FormEvent) => {
@@ -32,7 +33,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ variant = 'default', className = 
     const searchParams = new URLSearchParams();
     searchParams.set('destination', destination);
     searchParams.set('checkIn', checkIn);
-    if (checkOut) searchParams.set('checkOut', checkOut);
+    if (availableFrom) searchParams.set('availableFrom', availableFrom);
     searchParams.set('travelers', travelers);
 
     // Naviguer vers la page appartement avec les paramètres
@@ -42,8 +43,8 @@ const SearchBar: React.FC<SearchBarProps> = ({ variant = 'default', className = 
   if (variant === 'hero') {
     return (
       <form onSubmit={handleSearch} className={`w-full ${className}`}>
-        <div className="bg-white rounded-lg shadow-lg p-6 md:p-8 max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white rounded-lg shadow-lg p-6 md:p-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
             {/* Localisation */}
             <div className="flex flex-col">
               <label className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">
@@ -63,36 +64,22 @@ const SearchBar: React.FC<SearchBarProps> = ({ variant = 'default', className = 
 
             {/* Date d'arrivée */}
             <div className="flex flex-col">
-              <label className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">
-                Arrivée
-              </label>
-              <div className="relative">
-                <Calendar size={18} className="absolute left-3 top-3 text-gray-400" />
-                <input
-                  type="date"
-                  value={checkIn}
-                  onChange={(e) => setCheckIn(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all"
-                  min={new Date().toISOString().split('T')[0]}
-                />
-              </div>
+              <ImprovedDatePicker
+                label="Arrivée"
+                value={checkIn}
+                onChange={setCheckIn}
+                minDate={new Date().toISOString().split('T')[0]}
+              />
             </div>
 
-            {/* Date de départ */}
+            {/* Date de disponibilité */}
             <div className="flex flex-col">
-              <label className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">
-                Départ
-              </label>
-              <div className="relative">
-                <Calendar size={18} className="absolute left-3 top-3 text-gray-400" />
-                <input
-                  type="date"
-                  value={checkOut}
-                  onChange={(e) => setCheckOut(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all"
-                  min={checkIn || new Date().toISOString().split('T')[0]}
-                />
-              </div>
+              <ImprovedDatePicker
+                label="Disponibilité minimum"
+                value={availableFrom}
+                onChange={setAvailableFrom}
+                minDate={new Date().toISOString().split('T')[0]}
+              />
             </div>
 
             {/* Nombre de voyageurs */}
@@ -105,9 +92,9 @@ const SearchBar: React.FC<SearchBarProps> = ({ variant = 'default', className = 
                 <select
                   value={travelers}
                   onChange={(e) => setTravelers(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all appearance-none"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all appearance-none cursor-pointer"
                 >
-                  {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20].map((num) => (
                     <option key={num} value={num}>
                       {num} {num === 1 ? 'voyageur' : 'voyageurs'}
                     </option>
@@ -115,16 +102,18 @@ const SearchBar: React.FC<SearchBarProps> = ({ variant = 'default', className = 
                 </select>
               </div>
             </div>
-          </div>
 
-          {/* Bouton de recherche */}
-          <button
-            type="submit"
-            className="w-full md:w-auto bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-bold px-12 py-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl uppercase tracking-widest"
-          >
-            <Search size={20} />
-            Rechercher
-          </button>
+            {/* Bouton de recherche */}
+            <div className="flex items-end">
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-bold px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl uppercase tracking-widest h-full"
+              >
+                <Search size={18} />
+                <span className="hidden sm:inline">Rechercher</span>
+              </button>
+            </div>
+          </div>
         </div>
       </form>
     );
@@ -152,6 +141,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ variant = 'default', className = 
             value={checkIn}
             onChange={(e) => setCheckIn(e.target.value)}
             className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-pink-500 transition-colors"
+            min={new Date().toISOString().split('T')[0]}
           />
         </div>
 
@@ -160,12 +150,9 @@ const SearchBar: React.FC<SearchBarProps> = ({ variant = 'default', className = 
           <select
             value={travelers}
             onChange={(e) => setTravelers(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-pink-500 transition-colors appearance-none"
+            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-pink-500 transition-colors appearance-none cursor-pointer"
           >
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
-              <option key={num} value={num}>
-                {num} {num === 1 ? 'voyageur' : 'voyageurs'}
-              </option>
+            {[1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20].map((num) => (
             ))}
           </select>
         </div>
