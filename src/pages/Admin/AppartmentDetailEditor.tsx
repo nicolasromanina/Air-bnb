@@ -319,7 +319,7 @@ const AppartmentDetailEditor: React.FC<AppartmentDetailEditorProps> = ({
       const formData = new FormData();
       formData.append('image', file);
       
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('auth_token');
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://airbnb-backend-l640.onrender.com/api'}/upload/image`, {
         method: 'POST',
         headers: {

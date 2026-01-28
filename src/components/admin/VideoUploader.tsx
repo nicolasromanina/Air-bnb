@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Upload, Trash2, AlertCircle, CheckCircle } from 'lucide-react';
+import { imageUploadService } from '@/services/imageUploadService';
 
 type Props = {
   value?: string;
@@ -35,28 +36,7 @@ const VideoUploader: React.FC<Props> = ({ value, onChange, label = 'Upload vidé
     setUploadSuccess(false);
 
     try {
-      const formData = new FormData();
-      formData.append('video', file);
-      
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://airbnb-backend.onrender.com/api';
-      
-      const response = await fetch(
-        `${apiUrl}/home/upload-video`,
-        {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
-          }
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erreur lors de l\'upload');
-      }
-
-      const data = await response.json();
+      const data = await imageUploadService.uploadHomeVideo(file);
       const videoUrl = data.url;
 
       setPreview(videoUrl);

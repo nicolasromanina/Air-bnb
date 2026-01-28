@@ -20,8 +20,8 @@ const AdminLogin: React.FC = () => {
       if (res.data?.user?.role === 'superadmin' || res.data?.user?.role === 'admin') {
         toast.push({ title: 'Connexion réussie', description: 'Bienvenue dans l\'admin.' });
         
-        // Stocker le token et les infos utilisateur
-        localStorage.setItem('adminToken', res.data.token);
+        // Token est déjà sauvegardé par api.login() dans auth_token
+        // Stocker les infos utilisateur pour reference
         localStorage.setItem('adminUser', JSON.stringify(res.data.user));
         
         // Rediriger vers le dashboard admin
