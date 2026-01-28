@@ -2073,6 +2073,7 @@ const AppartmentEditor: React.FC = () => {
                     value={pageData.videoSection.videoUrl}
                     onChange={(url) => updateField('videoSection.videoUrl', url)}
                     label="Télécharger une vidéo"
+                    uploadType="apartment"
                   />
                   <p className="text-xs text-gray-500 mt-2">Vous pouvez télécharger une vidéo locale (max 100MB)</p>
                 </div>

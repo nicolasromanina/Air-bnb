@@ -6,9 +6,10 @@ type Props = {
   value?: string;
   onChange: (url: string) => void;
   label?: string;
+  uploadType?: 'home' | 'apartment';
 };
 
-const VideoUploader: React.FC<Props> = ({ value, onChange, label = 'Upload vidéo' }) => {
+const VideoUploader: React.FC<Props> = ({ value, onChange, label = 'Upload vidéo', uploadType = 'home' }) => {
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [preview, setPreview] = useState<string | undefined>(value);
   const [isUploading, setIsUploading] = useState(false);
@@ -36,7 +37,12 @@ const VideoUploader: React.FC<Props> = ({ value, onChange, label = 'Upload vidé
     setUploadSuccess(false);
 
     try {
-      const data = await imageUploadService.uploadHomeVideo(file);
+      // Choisir le service d'upload en fonction du type
+      const uploadService = uploadType === 'apartment' 
+        ? imageUploadService.uploadApartmentVideo 
+        : imageUploadService.uploadHomeVideo;
+      
+      const data = await uploadService(file);
       const videoUrl = data.url;
 
       setPreview(videoUrl);

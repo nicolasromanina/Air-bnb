@@ -187,5 +187,34 @@ export const imageUploadService = {
       console.error('Erreur upload home video:', error);
       throw error;
     }
+  },
+
+  /**
+   * Upload une vidéo pour la page apartment
+   */
+  uploadApartmentVideo: async (file: File): Promise<UploadResponse> => {
+    const formData = new FormData();
+    formData.append('video', file);
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${config.apiBaseUrl}/apartments/upload-video`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token || ''}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de l\'upload de la vidéo');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur upload apartment video:', error);
+      throw error;
+    }
   }
 };
