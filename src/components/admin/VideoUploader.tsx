@@ -46,7 +46,7 @@ const VideoUploader: React.FC<Props> = ({ value, onChange, label = 'Upload vidé
           method: 'POST',
           body: formData,
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+            'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
           }
         }
       );
