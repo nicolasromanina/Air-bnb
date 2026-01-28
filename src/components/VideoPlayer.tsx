@@ -67,10 +67,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       {/* Play Button Overlay */}
       <button
         onClick={handlePlayClick}
-        className={`absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/20 transition-all duration-300 rounded-inherit group`}
+        className={`absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/20 transition-all duration-300 rounded-inherit group z-10`}
         aria-label="Lire la vidéo"
       >
-        <div className={`${sizes.button} rounded-full border-2 border-white/40 flex items-center justify-center backdrop-blur-md bg-white/10 transition-all duration-500 group-hover:scale-110 group-hover:bg-[#FF1B7C] group-hover:border-[#FF1B7C]`}>
+        <div className={`${sizes.button} rounded-full border-2 border-white flex items-center justify-center backdrop-blur-md bg-white/20 transition-all duration-500 group-hover:scale-110 group-hover:bg-[#FF1B7C] group-hover:border-[#FF1B7C] shadow-lg`}>
           <Play className={`${sizes.icon} text-white fill-white ml-0.5`} />
         </div>
       </button>
