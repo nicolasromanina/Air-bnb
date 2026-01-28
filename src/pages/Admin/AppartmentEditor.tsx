@@ -213,6 +213,21 @@ const AppartmentEditor: React.FC = () => {
     return () => clearTimeout(timer);
   }, [roomDetailHasChanges, autoSaveRoomDetail, isSaving]);
 
+  // Auto-save main page data when it changes (debounced)
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (isSaving) return;
+      try {
+        console.log('[ADMIN] 🔄 Auto-saving apartment page...');
+        await apartmentApi.updateApartmentPage(pageData);
+      } catch (error) {
+        console.error('[ADMIN] Auto-save failed:', error);
+      }
+    }, 3000); // 3 seconds after last change
+
+    return () => clearTimeout(timer);
+  }, [pageData, isSaving]);
+
   const checkConnection = async () => {
     try {
       const status = await apartmentApi.checkConnection();
