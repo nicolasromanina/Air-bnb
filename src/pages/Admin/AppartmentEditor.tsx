@@ -52,6 +52,11 @@ const AppartmentEditor: React.FC = () => {
   const [autoSaveRoomDetail, setAutoSaveRoomDetail] = useState(true);
   const [availableOptions, setAvailableOptions] = useState<Record<string, any[]>>({});
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
+  const [newOptionForm, setNewOptionForm] = useState({
+    name: '',
+    price: '',
+    pricingType: 'fixed' as 'fixed' | 'per_day' | 'per_guest'
+  });
   const [newRoom, setNewRoom] = useState<any>({
     title: '',
     description: '',
@@ -1681,6 +1686,74 @@ const AppartmentEditor: React.FC = () => {
                           </div>
                         ) : (
                           <>
+                            {/* Créer une nouvelle option personnalisée */}
+                            <div className="border-b border-indigo-200 pb-4 mb-4">
+                              <h5 className="font-semibold text-sm text-indigo-800 mb-3">📝 Créer une nouvelle option:</h5>
+                              <div className="space-y-3 bg-white p-3 rounded border border-indigo-100">
+                                <div>
+                                  <label className="text-xs font-semibold text-gray-700 block mb-1">Nom de l'option</label>
+                                  <input
+                                    type="text"
+                                    value={newOptionForm.name}
+                                    onChange={(e) => setNewOptionForm({ ...newOptionForm, name: e.target.value })}
+                                    placeholder="ex: Nettoyage supplémentaire"
+                                    className="w-full border rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-400"
+                                  />
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                    <label className="text-xs font-semibold text-gray-700 block mb-1">Prix (€)</label>
+                                    <input
+                                      type="number"
+                                      value={newOptionForm.price}
+                                      onChange={(e) => setNewOptionForm({ ...newOptionForm, price: e.target.value })}
+                                      placeholder="ex: 50"
+                                      min="0"
+                                      step="0.01"
+                                      className="w-full border rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-400"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-xs font-semibold text-gray-700 block mb-1">Type de tarification</label>
+                                    <select
+                                      value={newOptionForm.pricingType}
+                                      onChange={(e) => setNewOptionForm({ ...newOptionForm, pricingType: e.target.value as 'fixed' | 'per_day' | 'per_guest' })}
+                                      className="w-full border rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-400"
+                                    >
+                                      <option value="fixed">Fixe</option>
+                                      <option value="per_day">Par nuit</option>
+                                      <option value="per_guest">Par personne</option>
+                                    </select>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    if (newOptionForm.name.trim() && newOptionForm.price.trim()) {
+                                      const newOption = {
+                                        optionId: `custom_${Date.now()}`,
+                                        name: newOptionForm.name.trim(),
+                                        price: parseFloat(newOptionForm.price),
+                                        quantity: 1,
+                                        pricingType: newOptionForm.pricingType
+                                      };
+                                      updateRoomDetailField('additionalOptions', [
+                                        ...(roomDetail.additionalOptions || []),
+                                        newOption
+                                      ]);
+                                      setNewOptionForm({ name: '', price: '', pricingType: 'fixed' });
+                                      toast.success('Option ajoutée avec succès!');
+                                    } else {
+                                      toast.error('Veuillez remplir tous les champs');
+                                    }
+                                  }}
+                                  className="w-full px-4 py-2 bg-indigo-100 text-indigo-600 rounded-lg hover:bg-indigo-200 text-sm font-semibold flex items-center gap-2 justify-center transition-all"
+                                >
+                                  <Plus size={16} />
+                                  Créer l'option
+                                </button>
+                              </div>
+                            </div>
+
                             {/* Afficher les options sélectionnées */}
                             {(roomDetail.additionalOptions || []).length > 0 && (
                               <div className="space-y-2 mb-4">

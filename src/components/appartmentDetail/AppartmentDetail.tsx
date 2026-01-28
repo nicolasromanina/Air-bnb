@@ -514,128 +514,90 @@ function AppartmentDetail() {
                         )}
                     </div>
 
-                    {/* Bloc Incluses et sur demande (API) */}
+                    {/* Bloc Incluses et sur demande */}
                     <div className="bg-[#F8F9FA] rounded-[40px] p-8 md:p-12 border border-gray-100">
                         <div className="text-center mb-8">
                             <h3 className="text-[22px] font-bold mb-1">Incluses et sur demande</h3>
-                            <p className="text-gray-500 text-sm">Class aptent taciti per inceptos himenaeos.</p>
+                            <p className="text-gray-500 text-sm">Options spécifiques à cette chambre</p>
                         </div>
                         
-                        {/* Affichage dynamique des images des options sélectionnées */}
-                        <div className="flex justify-center gap-3 mb-10 flex-wrap">
-                            {loadingOptions ? (
-                                <div className="text-gray-400 text-sm">Chargement...</div>
-                            ) : (
-                                Object.values(allOptions).flat()
-                                    .filter((option: any) => option.image || option.icon)
-                                    .slice(0, 4)
-                                    .map((option: any, i: number) => (
-                                        <div key={i} className="w-20 h-20 rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md transition">
-                                            {option.image ? (
-                                                <img 
-                                                    src={option.image} 
-                                                    className="w-full h-full object-cover" 
-                                                    alt={option.name}
-                                                    onError={(e) => {
-                                                        (e.currentTarget as HTMLImageElement).src = `https://picsum.photos/200/200?random=${i+50}`;
-                                                    }}
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-2xl bg-gray-50">
-                                                    {option.icon || '✨'}
+                        {/* Affichage des options de la chambre */}
+                        {roomDetail?.additionalOptions && roomDetail.additionalOptions.length > 0 ? (
+                            <>
+                                {/* Affichage des emojis des options */}
+                                <div className="flex justify-center gap-3 mb-10 flex-wrap">
+                                    {roomDetail.additionalOptions.slice(0, 4).map((option, i) => (
+                                        <div key={i} className="w-20 h-20 rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md transition flex items-center justify-center text-2xl">
+                                            ✨
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Liste des options de la chambre */}
+                                <div className="space-y-3">
+                                    {roomDetail.additionalOptions.map((option) => (
+                                        <div key={option.optionId} className={`bg-white border border-gray-200 rounded-xl overflow-hidden transition-all ${expandedOption === option.optionId ? 'shadow-xl ring-1 ring-black/5' : ''}`}>
+                                            <button 
+                                                onClick={() => setExpandedOption(expandedOption === option.optionId ? null : option.optionId)} 
+                                                className="w-full p-5 flex justify-between items-center group gap-4"
+                                            >
+                                                {/* Option icon */}
+                                                <div className="w-12 h-12 rounded-lg flex-shrink-0 bg-gradient-to-br from-pink-100 to-pink-50 flex items-center justify-center text-xl">
+                                                    ✨
+                                                </div>
+                                                <span className={`text-[15px] font-bold flex-1 transition-colors ${selectedOptions.some(o => o.optionId === option.optionId) ? 'text-[#FF385C]' : 'text-gray-800'}`}>
+                                                    {option.name}
+                                                    {selectedOptions.some(o => o.optionId === option.optionId) && <Check size={14} className="inline ml-2" />}
+                                                </span>
+                                                <div className="bg-gray-50 p-1.5 rounded-full group-hover:bg-gray-100 transition-colors">
+                                                    <ChevronDown size={18} className={`text-gray-400 transition-transform duration-300 ${expandedOption === option.optionId ? 'rotate-180' : ''}`} />
+                                                </div>
+                                            </button>
+
+                                            {expandedOption === option.optionId && (
+                                                <div className="p-8 pt-0 border-t border-gray-50 grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                    <div className="space-y-4">
+                                                        <div className="w-full h-48 bg-gradient-to-br from-pink-100 to-pink-50 rounded-lg flex items-center justify-center text-5xl">
+                                                            ✨
+                                                        </div>
+                                                        <h4 className="text-[12px] font-black uppercase text-black tracking-widest">{option.name}</h4>
+                                                        <p className="text-[13px] text-gray-400 leading-relaxed font-medium">Option supplémentaire pour votre séjour</p>
+                                                        <div className="text-2xl font-black text-gray-900">{option.price}€</div>
+                                                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Disponible pour : {apartment.title}</div>
+                                                    </div>
+                                                    <div className="flex flex-col justify-between">
+                                                        <div className="space-y-4">
+                                                            <div className="flex justify-between text-[10px] font-black uppercase text-gray-400 tracking-widest">
+                                                                <span>{option.pricingType === 'per_guest' ? 'Nombre de pers.' : 'Nombre de nuit'}</span>
+                                                                <span>Prix</span>
+                                                            </div>
+                                                            <div className="flex justify-between items-center">
+                                                                <div className="flex items-center bg-black rounded-lg p-1 px-2">
+                                                                    <button onClick={() => option.pricingType === 'per_guest' ? setGuests(Math.max(1, guests-1)) : setNights(Math.max(1, nights-1))} className="text-white p-1 hover:text-gray-300"><Minus size={14}/></button>
+                                                                    <span className="text-white px-3 text-sm font-bold min-w-[20px] text-center">{option.pricingType === 'per_guest' ? guests : nights}</span>
+                                                                    <button onClick={() => option.pricingType === 'per_guest' ? setGuests(guests+1) : setNights(nights+1)} className="text-white p-1 hover:text-gray-300"><Plus size={14}/></button>
+                                                                </div>
+                                                                <span className="font-black text-[22px] text-gray-900">{calculateOptionPrice(option)}€</span>
+                                                            </div>
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => handleOptionToggle(option)}
+                                                            className={`w-full mt-8 py-4 rounded-xl font-black text-[12px] uppercase tracking-widest transition-all ${selectedOptions.some(o => o.optionId === option.optionId) ? 'bg-gray-100 text-gray-500' : 'bg-[#FF385C] text-white hover:brightness-110 shadow-lg shadow-pink-200'}`}
+                                                        >
+                                                            {selectedOptions.some(o => o.optionId === option.optionId) ? 'Retirer du panier' : 'Passer au paiement'}
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
-                                    ))
-                            )}
-                        </div>
-
-                        {/* BOUCLE DYNAMIQUE SUR LES OPTIONS DE L'API */}
-                        <div className="space-y-3">
-                            {loadingOptions ? (
-                                <div className="text-center py-10 text-gray-400 font-medium">Chargement des services...</div>
-                            ) : (
-                                Object.values(allOptions).flat().map((option: any) => (
-                                    <div key={option._id} className={`bg-white border border-gray-200 rounded-xl overflow-hidden transition-all ${expandedOption === option._id ? 'shadow-xl ring-1 ring-black/5' : ''}`}>
-                                        <button 
-                                            onClick={() => setExpandedOption(expandedOption === option._id ? null : option._id)} 
-                                            className="w-full p-5 flex justify-between items-center group gap-4"
-                                        >
-                                            {/* Option thumbnail image */}
-                                            <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
-                                                {option.image ? (
-                                                    <img 
-                                                        src={option.image} 
-                                                        alt={option.name}
-                                                        className="w-full h-full object-cover"
-                                                        onError={(e) => {
-                                                            (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-xl">
-                                                        {option.icon || '✨'}
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <span className={`text-[15px] font-bold flex-1 transition-colors ${selectedOptions.some(o => o.optionId === option._id) ? 'text-[#FF385C]' : 'text-gray-800'}`}>
-                                                {option.name}
-                                                {selectedOptions.some(o => o.optionId === option._id) && <Check size={14} className="inline ml-2" />}
-                                            </span>
-                                            <div className="bg-gray-50 p-1.5 rounded-full group-hover:bg-gray-100 transition-colors">
-                                                <ChevronDown size={18} className={`text-gray-400 transition-transform duration-300 ${expandedOption === option._id ? 'rotate-180' : ''}`} />
-                                            </div>
-                                        </button>
-
-                                        {expandedOption === option._id && (
-                                            <div className="p-8 pt-0 border-t border-gray-50 grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-top-2 duration-300">
-                                                <div className="space-y-4">
-                                                    {/* Large image for expanded option */}
-                                                    {option.image && (
-                                                        <div className="rounded-lg overflow-hidden h-48 bg-gray-100 mb-4">
-                                                            <img 
-                                                                src={option.image} 
-                                                                alt={option.name}
-                                                                className="w-full h-full object-cover"
-                                                                onError={(e) => {
-                                                                    (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    )}
-                                                    <h4 className="text-[12px] font-black uppercase text-black tracking-widest">{option.name}</h4>
-                                                    <p className="text-[13px] text-gray-400 leading-relaxed font-medium">{option.description || "Service exclusif pour votre séjour."}</p>
-                                                    <div className="text-2xl font-black text-gray-900">{option.price}€</div>
-                                                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Disponible pour : {apartment.title}</div>
-                                                </div>
-                                                <div className="flex flex-col justify-between">
-                                                    <div className="space-y-4">
-                                                        <div className="flex justify-between text-[10px] font-black uppercase text-gray-400 tracking-widest">
-                                                            <span>{option.pricingType === 'per_guest' ? 'Nombre de pers.' : 'Nombre de nuit'}</span>
-                                                            <span>Prix</span>
-                                                        </div>
-                                                        <div className="flex justify-between items-center">
-                                                            <div className="flex items-center bg-black rounded-lg p-1 px-2">
-                                                                <button onClick={() => option.pricingType === 'per_guest' ? setGuests(Math.max(1, guests-1)) : setNights(Math.max(1, nights-1))} className="text-white p-1 hover:text-gray-300"><Minus size={14}/></button>
-                                                                <span className="text-white px-3 text-sm font-bold min-w-[20px] text-center">{option.pricingType === 'per_guest' ? guests : nights}</span>
-                                                                <button onClick={() => option.pricingType === 'per_guest' ? setGuests(guests+1) : setNights(nights+1)} className="text-white p-1 hover:text-gray-300"><Plus size={14}/></button>
-                                                            </div>
-                                                            <span className="font-black text-[22px] text-gray-900">{calculateOptionPrice(option)}€</span>
-                                                        </div>
-                                                    </div>
-                                                    <button 
-                                                        onClick={() => handleOptionToggle(option)}
-                                                        className={`w-full mt-8 py-4 rounded-xl font-black text-[12px] uppercase tracking-widest transition-all ${selectedOptions.some(o => o.optionId === option._id) ? 'bg-gray-100 text-gray-500' : 'bg-[#FF385C] text-white hover:brightness-110 shadow-lg shadow-pink-200'}`}
-                                                    >
-                                                        {selectedOptions.some(o => o.optionId === option._id) ? 'Retirer du panier' : 'Passer au paiement'}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))
-                            )}
-                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-center py-12 text-gray-400">
+                                <p className="text-sm font-medium">Aucune option supplémentaire pour cette chambre</p>
+                            </div>
+                        )}
                         {/* Résumé du prix total des options */}
                         {selectedOptions.length > 0 && (
                            <div className="mt-6 text-center text-[12px] font-bold uppercase text-gray-400 tracking-widest animate-pulse">
