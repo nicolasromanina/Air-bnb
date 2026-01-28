@@ -65,6 +65,7 @@ export interface UpdateRoomDetailPayload {
   guests?: string;
   bedrooms?: string;
   images?: string[];
+  videoUrl?: string;
   features?: string[];
   accommodationType?: string;
   includes?: string[];
