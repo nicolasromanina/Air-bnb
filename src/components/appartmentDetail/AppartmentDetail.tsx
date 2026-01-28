@@ -28,7 +28,6 @@ function AppartmentDetail() {
     const [roomDetail, setRoomDetail] = useState<RoomDetail | null>(null);
     const [loadingRoomDetail, setLoadingRoomDetail] = useState(true);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const [showVideoPlayer, setShowVideoPlayer] = useState(false);
 
     // Fetch room details from API
     const fetchRoomDetail = useCallback(async () => {
@@ -355,8 +354,7 @@ function AppartmentDetail() {
                         {roomDetail?.videoUrl && (
                             <div className="mt-6 space-y-3">
                                 <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Vidéo de la chambre</h3>
-                                <div className="relative rounded-sm overflow-hidden aspect-[4/3] bg-gray-100 group cursor-pointer"
-                                    onClick={() => setShowVideoPlayer(true)}>
+                                <div className="relative rounded-sm overflow-hidden aspect-[4/3] bg-gray-100 group cursor-pointer">
                                     <video
                                         src={roomDetail.videoUrl}
                                         className="w-full h-full object-cover"
@@ -365,11 +363,17 @@ function AppartmentDetail() {
                                             : `https://airbnb-backend.onrender.com${roomDetail.images[0]}`)
                                             : undefined}
                                     />
-                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
-                                        <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform">
-                                            <Play size={24} fill="black" className="ml-1" />
-                                        </div>
-                                    </div>
+                                    <VideoPlayer
+                                        videoUrl={roomDetail.videoUrl}
+                                        posterImage={
+                                            roomDetail.images?.[0]
+                                                ? (roomDetail.images[0].includes('cloudinary.com') || roomDetail.images[0].includes('airbnb-backend')
+                                                    ? roomDetail.images[0]
+                                                    : `https://airbnb-backend.onrender.com${roomDetail.images[0]}`)
+                                                : undefined
+                                        }
+                                        playButtonSize="large"
+                                    />
                                 </div>
                             </div>
                         )}
@@ -595,22 +599,6 @@ function AppartmentDetail() {
                         )}
                     </div> 
                 </section>
-
-                {/* VideoPlayer Modal */}
-                {showVideoPlayer && roomDetail?.videoUrl && (
-                    <VideoPlayer
-                        videoUrl={roomDetail.videoUrl}
-                        posterImage={
-                            roomDetail.images?.[0]
-                                ? (roomDetail.images[0].includes('cloudinary.com') || roomDetail.images[0].includes('airbnb-backend')
-                                    ? roomDetail.images[0]
-                                    : `https://airbnb-backend.onrender.com${roomDetail.images[0]}`)
-                                : undefined
-                        }
-                        onClose={() => setShowVideoPlayer(false)}
-                        playButtonSize="large"
-                    />
-                )}
             </div>
         </div>
     );
