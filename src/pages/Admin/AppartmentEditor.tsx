@@ -22,6 +22,7 @@ import {
 import VideoUploader from '@/components/admin/VideoUploader';
 import { apartmentApi, ApartmentPageData } from '@/services/apartmentApi';
 import { roomDetailApi, RoomDetail } from '@/services/roomDetailApi';
+import { api } from '@/services/api';
 
 interface ApartmentPageDataState extends Omit<ApartmentPageData, 'meta'> {
   meta?: ApartmentPageData['meta'];
@@ -49,6 +50,8 @@ const AppartmentEditor: React.FC = () => {
   const [roomDetailLastSaved, setRoomDetailLastSaved] = useState<Date | null>(null);
   const [deleteConfirmImage, setDeleteConfirmImage] = useState<number | null>(null);
   const [autoSaveRoomDetail, setAutoSaveRoomDetail] = useState(true);
+  const [availableOptions, setAvailableOptions] = useState<Record<string, any[]>>({});
+  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
   const [newRoom, setNewRoom] = useState<any>({
     title: '',
     description: '',
@@ -451,6 +454,9 @@ const AppartmentEditor: React.FC = () => {
         setRoomDetail(response.data);
         setSelectedRoomForDetail(roomId);
         setActiveSection('roomDetail');
+        
+        // Charger les options disponibles
+        loadAvailableOptions();
       } else {
         console.warn('[ADMIN] ⚠️ API returned invalid response:', { success: response.success, hasData: !!response.data });
         setSaveMessage({ type: 'error', text: '❌ Impossible de charger les détails' });
@@ -461,6 +467,21 @@ const AppartmentEditor: React.FC = () => {
     } finally {
       setIsLoadingRoomDetail(false);
       console.log('[ADMIN] 🏁 Room detail loading completed');
+    }
+  };
+
+  // Charger les options supplémentaires disponibles
+  const loadAvailableOptions = async () => {
+    setIsLoadingOptions(true);
+    try {
+      const response = await api.getAdditionalOptions(selectedRoomForDetail || undefined);
+      if (response.success && response.data?.options) {
+        setAvailableOptions(response.data.options);
+      }
+    } catch (error) {
+      console.error('[ADMIN] Error loading available options:', error);
+    } finally {
+      setIsLoadingOptions(false);
     }
   };
 
@@ -1644,6 +1665,102 @@ const AppartmentEditor: React.FC = () => {
                             Ajouter une caractéristique
                           </button>
                         </div>
+                      </div>
+
+                      {/* Options supplémentaires */}
+                      <div className="border rounded-lg p-4 bg-indigo-50">
+                        <h4 className="text-lg font-semibold mb-4 flex items-center gap-2 text-indigo-900">
+                          <Tag size={20} />
+                          Options supplémentaires
+                        </h4>
+                        
+                        {isLoadingOptions ? (
+                          <div className="text-center py-4 text-gray-600">
+                            <Loader size={24} className="animate-spin mx-auto mb-2" />
+                            Chargement des options...
+                          </div>
+                        ) : (
+                          <>
+                            {/* Afficher les options sélectionnées */}
+                            {(roomDetail.additionalOptions || []).length > 0 && (
+                              <div className="space-y-2 mb-4">
+                                <h5 className="font-semibold text-sm text-indigo-800">Options sélectionnées:</h5>
+                                {roomDetail.additionalOptions.map((option, idx) => (
+                                  <div key={idx} className="flex gap-2 items-center bg-white p-3 rounded border border-indigo-200">
+                                    <div className="flex-1">
+                                      <p className="text-sm font-semibold">{option.name}</p>
+                                      <p className="text-xs text-gray-600">
+                                        {option.price}€ ({option.pricingType === 'fixed' ? 'Fixe' : option.pricingType === 'per_day' ? 'Par nuit' : 'Par personne'})
+                                        {option.quantity > 1 && ` × ${option.quantity}`}
+                                      </p>
+                                    </div>
+                                    <button
+                                      onClick={() => {
+                                        const newOptions = roomDetail.additionalOptions!.filter((_, i) => i !== idx);
+                                        updateRoomDetailField('additionalOptions', newOptions);
+                                      }}
+                                      className="p-2 text-red-500 hover:bg-red-100 rounded border"
+                                    >
+                                      <Trash2 size={18} />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Ajouter des options */}
+                            {Object.keys(availableOptions).length > 0 ? (
+                              <div className="space-y-3">
+                                <h5 className="font-semibold text-sm text-indigo-800">Ajouter une option:</h5>
+                                {Object.entries(availableOptions).map(([category, options]) => (
+                                  <div key={category}>
+                                    <p className="text-xs font-semibold text-indigo-700 mb-2">{category}</p>
+                                    <div className="space-y-1">
+                                      {Array.isArray(options) && options.map((option: any) => {
+                                        const isSelected = roomDetail.additionalOptions?.some((o) => o.optionId === option._id);
+                                        return (
+                                          <button
+                                            key={option._id}
+                                            onClick={() => {
+                                              if (isSelected) {
+                                                const newOptions = roomDetail.additionalOptions!.filter((o) => o.optionId !== option._id);
+                                                updateRoomDetailField('additionalOptions', newOptions);
+                                              } else {
+                                                const newOption = {
+                                                  optionId: option._id,
+                                                  name: option.name,
+                                                  price: option.price,
+                                                  quantity: 1,
+                                                  pricingType: option.pricingType || 'fixed'
+                                                };
+                                                updateRoomDetailField('additionalOptions', [
+                                                  ...(roomDetail.additionalOptions || []),
+                                                  newOption
+                                                ]);
+                                              }
+                                            }}
+                                            className={`w-full text-left px-3 py-2 rounded border text-sm transition-all ${
+                                              isSelected
+                                                ? 'bg-indigo-200 border-indigo-400 text-indigo-900 font-semibold'
+                                                : 'bg-white border-indigo-100 text-gray-700 hover:border-indigo-300'
+                                            }`}
+                                          >
+                                            <div className="flex justify-between items-center">
+                                              <span>{option.name}</span>
+                                              <span className="text-xs font-semibold">{option.price}€</span>
+                                            </div>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-gray-600 text-sm">Aucune option supplémentaire disponible</p>
+                            )}
+                          </>
+                        )}
                       </div>
                     </div>
                   )}

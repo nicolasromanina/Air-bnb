@@ -425,6 +425,21 @@ function AppartmentDetail() {
                             {roomDetail?.amenities && roomDetail.amenities.length > 0 && (
                                 <InfoRow label="Équipements et services" value={roomDetail.amenities.join(', ')} />
                             )}
+                            {roomDetail?.additionalOptions && roomDetail.additionalOptions.length > 0 && (
+                                <div className="border-t border-gray-100 mt-4 pt-4">
+                                    <p className="text-sm font-semibold text-gray-800 mb-2">Options supplémentaires:</p>
+                                    <ul className="space-y-1">
+                                        {roomDetail.additionalOptions.map((option, idx) => (
+                                            <li key={idx} className="text-sm text-gray-600 flex justify-between items-center">
+                                                <span>• {option.name}</span>
+                                                <span className="font-semibold text-pink-600">
+                                                    {option.price}€ ({option.pricingType === 'fixed' ? 'Fixe' : option.pricingType === 'per_day' ? 'Par nuit' : 'Par personne'})
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                         </div>
 
                         {/* Date picker for reservation */}

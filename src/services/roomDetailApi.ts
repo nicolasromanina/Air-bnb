@@ -21,6 +21,13 @@ export interface RoomDetail {
   includes?: string[];
   amenities?: string[];
   selectedOptionIds?: string[];
+  additionalOptions?: {
+    optionId: string;
+    name: string;
+    price: number;
+    quantity: number;
+    pricingType: 'fixed' | 'per_day' | 'per_guest';
+  }[];
   meta?: {
     createdAt?: string;
     updatedAt?: string;
@@ -77,6 +84,13 @@ export interface UpdateRoomDetailPayload {
   includes?: string[];
   amenities?: string[];
   selectedOptionIds?: string[];
+  additionalOptions?: {
+    optionId: string;
+    name: string;
+    price: number;
+    quantity: number;
+    pricingType: 'fixed' | 'per_day' | 'per_guest';
+  }[];
 }
 
 const makeRequest = async <T>(
