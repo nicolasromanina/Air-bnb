@@ -1285,7 +1285,7 @@ const VideoSection: React.FC<VideoSectionProps> = memo(({
             
             {/* Overlay sombre au survol */}
             <div 
-              className="absolute inset-0 transition-all duration-300"
+              className="absolute inset-0 transition-all duration-300 z-0"
               style={{ 
                 backgroundColor: data.overlayColor || 'rgba(0,0,0,0.1)',
                 opacity: 'group-hover:opacity-30' as any
@@ -1294,11 +1294,22 @@ const VideoSection: React.FC<VideoSectionProps> = memo(({
             
             {/* VideoPlayer with play button */}
             {data.videoUrl && (
-              <VideoPlayer
-                videoUrl={data.videoUrl}
-                posterImage={getImageSrc()}
-                playButtonSize="large"
-              />
+              <div className="absolute inset-0 z-20">
+                <VideoPlayer
+                  videoUrl={data.videoUrl}
+                  posterImage={getImageSrc()}
+                  playButtonSize="large"
+                />
+              </div>
+            )}
+
+            {/* Placeholder play button when no video */}
+            {!data.videoUrl && (
+              <div className="absolute inset-0 flex items-center justify-center z-20">
+                <div className="relative w-24 h-24 lg:w-32 lg:h-32 rounded-full border-2 border-white flex items-center justify-center bg-white/20 backdrop-blur-md shadow-lg">
+                  <Play className="w-10 h-10 lg:w-14 lg:h-14 text-white fill-white ml-1" />
+                </div>
+              </div>
             )}
 
             {/* Légende en bas de vidéo */}
