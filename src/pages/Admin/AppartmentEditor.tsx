@@ -1447,6 +1447,9 @@ const AppartmentEditor: React.FC = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* TAB: Détails */}
+                  {!heroInfoTab && (
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-yellow-50 p-4 rounded-lg border-2 border-yellow-200">
                         <div>
