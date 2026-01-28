@@ -210,6 +210,30 @@ function AppartmentDetail() {
     };
 
     const handleReservation = () => {
+        // Validation des dates AVANT de créer la réservation
+        const checkInDate_ = new Date(checkInDate);
+        const checkOutDate_ = new Date(checkOutDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Vérifier que les dates sont valides
+        if (isNaN(checkInDate_.getTime()) || isNaN(checkOutDate_.getTime())) {
+            toast.error('Veuillez sélectionner des dates valides');
+            return;
+        }
+
+        // Vérifier que la date d'arrivée n'est pas avant aujourd'hui
+        if (checkInDate_ < today) {
+            toast.error('La date d\'arrivée doit être à partir d\'aujourd\'hui ou ultérieurement');
+            return;
+        }
+
+        // Vérifier que la date de départ est après la date d'arrivée
+        if (checkOutDate_ <= checkInDate_) {
+            toast.error('La date de départ doit être après la date d\'arrivée');
+            return;
+        }
+
         // Build a complete reservation object matching backend schema requirements
         const aptIdNum = id ? Number(id) : undefined;
         const extractNumber = (val: any) => {

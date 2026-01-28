@@ -115,6 +115,22 @@ export const contactServices = {
     }
   },
 
+  // Soumettre un formulaire de contact
+  async submitContactForm(data: {
+    fullName: string;
+    email: string;
+    phone: string;
+    message: string;
+    consent: boolean;
+  }): Promise<ApiResponse<any>> {
+    try {
+      const response: AxiosResponse<ApiResponse<any>> = await apiClient.post('/contact-messages/submit', data);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+
   // Upload d'image
   async uploadImage(file: File): Promise<string> {
     try {

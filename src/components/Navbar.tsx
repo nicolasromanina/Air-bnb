@@ -155,7 +155,7 @@ const Navbar = () => {
                 <UserMenu />
               ) : (
                 <button 
-                  onClick={() => handleNavClick("/contact")}
+                  onClick={() => handleNavClick("/appartement")}
                   className="bg-[#FF1B7C] text-white px-6 lg:px-8 py-2.5 lg:py-3 rounded-sm font-bold text-xs lg:text-sm tracking-wider hover:bg-[#e0176d] active:scale-95 transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-[#FF1B7C] focus:ring-offset-2"
                   style={{ fontFamily: "'Montserrat', sans-serif" }}
                 >

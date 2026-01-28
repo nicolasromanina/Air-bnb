@@ -7,7 +7,7 @@ import apartment1 from "@/assets/apartment-1.jpg";
 import apartment2 from "@/assets/apartment-2.jpg";
 import bedroomTestimonial from "@/assets/bedroom-testimonial.jpg";
 import avatar from "@/assets/avatar.jpg";
-import { useContactPage } from '@/services/contactApi';
+import { useContactPage, contactServices } from '@/services/contactApi';
 import { IContactPage } from '@/types/contact.types';
 
 // Configuration de la grille unifiée
@@ -141,6 +141,8 @@ const Contact: React.FC = () => {
     message: '',
     consent: false
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Utiliser les données du backend ou les données par défaut
   const data = pageData || defaultContactPage;
@@ -170,14 +172,48 @@ const Contact: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formState);
-    setFormState({
-      fullName: '',
-      phone: '',
-      email: '',
-      message: '',
-      consent: false
-    });
+    setIsSubmitting(true);
+    setSubmitMessage(null);
+
+    try {
+      const response = await contactServices.submitContactForm({
+        fullName: formState.fullName,
+        phone: formState.phone,
+        email: formState.email,
+        message: formState.message,
+        consent: formState.consent
+      });
+
+      if (response.status === 201 || response.status === 200) {
+        setSubmitMessage({
+          type: 'success',
+          text: response.message || 'Votre message a été envoyé avec succès!'
+        });
+        setFormState({
+          fullName: '',
+          phone: '',
+          email: '',
+          message: '',
+          consent: false
+        });
+        // Masquer le message de succès après 5 secondes
+        setTimeout(() => {
+          setSubmitMessage(null);
+        }, 5000);
+      } else {
+        setSubmitMessage({
+          type: 'error',
+          text: response.message || 'Une erreur est survenue'
+        });
+      }
+    } catch (error) {
+      setSubmitMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Une erreur est survenue lors de l\'envoi du message'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -256,6 +292,15 @@ const Contact: React.FC = () => {
               <div className="lg:w-[55%] p-4 md:p-8 lg:p-12">
                 <div className="bg-white rounded-2xl p-8 md:p-12 shadow-xl h-full">
                   <form className="space-y-6" onSubmit={handleSubmit}>
+                    {submitMessage && (
+                      <div className={`p-4 rounded-lg text-sm font-medium ${
+                        submitMessage.type === 'success' 
+                          ? 'bg-green-100 text-green-800 border border-green-300' 
+                          : 'bg-red-100 text-red-800 border border-red-300'
+                      }`}>
+                        {submitMessage.text}
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="text-[11px] font-black tracking-widest text-gray-400">Nom complet</label>
@@ -324,10 +369,10 @@ const Contact: React.FC = () => {
 
                     <button 
                       type="submit"
-                      disabled={!formState.consent}
+                      disabled={!formState.consent || isSubmitting}
                       className="w-full bg-black text-white font-black tracking-[0.2em] py-5 rounded-xl hover:bg-[#FF2D75] transition-all transform active:scale-[0.98] text-xs shadow-lg shadow-black/10 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {data.contactForm.submitButtonText.split(/\r?\n/).map((line, i, arr) => (
+                      {isSubmitting ? 'Envoi en cours...' : data.contactForm.submitButtonText.split(/\r?\n/).map((line, i, arr) => (
                         <React.Fragment key={i}>
                           {line}
                           {i < arr.length - 1 && <br />}

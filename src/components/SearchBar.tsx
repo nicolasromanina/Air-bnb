@@ -1,0 +1,185 @@
+import React, { useState } from 'react';
+import { MapPin, Calendar, Users, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+interface SearchBarProps {
+  variant?: 'hero' | 'default';
+  className?: string;
+}
+
+const SearchBar: React.FC<SearchBarProps> = ({ variant = 'default', className = '' }) => {
+  const navigate = useNavigate();
+  const [destination, setDestination] = useState('');
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+  const [travelers, setTravelers] = useState('2');
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validation basique
+    if (!destination.trim()) {
+      alert('Veuillez sélectionner une destination');
+      return;
+    }
+
+    if (!checkIn) {
+      alert('Veuillez sélectionner une date d\'arrivée');
+      return;
+    }
+
+    // Construire les paramètres de recherche
+    const searchParams = new URLSearchParams();
+    searchParams.set('destination', destination);
+    searchParams.set('checkIn', checkIn);
+    if (checkOut) searchParams.set('checkOut', checkOut);
+    searchParams.set('travelers', travelers);
+
+    // Naviguer vers la page appartement avec les paramètres
+    navigate(`/appartement?${searchParams.toString()}`);
+  };
+
+  if (variant === 'hero') {
+    return (
+      <form onSubmit={handleSearch} className={`w-full ${className}`}>
+        <div className="bg-white rounded-lg shadow-lg p-6 md:p-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {/* Localisation */}
+            <div className="flex flex-col">
+              <label className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">
+                Destination
+              </label>
+              <div className="relative">
+                <MapPin size={18} className="absolute left-3 top-3 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Où souhaitez-vous aller ?"
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Date d'arrivée */}
+            <div className="flex flex-col">
+              <label className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">
+                Arrivée
+              </label>
+              <div className="relative">
+                <Calendar size={18} className="absolute left-3 top-3 text-gray-400" />
+                <input
+                  type="date"
+                  value={checkIn}
+                  onChange={(e) => setCheckIn(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all"
+                  min={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+            </div>
+
+            {/* Date de départ */}
+            <div className="flex flex-col">
+              <label className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">
+                Départ
+              </label>
+              <div className="relative">
+                <Calendar size={18} className="absolute left-3 top-3 text-gray-400" />
+                <input
+                  type="date"
+                  value={checkOut}
+                  onChange={(e) => setCheckOut(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all"
+                  min={checkIn || new Date().toISOString().split('T')[0]}
+                />
+              </div>
+            </div>
+
+            {/* Nombre de voyageurs */}
+            <div className="flex flex-col">
+              <label className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">
+                Voyageurs
+              </label>
+              <div className="relative">
+                <Users size={18} className="absolute left-3 top-3 text-gray-400" />
+                <select
+                  value={travelers}
+                  onChange={(e) => setTravelers(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all appearance-none"
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+                    <option key={num} value={num}>
+                      {num} {num === 1 ? 'voyageur' : 'voyageurs'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Bouton de recherche */}
+          <button
+            type="submit"
+            className="w-full md:w-auto bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-bold px-12 py-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl uppercase tracking-widest"
+          >
+            <Search size={20} />
+            Rechercher
+          </button>
+        </div>
+      </form>
+    );
+  }
+
+  // Variant default (inline)
+  return (
+    <form onSubmit={handleSearch} className={`w-full ${className}`}>
+      <div className="flex flex-col md:flex-row gap-3 items-center">
+        <div className="flex-1 relative">
+          <MapPin size={16} className="absolute left-3 top-3 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Destination"
+            value={destination}
+            onChange={(e) => setDestination(e.target.value)}
+            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-pink-500 transition-colors"
+          />
+        </div>
+
+        <div className="flex-1 relative">
+          <Calendar size={16} className="absolute left-3 top-3 text-gray-400" />
+          <input
+            type="date"
+            value={checkIn}
+            onChange={(e) => setCheckIn(e.target.value)}
+            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-pink-500 transition-colors"
+          />
+        </div>
+
+        <div className="flex-1 relative">
+          <Users size={16} className="absolute left-3 top-3 text-gray-400" />
+          <select
+            value={travelers}
+            onChange={(e) => setTravelers(e.target.value)}
+            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-pink-500 transition-colors appearance-none"
+          >
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+              <option key={num} value={num}>
+                {num} {num === 1 ? 'voyageur' : 'voyageurs'}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <button
+          type="submit"
+          className="bg-pink-500 hover:bg-pink-600 text-white font-bold px-6 py-2 rounded-md flex items-center gap-2 transition-all text-sm whitespace-nowrap"
+        >
+          <Search size={16} />
+          Rechercher
+        </button>
+      </div>
+    </form>
+  );
+};
+
+export default SearchBar;

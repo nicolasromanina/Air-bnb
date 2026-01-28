@@ -5,6 +5,11 @@ export interface Room {
   description: string;
   guests: string;
   bedrooms: string;
+  city?: string;
+  location?: string;
+  availability?: boolean;
+  availableFrom?: string;
+  capacity?: number;
 }
 
 export interface ApartmentPageData {

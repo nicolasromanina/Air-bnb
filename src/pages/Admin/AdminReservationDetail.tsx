@@ -41,7 +41,6 @@ import {
   ArrowRightLeft,
   Send,
   History,
-  FileText,
   Clock,
   Check,
   AlertCircle,
@@ -213,9 +212,9 @@ L'équipe de gestion`,
     if (!template || !reservation) return;
 
     setSelectedTemplate(templateId);
-    setSubject(template.subject);
 
     let content = template.content;
+    let subject = template.subject;
     
     // Remplacer les variables
     const variables = {
@@ -238,9 +237,12 @@ L'équipe de gestion`,
     };
 
     Object.entries(variables).forEach(([key, value]) => {
-      content = content.replace(new RegExp(`{${key}}`, 'g'), String(value));
+      const regex = new RegExp(`{${key}}`, 'g');
+      content = content.replace(regex, String(value));
+      subject = subject.replace(regex, String(value));
     });
 
+    setSubject(subject);
     setMessage(content);
   };
 

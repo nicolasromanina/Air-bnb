@@ -14,6 +14,9 @@ import Appartment from '@/pages/Appartment';
 import AppartmentEditor from '@/pages/Admin/AppartmentEditor';
 import AppartmentDetailEditor from '@/pages/Admin/AppartmentDetailEditor';
 import FooterEditor from '@/pages/Admin/FooterEditor';
+import LegalEditor from '@/pages/Admin/LegalEditor';
+import PolicyEditor from '@/pages/Admin/PolicyEditor';
+import GeneralConditionEditor from '@/pages/Admin/GeneralConditionEditor';
 
 const AdminRoutes = () => {
   return (
@@ -34,6 +37,9 @@ const AdminRoutes = () => {
         <Route path="reservations/:id" element={<AdminReservationDetail />} />
         <Route path="contact" element={<ContactEditor />} />
         <Route path="footer" element={<FooterEditor />} />
+        <Route path="legal-editor" element={<LegalEditor />} />
+        <Route path="policy-editor" element={<PolicyEditor />} />
+        <Route path="general-conditions-editor" element={<GeneralConditionEditor />} />
 
       </Route>
 

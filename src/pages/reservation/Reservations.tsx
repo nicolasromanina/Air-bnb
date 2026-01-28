@@ -82,11 +82,38 @@ const Reservations = () => {
   const handleDeleteReservation = async (id: string) => {
     try {
       await deleteReservation(id);
-      setReservations(reservations.filter((r) => r._id !== id));
+      // Reload reservations after successful deletion
+      loadReservations();
       setDeleteConfirm(null);
     } catch (err) {
       console.error("Erreur suppression:", err);
+      // Le toast d'erreur est déjà géré par le hook
     }
+  };
+
+  const canCancelReservation = (reservation: Reservation): boolean => {
+    if (reservation.status === "cancelled") return false;
+    
+    const checkInDate = new Date(reservation.checkIn);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Can only cancel if check-in is in the future
+    return checkInDate > today;
+  };
+
+  const getCancelReasonIfNotAllowed = (reservation: Reservation): string | null => {
+    if (reservation.status === "cancelled") return "Cette réservation est déjà annulée";
+    
+    const checkInDate = new Date(reservation.checkIn);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (checkInDate <= today) {
+      return "Impossible d'annuler : le séjour a déjà commencé ou est en cours";
+    }
+    
+    return null;
   };
 
   const getStatusBadge = (status?: string) => {
@@ -434,10 +461,19 @@ const Reservations = () => {
                         Voir le logement
                       </Link>
 
-                      {reservation.status !== "cancelled" && (
+                      {canCancelReservation(reservation) ? (
                         <button
                           onClick={() => setDeleteConfirm(reservation._id)}
                           className="inline-flex items-center gap-2 px-4 py-2 bg-destructive/10 text-destructive rounded-lg font-semibold hover:bg-destructive/20 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Annuler
+                        </button>
+                      ) : (
+                        <button
+                          disabled
+                          title={getCancelReasonIfNotAllowed(reservation) || "Annulation non disponible"}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-500 rounded-lg font-semibold cursor-not-allowed"
                         >
                           <Trash2 className="w-4 h-4" />
                           Annuler
@@ -451,12 +487,16 @@ const Reservations = () => {
                         <p className="text-destructive font-semibold mb-3">
                           Êtes-vous sûr de vouloir annuler cette réservation?
                         </p>
+                        <p className="text-sm text-destructive/80 mb-3">
+                          Cette action annulera définitivement votre réservation du {formatDate(reservation.checkIn)} au {formatDate(reservation.checkOut)}.
+                          {reservation.totalPrice && ` Un remboursement de ${reservation.totalPrice.toFixed(2)}€ sera effectué.`}
+                        </p>
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleDeleteReservation(reservation._id)}
                             className="flex-1 px-4 py-2 bg-destructive text-white rounded-lg font-semibold hover:bg-destructive/90 transition-colors"
                           >
-                            Oui, annuler
+                            Oui, annuler la réservation
                           </button>
                           <button
                             onClick={() => setDeleteConfirm(null)}

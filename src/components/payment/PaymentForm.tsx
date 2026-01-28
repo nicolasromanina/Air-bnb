@@ -279,6 +279,9 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
   };
 
   const [suggestedDate, setSuggestedDate] = useState<Date | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editCheckIn, setEditCheckIn] = useState(reservationDetails?.checkIn ? new Date(reservationDetails.checkIn).toISOString().split('T')[0] : '');
+  const [editCheckOut, setEditCheckOut] = useState(reservationDetails?.checkOut ? new Date(reservationDetails.checkOut).toISOString().split('T')[0] : '');
 
   const handleUseSuggested = () => {
     if (!suggestedDate || !reservationDetails) return;
@@ -292,6 +295,34 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
     }
     setSuggestedDate(null);
     toast.success('Dates mises à jour avec la suggestion');
+  };
+
+  const handleApplyNewDates = () => {
+    if (!editCheckIn || !editCheckOut) {
+      toast.error('Veuillez remplir les deux dates');
+      return;
+    }
+
+    const checkInDate = new Date(editCheckIn);
+    const checkOutDate = new Date(editCheckOut);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (checkInDate < today) {
+      toast.error('La date d\'arrivée doit être à partir d\'aujourd\'hui');
+      return;
+    }
+
+    if (checkOutDate <= checkInDate) {
+      toast.error('La date de départ doit être après la date d\'arrivée');
+      return;
+    }
+
+    if (typeof onSuggestDate === 'function') {
+      onSuggestDate(checkInDate.toISOString(), checkOutDate.toISOString());
+    }
+    setEditMode(false);
+    toast.success('Dates mises à jour avec succès');
   };
 
   const ErrorMessage = ({ message }: { message?: string }) => {
@@ -332,6 +363,42 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
               <p className="text-xs text-muted-foreground font-semibold mb-1">Départ</p>
               <p className="text-sm font-medium">{new Date(reservationDetails.checkOut).toLocaleDateString('fr-FR')}</p>
             </div>
+            <button
+              type="button"
+              onClick={() => setEditMode(!editMode)}
+              className="col-span-2 mt-2 text-xs text-primary font-semibold hover:underline"
+            >
+              {editMode ? '✕ Annuler' : '✏️ Modifier les dates'}
+            </button>
+            {editMode && (
+              <div className="col-span-2 mt-3 pt-3 border-t border-border space-y-3">
+                <div>
+                  <label className="text-xs text-muted-foreground font-semibold mb-1 block">Nouvelle date d'arrivée</label>
+                  <input
+                    type="date"
+                    value={editCheckIn}
+                    onChange={(e) => setEditCheckIn(e.target.value)}
+                    className="w-full px-3 py-2 rounded border border-input text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground font-semibold mb-1 block">Nouvelle date de départ</label>
+                  <input
+                    type="date"
+                    value={editCheckOut}
+                    onChange={(e) => setEditCheckOut(e.target.value)}
+                    className="w-full px-3 py-2 rounded border border-input text-sm"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleApplyNewDates}
+                  className="w-full mt-2 px-3 py-2 bg-primary text-primary-foreground rounded text-sm font-semibold hover:bg-primary/90"
+                >
+                  Appliquer les nouvelles dates
+                </button>
+              </div>
+            )}
             <div className="col-span-2 mt-2 pt-2 border-t border-border">
               <p className="text-xs text-muted-foreground font-semibold mb-1">Durée du séjour</p>
               <p className="text-sm font-medium">

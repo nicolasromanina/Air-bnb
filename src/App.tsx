@@ -18,6 +18,9 @@ import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import Payment from "./pages/reservation/Payment";
 import PriceSection from "./pages/Price";
 import Contact from "./pages/Contact";
+import Legal from "./pages/Legal";
+import Policy from "./pages/Policy";
+import GeneralCondition from "./pages/GeneralCondition";
 import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/AuthPage";
 import AdminRoutes from "./routes/AdminRoutes";
@@ -25,6 +28,7 @@ import PaymentSuccess from "./pages/reservation/PaymentSuccess";
 import PaymentCanceled from "./pages/reservation/PaymentCanceled";
 import Reservations from "./pages/reservation/Reservations";
 import AuthGuard from "./components/payment/AuthGuard";
+
 
 const queryClient = new QueryClient();
 
@@ -49,6 +53,9 @@ const App = () => (
             <Route path="/login" element={<Navigate to="/auth" replace />} />
             <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/legal" element={<Legal />} />
+            <Route path="/policy" element={<Policy />} />
+            <Route path="/general-conditions" element={<GeneralCondition />} />
             
             <Route path="/payment" 
               element={

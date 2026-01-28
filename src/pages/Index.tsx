@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Play, Search, CalendarDays, Users, Map, Home, Sofa, ChevronLeft, ChevronRight, Wifi, Bed, TreePine, Car, Waves, Diamond } from 'lucide-react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -570,35 +570,221 @@ const RotatingBadge = ({ text }: { text?: string }) => (
   </div>
 );
 
-/* ================= DESTINATION SEARCH ================= */
-const DestinationSearch = ({ data }: { data?: any | null }) => {
-  const [searchHover, setSearchHover] = useState(false);
-  const gridContainer = "max-w-[1440px] w-full mx-auto px-4 xs:px-5 sm:px-6 md:px-10 lg:px-16 xl:px-20";
+/* ================= INPUT FIELD COMPONENT WITH SUGGESTIONS ================= */
+const InputField = ({ label, placeholder, icon: Icon, type = 'text', value, onChange, error = '', min = undefined, suggestions = [] }: any) => {
+  const hasError = error.length > 0;
+  const isValid = value && !hasError;
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
 
-  const InputField = ({ label, placeholder, icon: Icon }) => (
-    <div className="mb-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-      <label className="block text-[10px] xs:text-[11px] font-bold mb-2 tracking-[0.1em] text-gray-800"
-             style={{ fontFamily: "'Montserrat', sans-serif" }}>
-        {label}
-      </label>
+  // Filtrer les suggestions basées sur l'input
+  useEffect(() => {
+    if (type === 'text' && value && suggestions.length > 0) {
+      const filtered = suggestions.filter((suggestion: string) =>
+        suggestion.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredSuggestions(filtered);
+      setShowSuggestions(filtered.length > 0);
+    } else {
+      setShowSuggestions(false);
+    }
+  }, [value, suggestions, type]);
 
-      <div className="relative group">
+  const handleSuggestionClick = (suggestion: string) => {
+    onChange({ target: { value: suggestion } });
+    setShowSuggestions(false);
+  };
+  
+  return (
+    <div className="mb-6 relative" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+      <div className="flex items-center justify-between mb-2">
+        <label className="block text-[10px] xs:text-[11px] font-bold tracking-[0.1em] text-gray-800"
+               style={{ fontFamily: "'Montserrat', sans-serif" }}>
+          {label}
+        </label>
+        {isValid && (
+          <span className="text-[10px] text-green-600 font-semibold">✓ Valide</span>
+        )}
+      </div>
+
+      <div className={`relative group transition-all ${hasError ? 'mb-1' : ''}`}>
         <input
-          type="text"
+          type={type}
           placeholder={placeholder}
-          className="w-full bg-white border border-gray-100 rounded-lg px-4 xs:px-5 py-3 xs:py-4 text-sm
-                     placeholder:text-gray-400 focus:ring-2 focus:ring-black/5
-                     outline-none transition-all shadow-sm"
+          value={value}
+          onChange={onChange}
+          onFocus={() => {
+            if (type === 'text' && value && filteredSuggestions.length > 0) {
+              setShowSuggestions(true);
+            }
+          }}
+          min={min}
+          className={`w-full bg-white border rounded-lg px-4 xs:px-5 py-3 xs:py-4 text-sm
+                     placeholder:text-gray-400 outline-none transition-all shadow-sm
+                     ${
+                       hasError
+                         ? 'border-red-400 focus:ring-2 focus:ring-red-200'
+                         : isValid
+                         ? 'border-green-400 focus:ring-2 focus:ring-green-200'
+                         : 'border-gray-100 focus:ring-2 focus:ring-black/5'
+                     }`}
           style={{ fontFamily: "'Montserrat', sans-serif" }}
         />
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 xs:w-9 xs:h-9
-                        bg-[#1a1a1a] rounded-md flex items-center justify-center
-                        text-white group-hover:bg-black transition-colors">
-          <Icon size={16} strokeWidth={2.5} />
+        <div className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 xs:w-9 xs:h-9
+                        rounded-md flex items-center justify-center
+                        text-white group-hover:opacity-90 transition-all
+                        ${
+                          hasError
+                            ? 'bg-red-500'
+                            : isValid
+                            ? 'bg-green-500'
+                            : 'bg-[#1a1a1a] group-hover:bg-black'
+                        }`}>
+          {hasError ? (
+            <span className="text-lg">⚠</span>
+          ) : isValid ? (
+            <span className="text-lg">✓</span>
+          ) : (
+            <Icon size={16} strokeWidth={2.5} />
+          )}
         </div>
+
+        {/* Suggestions Dropdown */}
+        {showSuggestions && filteredSuggestions.length > 0 && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+            {filteredSuggestions.map((suggestion, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSuggestionClick(suggestion)}
+                className="w-full text-left px-4 xs:px-5 py-2 xs:py-2.5 text-sm hover:bg-[#FF1B7C]/10 
+                         transition-colors border-b border-gray-100 last:border-b-0 font-medium text-gray-800"
+                style={{ fontFamily: "'Montserrat', sans-serif" }}
+              >
+                <Map className="inline w-3 h-3 mr-2 text-[#FF1B7C]" />
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+
+      {hasError && (
+        <p className="text-[11px] xs:text-[12px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+          <span>✕</span>
+          {error}
+        </p>
+      )}
     </div>
   );
+};
+
+/* ================= DESTINATION SEARCH ================= */
+const DestinationSearch = ({ data }: { data?: any | null }) => {
+  const navigate = useNavigate();
+  const [searchHover, setSearchHover] = useState(false);
+  const [destination, setDestination] = useState('');
+  const [checkInDate, setCheckInDate] = useState('');
+  const [travelers, setTravelers] = useState('');
+  const [errors, setErrors] = useState({ destination: '', checkInDate: '', travelers: '' });
+  const gridContainer = "max-w-[1440px] w-full mx-auto px-4 xs:px-5 sm:px-6 md:px-10 lg:px-16 xl:px-20";
+
+  // Validation en temps réel pour destination
+  const validateDestination = (value: string) => {
+    if (!value.trim()) {
+      return 'Veuillez entrer une destination';
+    }
+    if (value.trim().length < 2) {
+      return 'La destination doit contenir au moins 2 caractères';
+    }
+    return '';
+  };
+
+  // Validation en temps réel pour la date
+  const validateCheckInDate = (value: string) => {
+    if (!value) {
+      return 'Veuillez sélectionner une date d\'arrivée';
+    }
+    const selectedDate = new Date(value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < today) {
+      return 'La date d\'arrivée doit être aujourd\'hui ou plus tard';
+    }
+    return '';
+  };
+
+  // Validation en temps réel pour les voyageurs
+  const validateTravelers = (value: string) => {
+    if (!value) {
+      return 'Veuillez indiquer le nombre de voyageurs';
+    }
+    const num = parseInt(value, 10);
+    if (isNaN(num) || num < 1) {
+      return 'Le nombre doit être au minimum 1';
+    }
+    if (num > 20) {
+      return 'Le nombre maximum est 20';
+    }
+    return '';
+  };
+
+  // Handlers avec validation
+  const handleDestinationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setDestination(value);
+    setErrors(prev => ({ ...prev, destination: validateDestination(value) }));
+  };
+
+  const handleCheckInDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCheckInDate(value);
+    setErrors(prev => ({ ...prev, checkInDate: validateCheckInDate(value) }));
+  };
+
+  const handleTravelersChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setTravelers(value);
+    setErrors(prev => ({ ...prev, travelers: validateTravelers(value) }));
+  };
+
+  // Valider tout avant la recherche (sans appeler setErrors)
+  const isFormValid = (): boolean => {
+    const destError = validateDestination(destination);
+    const dateError = validateCheckInDate(checkInDate);
+    const travelersError = validateTravelers(travelers);
+    
+    return !destError && !dateError && !travelersError;
+  };
+
+  const handleSearch = () => {
+    // Valider et mettre à jour les erreurs
+    const destError = validateDestination(destination);
+    const dateError = validateCheckInDate(checkInDate);
+    const travelersError = validateTravelers(travelers);
+    
+    setErrors({
+      destination: destError,
+      checkInDate: dateError,
+      travelers: travelersError
+    });
+
+    if (destError || dateError || travelersError) {
+      return;
+    }
+
+    // Redirection vers la page d'appartements avec les paramètres de recherche
+    const searchParams = new URLSearchParams({
+      destination: destination.trim(),
+      checkIn: checkInDate,
+      travelers: travelers
+    });
+    
+    console.log('🔍 Recherche initiée:', { destination, checkInDate, travelers });
+    
+    // Utiliser navigate de React Router au lieu de window.location.href
+    navigate(`/appartement?${searchParams.toString()}`);
+  };
 
   return (
     <section className="bg-white py-8 xs:py-10 sm:py-12 md:py-16 lg:py-20 overflow-hidden"
@@ -676,29 +862,46 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
                 </p>
 
                 <InputField
-                  label={data?.formLabels?.destination ?? ''}
-                  placeholder={data?.formLabels?.destination ?? ''}
+                  label={data?.formLabels?.destination ?? 'Destination'}
+                  placeholder={data?.formLabels?.destination ?? 'Où allez-vous ?'}
                   icon={Map}
+                  type="text"
+                  value={destination}
+                  onChange={handleDestinationChange}
+                  error={errors.destination}
                 />
                 <InputField
-                  label={data?.formLabels?.date ?? ''}
+                  label={data?.formLabels?.date ?? 'Date d\'arrivée'}
                   placeholder={data?.formLabels?.date ?? ''}
                   icon={CalendarDays}
+                  type="date"
+                  value={checkInDate}
+                  onChange={handleCheckInDateChange}
+                  error={errors.checkInDate}
+                  min={new Date().toISOString().split('T')[0]}
                 />
                 <InputField
-                  label={data?.formLabels?.travelers ?? 'Voyageur'}
-                  placeholder={data?.formLabels?.travelers ?? 'Ajouter des voyageurs'}
+                  label={data?.formLabels?.travelers ?? 'Voyageurs'}
+                  placeholder={data?.formLabels?.travelers ?? 'Nombre de voyageurs'}
                   icon={Users}
+                  type="number"
+                  value={travelers}
+                  onChange={handleTravelersChange}
+                  error={errors.travelers}
+                  min="1"
                 />
 
-                <Link
-                  to="/appartement"
+                <button
+                  onClick={handleSearch}
                   onMouseEnter={() => setSearchHover(true)}
                   onMouseLeave={() => setSearchHover(false)}
+                  disabled={!isFormValid()}
                   className={`w-full mt-6 py-4 xs:py-5 rounded-sm flex items-center
                               justify-center gap-2 xs:gap-3 text-white font-bold
                               transition-all duration-500 shadow-lg ${
-                                searchHover
+                                !isFormValid()
+                                  ? "bg-gray-400 cursor-not-allowed opacity-60"
+                                  : searchHover
                                   ? "bg-black scale-[1.01]"
                                   : "bg-[#FF1B7C]"
                               }`}
@@ -711,7 +914,7 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
                     className="w-4 h-4 xs:w-[18px] xs:h-[18px]"
                     strokeWidth={3}
                   />
-                </Link>
+                </button>
               </div>
             </div>
           </div>

@@ -18,6 +18,7 @@ import {
   Users,
   CalendarCheck,
   Wallet,
+  Scale,
 } from "lucide-react";
 
 interface NavItem {
@@ -40,6 +41,10 @@ const navItems: NavItem[] = [
   { label: "Détails Appart", href: "/admin/apartment-details", icon: FileText },
   { label: "Contact", href: "/admin/contact", icon: Mail },
   { label: "Pied de page", href: "/admin/footer", icon: PanelBottom },
+  // Légal section
+  { label: "Mentions Légales", href: "/admin/legal-editor", icon: Scale, section: "Légal" },
+  { label: "Politique de Confidentialité", href: "/admin/policy-editor", icon: Scale },
+  { label: "Conditions Générales", href: "/admin/general-conditions-editor", icon: Scale },
 ];
 
 interface AdminSidebarProps {

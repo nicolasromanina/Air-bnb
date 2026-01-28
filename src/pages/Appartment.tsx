@@ -1,10 +1,11 @@
 import React, { memo, useState, useEffect, useCallback } from 'react';
-import { Play, Newspaper, Check, Users, Bed, Edit3, Upload, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Play, Newspaper, Check, Users, Bed, Edit3, Upload, Loader2, MapPin, Calendar, Search } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import VideoPlayer from "@/components/VideoPlayer";
+import SearchBar from "@/components/SearchBar";
 import { formatGuests, formatBedrooms, extractNumber } from "@/utils/numberExtractor";
 import heroRoom from "@/assets/hero-room.jpg";
 import room1 from "@/assets/room-1.jpg";
@@ -565,17 +566,26 @@ interface RoomsSectionProps {
   isAdmin?: boolean;
   onUpdate?: (section: string, field: string, value: any) => Promise<void>;
   onUploadImage?: (file: File) => Promise<string>;
+  searchParams?: {
+    destination: string;
+    checkIn: string;
+    travelers: string;
+  };
+  filteredRooms?: any[];
 }
 
 const INITIAL_ROOMS_COUNT = 6;
 const LOAD_MORE_INCREMENT = 6;
 
-const RoomsSection: React.FC<RoomsSectionProps> = memo(({ 
+const RoomsSection: React.FC<RoomsSectionProps & { searchParams?: any; filteredRooms?: any[] }> = memo(({ 
   data, 
   isAdmin = false, 
   onUpdate, 
-  onUploadImage 
+  onUploadImage,
+  searchParams = {},
+  filteredRooms = []
 }) => {
+  const navigate = useNavigate();
   const [visibleRoomsCount, setVisibleRoomsCount] = useState(INITIAL_ROOMS_COUNT);
   
   const handleUpdate = useCallback(async (field: string, value: any) => {
@@ -593,15 +603,17 @@ const RoomsSection: React.FC<RoomsSectionProps> = memo(({
   }, [onUpdate, data?.rooms]);
 
   const handleLoadMore = () => {
-    setVisibleRoomsCount(prevCount => Math.min(prevCount + LOAD_MORE_INCREMENT, data?.rooms?.length || 0));
+    setVisibleRoomsCount(prevCount => Math.min(prevCount + LOAD_MORE_INCREMENT, allRooms.length || 0));
   };
   
   const handleShowLess = () => {
     setVisibleRoomsCount(INITIAL_ROOMS_COUNT);
   };
   
-  const visibleRooms = data?.rooms?.slice(0, visibleRoomsCount) || [];
-  const allRoomsVisible = visibleRoomsCount >= (data?.rooms?.length || 0);
+  // Utiliser les appartements filtrés si des critères de recherche existent, sinon tous les appartements
+  const allRooms = filteredRooms.length > 0 ? filteredRooms : (data?.rooms || []);
+  const visibleRooms = allRooms.slice(0, visibleRoomsCount) || [];
+  const allRoomsVisible = visibleRoomsCount >= (allRooms.length || 0);
 
   const getRoomImageSrc = useCallback((imageUrl: string) => {
     if (!imageUrl) return room1;
@@ -616,9 +628,70 @@ const RoomsSection: React.FC<RoomsSectionProps> = memo(({
 
   if (!data) return null;
 
+  // Fonction pour réinitialiser la recherche
+  const handleClearSearch = () => {
+    navigate('/appartement');
+  };
+
   return (
     <section className="py-16 lg:py-24 bg-white font-sans">
       <div className={GRID_CONTAINER}>
+        
+        {/* --- BARRE DE RECHERCHE HEROE (Si aucun critère) --- */}
+        {!searchParams.destination && !searchParams.checkIn && !searchParams.travelers && (
+          <div className="mb-16 lg:mb-24">
+            <SearchBar variant="hero" />
+          </div>
+        )}
+        
+        {/* --- BARRE DE RECHERCHE ACTIVE --- */}
+        {(searchParams.destination || searchParams.checkIn || searchParams.travelers) && (
+          <div className="mb-12 p-6 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
+              <div className="flex-1">
+                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">Critères de recherche actuels</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {searchParams.destination && (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200">
+                      <MapPin size={16} className="text-pink-500 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase font-semibold">Destination</p>
+                        <p className="text-sm font-medium text-gray-900">{searchParams.destination}</p>
+                      </div>
+                    </div>
+                  )}
+                  {searchParams.checkIn && (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200">
+                      <Calendar size={16} className="text-blue-500 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase font-semibold">Arrivée</p>
+                        <p className="text-sm font-medium text-gray-900">{new Date(searchParams.checkIn).toLocaleDateString('fr-FR')}</p>
+                      </div>
+                    </div>
+                  )}
+                  {searchParams.travelers && (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200">
+                      <Users size={16} className="text-green-500 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase font-semibold">Voyageurs</p>
+                        <p className="text-sm font-medium text-gray-900">{searchParams.travelers} personne(s)</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={handleClearSearch}
+                className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold rounded-lg transition-colors text-sm whitespace-nowrap"
+              >
+                ✕ Réinitialiser
+              </button>
+            </div>
+            {filteredRooms.length === 0 && (
+              <p className="text-sm text-red-600 font-medium">⚠️ Aucun appartement ne correspond à votre recherche.</p>
+            )}
+          </div>
+        )}
         
         {/* --- EN-TÊTE : Titre et Description --- */}
         <div className="flex flex-col items-center text-center mb-12 lg:mb-20">
@@ -639,11 +712,12 @@ const RoomsSection: React.FC<RoomsSectionProps> = memo(({
           
           {/* Compteur de chambres visibles */}
           <div className="mt-4 text-gray-500 text-sm font-medium">
-            Affichage de {visibleRooms.length} sur {data.rooms?.length || 0} chambres disponibles
+            Affichage de {visibleRooms.length} sur {allRooms.length} appartement(s) {filteredRooms.length > 0 ? 'correspondant(s)' : 'disponible(s)'}
           </div>
         </div>
-        
+
         {/* --- GRILLE DES CHAMBRES (3 colonnes sur Desktop) --- */}
+        {visibleRooms.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
           {visibleRooms.map((room, index) => (
             <div key={room.id || index} className="flex justify-center">
@@ -657,8 +731,22 @@ const RoomsSection: React.FC<RoomsSectionProps> = memo(({
             </div>
           ))}
         </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <Search size={48} className="text-gray-300 mb-4" />
+            <h3 className="text-xl font-bold text-gray-700 mb-2">Aucun appartement trouvé</h3>
+            <p className="text-gray-600 mb-6">Aucun appartement ne correspond à votre recherche. Essayez de modifier vos critères.</p>
+            <button
+              onClick={handleClearSearch}
+              className="px-6 py-3 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors"
+            >
+              Voir tous les appartements
+            </button>
+          </div>
+        )}
         
         {/* --- ACTIONS : Boutons de contrôle --- */}
+        {visibleRooms.length > 0 && (
         <div className="flex justify-center mt-16 lg:mt-24">
           {!allRoomsVisible ? (
             <button 
@@ -670,7 +758,7 @@ const RoomsSection: React.FC<RoomsSectionProps> = memo(({
           ) : (
             <div className="flex flex-col items-center gap-4">
               <p className="text-gray-600 font-medium">
-                Toutes nos chambres sont affichées
+                Toutes les chambres sont affichées
               </p>
               <div className="flex gap-4">
                 <button 
@@ -689,6 +777,7 @@ const RoomsSection: React.FC<RoomsSectionProps> = memo(({
             </div>
           )}
         </div>
+        )}
       </div>
     </section>
   );
@@ -1467,9 +1556,19 @@ const Appartment: React.FC<AppartmentProps> = ({
   onUpdate, 
   onUploadImage 
 }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [pageData, setPageData] = useState<ApartmentPageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // États de recherche
+  const [searchParams, setSearchParams] = useState({
+    destination: '',
+    checkIn: '',
+    travelers: ''
+  });
+  const [filteredRooms, setFilteredRooms] = useState<any[]>([]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -1497,6 +1596,86 @@ const Appartment: React.FC<AppartmentProps> = ({
       setLoading(false);
     }
   }, []);
+
+  // Récupérer les paramètres de recherche depuis l'URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const destination = params.get('destination') || '';
+    const checkIn = params.get('checkIn') || '';
+    const travelers = params.get('travelers') || '';
+    
+    setSearchParams({ destination, checkIn, travelers });
+    console.log('🔍 Paramètres de recherche reçus:', { destination, checkIn, travelers });
+  }, [location.search]);
+
+  // Filtrer les appartements en fonction des paramètres de recherche
+  useEffect(() => {
+    if (!pageData) return;
+
+    let rooms = pageData.roomsSection?.rooms || [];
+    
+    console.log('🔥 FILTRAGE - Rooms source:', rooms.length, 'Params:', searchParams);
+    
+    // Si aucun critère de recherche, afficher tous les appartements
+    if (!searchParams.destination && !searchParams.checkIn && !searchParams.travelers) {
+      console.log('✅ Pas de critères - Afficher tous les appartements');
+      setFilteredRooms(rooms);
+      return;
+    }
+
+    // Filtrer par destination (recherche dans le titre, la description, la ville ou le lieu)
+    if (searchParams.destination) {
+      const beforeCount = rooms.length;
+      rooms = rooms.filter((room: any) => {
+        const destination = searchParams.destination.toLowerCase();
+        const title = (room.title || '').toLowerCase();
+        const description = (room.description || '').toLowerCase();
+        const city = (room.city || '').toLowerCase();
+        const location = (room.location || '').toLowerCase();
+        return title.includes(destination) || 
+               description.includes(destination) || 
+               city.includes(destination) || 
+               location.includes(destination);
+      });
+      console.log(`🏘️ Filtrage destination "${searchParams.destination}": ${beforeCount} → ${rooms.length}`);
+    }
+
+    // Filtrer par nombre de voyageurs (capacité)
+    if (searchParams.travelers) {
+      const beforeCount = rooms.length;
+      const requiredTravelers = parseInt(searchParams.travelers, 10);
+      rooms = rooms.filter((room: any) => {
+        const guestCount = room.capacity !== undefined ? room.capacity : extractNumber(room.guests);
+        return guestCount >= requiredTravelers;
+      });
+      console.log(`👥 Filtrage voyageurs (${requiredTravelers}+): ${beforeCount} → ${rooms.length}`);
+    }
+
+    // Filtrer par disponibilité (checkIn)
+    if (searchParams.checkIn) {
+      const beforeCount = rooms.length;
+      const checkInDate = new Date(searchParams.checkIn);
+      
+      rooms = rooms.filter((room: any) => {
+        // Vérifier si la disponibilité est active
+        if (room.availability === false) {
+          return false;
+        }
+        
+        // Si une date de disponibilité est définie, vérifier qu'elle est antérieure ou égale à la date de check-in
+        if (room.availableFrom) {
+          const availableFromDate = new Date(room.availableFrom);
+          return availableFromDate <= checkInDate;
+        }
+        
+        return true;
+      });
+      console.log(`📅 Filtrage disponibilité depuis ${searchParams.checkIn}: ${beforeCount} → ${rooms.length}`);
+    }
+
+    setFilteredRooms(rooms);
+    console.log(`📊 RÉSULTAT FINAL: ${rooms.length} appartement(s) trouvé(s)`);
+  }, [pageData, searchParams]);
 
   const handleUpdate = useCallback(async (section: string, fieldPath: string, value: any) => {
     if (!pageData || !onUpdate) return;
@@ -1670,6 +1849,8 @@ const Appartment: React.FC<AppartmentProps> = ({
         isAdmin={isAdmin}
         onUpdate={handleUpdate}
         onUploadImage={handleUploadImage}
+        searchParams={searchParams}
+        filteredRooms={filteredRooms}
       />
       <FeatureSection 
         data={pageData.featureSection} 
