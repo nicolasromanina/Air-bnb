@@ -409,6 +409,12 @@ function AppartmentDetail() {
                             <InfoRow label="Prix standard" value={`${apartment.price}€ / nuit`} isBold />
                             <InfoRow label="Nombre de personnes" value={formatGuests(apartment.guests)} />
                             <InfoRow label="Nombre de chambres" value={formatBedrooms(apartment.bedrooms)} />
+                            {roomDetail?.city && (
+                                <InfoRow label="Ville" value={roomDetail.city} />
+                            )}
+                            {roomDetail?.country && (
+                                <InfoRow label="Pays" value={roomDetail.country} />
+                            )}
                             {roomDetail?.accommodationType && (
                                 <InfoRow label="Type de logement" value={roomDetail.accommodationType} />
                             )}

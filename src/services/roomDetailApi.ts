@@ -15,6 +15,8 @@ export interface RoomDetail {
   images: string[];
   videoUrl?: string;
   features: string[];
+  city?: string;
+  country?: string;
   accommodationType?: string;
   includes?: string[];
   amenities?: string[];
@@ -44,6 +46,8 @@ export interface PricingInfo {
 export interface GuestBedInfo {
   guests: string;
   bedrooms: string;
+  city?: string;
+  country?: string;
 }
 
 export interface RoomImages {
@@ -67,6 +71,8 @@ export interface UpdateRoomDetailPayload {
   images?: string[];
   videoUrl?: string;
   features?: string[];
+  city?: string;
+  country?: string;
   accommodationType?: string;
   includes?: string[];
   amenities?: string[];
@@ -281,7 +287,15 @@ export const roomDetailApi = {
     return await this.updateRoomDetail(roomId, { 
       guests: guestBedInfo.guests,
       bedrooms: guestBedInfo.bedrooms,
+      ...(guestBedInfo.city && { city: guestBedInfo.city }),
+      ...(guestBedInfo.country && { country: guestBedInfo.country }),
     });
+  },
+
+  // Mettre à jour la ville et le pays
+  async updateCityCountry(roomId: number, city: string, country: string): Promise<{ success: boolean; data: RoomDetail }> {
+    console.log('[API] 🔄 updateCityCountry called:', { roomId, city, country });
+    return await this.updateRoomDetail(roomId, { city, country });
   },
 
   // Mettre à jour les images

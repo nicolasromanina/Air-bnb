@@ -1499,6 +1499,28 @@ const AppartmentEditor: React.FC = () => {
                             placeholder="ex: 2 chambres"
                           />
                         </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2 font-semibold">🏙️ Ville</label>
+                          <input
+                            type="text"
+                            value={roomDetail.city || ''}
+                            onChange={(e) => updateRoomDetailField('city', e.target.value)}
+                            className="w-full border-2 border-yellow-300 rounded-lg p-3 focus:outline-none focus:border-yellow-500"
+                            placeholder="ex: Paris"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2 font-semibold">🌍 Pays</label>
+                          <input
+                            type="text"
+                            value={roomDetail.country || ''}
+                            onChange={(e) => updateRoomDetailField('country', e.target.value)}
+                            className="w-full border-2 border-yellow-300 rounded-lg p-3 focus:outline-none focus:border-yellow-500"
+                            placeholder="ex: France"
+                          />
+                        </div>
                       </div>
 
                       {/* Équipements inclus */}
