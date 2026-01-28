@@ -27,6 +27,7 @@ export interface RoomDetail {
     price: number;
     quantity: number;
     pricingType: 'fixed' | 'per_day' | 'per_guest';
+    image?: string;
   }[];
   meta?: {
     createdAt?: string;
@@ -90,6 +91,7 @@ export interface UpdateRoomDetailPayload {
     price: number;
     quantity: number;
     pricingType: 'fixed' | 'per_day' | 'per_guest';
+    image?: string;
   }[];
 }
 

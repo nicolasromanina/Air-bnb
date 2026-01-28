@@ -23,6 +23,7 @@ import VideoUploader from '@/components/admin/VideoUploader';
 import { apartmentApi, ApartmentPageData } from '@/services/apartmentApi';
 import { roomDetailApi, RoomDetail } from '@/services/roomDetailApi';
 import { api } from '@/services/api';
+import { imageUploadService } from '@/services/imageUploadService';
 
 interface ApartmentPageDataState extends Omit<ApartmentPageData, 'meta'> {
   meta?: ApartmentPageData['meta'];
@@ -57,6 +58,7 @@ const AppartmentEditor: React.FC = () => {
     price: '',
     pricingType: 'fixed' as 'fixed' | 'per_day' | 'per_guest'
   });
+  const [uploadingOptionImages, setUploadingOptionImages] = useState<Record<string, boolean>>({});
   const [newRoom, setNewRoom] = useState<any>({
     title: '',
     description: '',
@@ -1756,26 +1758,87 @@ const AppartmentEditor: React.FC = () => {
 
                             {/* Afficher les options sélectionnées */}
                             {(roomDetail.additionalOptions || []).length > 0 && (
-                              <div className="space-y-2 mb-4">
+                              <div className="space-y-3 mb-4">
                                 <h5 className="font-semibold text-sm text-indigo-800">Options sélectionnées:</h5>
                                 {roomDetail.additionalOptions.map((option, idx) => (
-                                  <div key={idx} className="flex gap-2 items-center bg-white p-3 rounded border border-indigo-200">
-                                    <div className="flex-1">
-                                      <p className="text-sm font-semibold">{option.name}</p>
-                                      <p className="text-xs text-gray-600">
-                                        {option.price}€ ({option.pricingType === 'fixed' ? 'Fixe' : option.pricingType === 'per_day' ? 'Par nuit' : 'Par personne'})
-                                        {option.quantity > 1 && ` × ${option.quantity}`}
-                                      </p>
+                                  <div key={idx} className="bg-white p-4 rounded border border-indigo-200 space-y-3">
+                                    <div className="flex gap-2 items-start justify-between">
+                                      <div className="flex-1">
+                                        <p className="text-sm font-semibold">{option.name}</p>
+                                        <p className="text-xs text-gray-600">
+                                          {option.price}€ ({option.pricingType === 'fixed' ? 'Fixe' : option.pricingType === 'per_day' ? 'Par nuit' : 'Par personne'})
+                                          {option.quantity > 1 && ` × ${option.quantity}`}
+                                        </p>
+                                      </div>
+                                      <button
+                                        onClick={() => {
+                                          const newOptions = roomDetail.additionalOptions!.filter((_, i) => i !== idx);
+                                          updateRoomDetailField('additionalOptions', newOptions);
+                                        }}
+                                        className="p-2 text-red-500 hover:bg-red-100 rounded border"
+                                      >
+                                        <Trash2 size={18} />
+                                      </button>
                                     </div>
-                                    <button
-                                      onClick={() => {
-                                        const newOptions = roomDetail.additionalOptions!.filter((_, i) => i !== idx);
-                                        updateRoomDetailField('additionalOptions', newOptions);
-                                      }}
-                                      className="p-2 text-red-500 hover:bg-red-100 rounded border"
-                                    >
-                                      <Trash2 size={18} />
-                                    </button>
+                                    
+                                    {/* Image upload pour l'option */}
+                                    <div className="border-t border-indigo-100 pt-3">
+                                      <label className="text-xs font-semibold text-gray-700 block mb-2">Image de l'option (optionnelle)</label>
+                                      <div className="flex gap-2">
+                                        {option.image && (
+                                          <div className="w-20 h-20 rounded-lg overflow-hidden border border-indigo-200 flex-shrink-0">
+                                            <img
+                                              src={option.image}
+                                              alt={option.name}
+                                              className="w-full h-full object-cover"
+                                            />
+                                          </div>
+                                        )}
+                                        <div className="flex-1">
+                                          <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={async (e) => {
+                                              const file = e.currentTarget.files?.[0];
+                                              if (!file) return;
+
+                                              setUploadingOptionImages({ ...uploadingOptionImages, [idx]: true });
+                                              try {
+                                                const response = await imageUploadService.uploadRoomDetailImage(file);
+                                                if (response.success && response.data?.url) {
+                                                  const updatedOptions = [...(roomDetail.additionalOptions || [])];
+                                                  updatedOptions[idx] = { ...updatedOptions[idx], image: response.data.url };
+                                                  updateRoomDetailField('additionalOptions', updatedOptions);
+                                                  toast.success('Image téléchargée avec succès!');
+                                                }
+                                              } catch (error) {
+                                                console.error('Upload error:', error);
+                                                toast.error('Erreur lors du téléchargement');
+                                              } finally {
+                                                setUploadingOptionImages({ ...uploadingOptionImages, [idx]: false });
+                                              }
+                                            }}
+                                            disabled={uploadingOptionImages[idx]}
+                                            className="w-full px-3 py-2 border border-indigo-200 rounded-lg text-sm cursor-pointer hover:border-indigo-400 disabled:opacity-50"
+                                          />
+                                          {uploadingOptionImages[idx] && (
+                                            <p className="text-xs text-indigo-600 mt-1">Téléchargement...</p>
+                                          )}
+                                        </div>
+                                        {option.image && (
+                                          <button
+                                            onClick={() => {
+                                              const updatedOptions = [...(roomDetail.additionalOptions || [])];
+                                              updatedOptions[idx] = { ...updatedOptions[idx], image: undefined };
+                                              updateRoomDetailField('additionalOptions', updatedOptions);
+                                            }}
+                                            className="p-2 text-red-500 hover:bg-red-100 rounded border flex-shrink-0"
+                                          >
+                                            <Trash2 size={16} />
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
                                   </div>
                                 ))}
                               </div>

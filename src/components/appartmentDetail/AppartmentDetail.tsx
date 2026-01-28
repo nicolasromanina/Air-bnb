@@ -524,11 +524,22 @@ function AppartmentDetail() {
                         {/* Affichage des options de la chambre */}
                         {roomDetail?.additionalOptions && roomDetail.additionalOptions.length > 0 ? (
                             <>
-                                {/* Affichage des emojis des options */}
+                                {/* Affichage des images des options */}
                                 <div className="flex justify-center gap-3 mb-10 flex-wrap">
                                     {roomDetail.additionalOptions.slice(0, 4).map((option, i) => (
-                                        <div key={i} className="w-20 h-20 rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md transition flex items-center justify-center text-2xl">
-                                            ✨
+                                        <div key={i} className="w-20 h-20 rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md transition flex items-center justify-center text-2xl bg-gradient-to-br from-pink-100 to-pink-50">
+                                            {option.image ? (
+                                                <img
+                                                    src={option.image}
+                                                    alt={option.name}
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                                    }}
+                                                />
+                                            ) : (
+                                                <span>✨</span>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -541,9 +552,21 @@ function AppartmentDetail() {
                                                 onClick={() => setExpandedOption(expandedOption === option.optionId ? null : option.optionId)} 
                                                 className="w-full p-5 flex justify-between items-center group gap-4"
                                             >
-                                                {/* Option icon */}
-                                                <div className="w-12 h-12 rounded-lg flex-shrink-0 bg-gradient-to-br from-pink-100 to-pink-50 flex items-center justify-center text-xl">
-                                                    ✨
+                                                {/* Option image/icon */}
+                                                <div className="w-12 h-12 rounded-lg flex-shrink-0 bg-gradient-to-br from-pink-100 to-pink-50 flex items-center justify-center text-xl overflow-hidden">
+                                                    {option.image ? (
+                                                        <img
+                                                            src={option.image}
+                                                            alt={option.name}
+                                                            className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                                                (e.currentTarget as HTMLImageElement).parentElement!.textContent = '✨';
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <span>✨</span>
+                                                    )}
                                                 </div>
                                                 <span className={`text-[15px] font-bold flex-1 transition-colors ${selectedOptions.some(o => o.optionId === option.optionId) ? 'text-[#FF385C]' : 'text-gray-800'}`}>
                                                     {option.name}
@@ -557,9 +580,22 @@ function AppartmentDetail() {
                                             {expandedOption === option.optionId && (
                                                 <div className="p-8 pt-0 border-t border-gray-50 grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-top-2 duration-300">
                                                     <div className="space-y-4">
-                                                        <div className="w-full h-48 bg-gradient-to-br from-pink-100 to-pink-50 rounded-lg flex items-center justify-center text-5xl">
-                                                            ✨
-                                                        </div>
+                                                        {option.image ? (
+                                                            <div className="w-full h-48 bg-white rounded-lg overflow-hidden flex items-center justify-center text-5xl border border-gray-100">
+                                                                <img
+                                                                    src={option.image}
+                                                                    alt={option.name}
+                                                                    className="w-full h-full object-cover"
+                                                                    onError={(e) => {
+                                                                        (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        ) : (
+                                                            <div className="w-full h-48 bg-gradient-to-br from-pink-100 to-pink-50 rounded-lg flex items-center justify-center text-5xl">
+                                                                ✨
+                                                            </div>
+                                                        )}
                                                         <h4 className="text-[12px] font-black uppercase text-black tracking-widest">{option.name}</h4>
                                                         <p className="text-[13px] text-gray-400 leading-relaxed font-medium">Option supplémentaire pour votre séjour</p>
                                                         <div className="text-2xl font-black text-gray-900">{option.price}€</div>
