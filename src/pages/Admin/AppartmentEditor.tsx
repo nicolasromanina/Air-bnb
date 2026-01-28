@@ -1443,6 +1443,20 @@ const AppartmentEditor: React.FC = () => {
                             uploadType="room-detail"
                             label="Télécharger la vidéo de la chambre"
                           />
+
+                          {/* Champ URL de la vidéo */}
+                          <div className="bg-gray-50 p-3 rounded-lg border">
+                            <label className="block text-sm font-medium mb-2 font-semibold">URL de la vidéo</label>
+                            <textarea
+                              value={roomDetail.videoUrl || ''}
+                              onChange={(e) => updateRoomDetailField('videoUrl', e.target.value)}
+                              className="w-full border rounded-lg p-3 h-20 font-mono text-xs focus:outline-none focus:border-blue-500"
+                              placeholder="URL Cloudinary de la vidéo (générée après upload ou entrée manuelle)"
+                            />
+                            <p className="text-xs text-gray-500 mt-2">
+                              {roomDetail.videoUrl ? '✅ URL stockée' : '⚠️ Aucune URL enregistrée'}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
