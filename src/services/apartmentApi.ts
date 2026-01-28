@@ -68,8 +68,10 @@ export interface ApartmentPageData {
   };
   videoSection: {
     coverImage: string;
+    videoUrl: string;
     playButtonText: string;
     overlayColor: string;
+    galleryImages: string[];
   };
   finalSection: {
     title: string;
