@@ -23,6 +23,7 @@ export interface IHeroSection {
 
 export interface IWelcomeSection {
   videoImage: string;
+  videoUrl: string;
   image1: string;
   image2: string;
   title: string;
@@ -75,6 +76,7 @@ export interface IVideoSection {
   title: string;
   description: string;
   mainImage: string;
+  videoUrl: string;
   galleryImages: string[];
   buttonText: string;
   accentColor: string;

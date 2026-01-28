@@ -4,6 +4,7 @@ import { Play, Search, CalendarDays, Users, Map, Home, Sofa, ChevronLeft, Chevro
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PinkPowderEffect from "@/components/PinkPowderEffect";
+import VideoPlayer from "@/components/VideoPlayer";
 
 import { homeApi } from '@/services/homeApi';
 import type { HomePageData, IHeroSection, IWelcomeSection } from '@/types/home.types';
@@ -304,9 +305,11 @@ const VideoModal = ({ isOpen, videoUrl, onClose }: { isOpen: boolean; videoUrl?:
 
 /* ================= WELCOME SECTION ================= */
 const WelcomeSection = ({ data }: { data?: IWelcomeSection | null }) => {
-  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const containerStyles =
     "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
+
+  // Déterminer si c'est une vidéo Cloudinary ou YouTube
+  const isCloudinaryVideo = data?.videoUrl && data.videoUrl.includes('cloudinary.com');
 
   return (
     <>
@@ -317,19 +320,20 @@ const WelcomeSection = ({ data }: { data?: IWelcomeSection | null }) => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10 lg:hidden">
             {/* VIDEO */}
             <div 
-              className="relative aspect-square w-full overflow-hidden rounded-xl cursor-pointer group"
-              onClick={() => data?.videoUrl && setIsVideoModalOpen(true)}
+              className="relative aspect-square w-full overflow-hidden rounded-xl group"
             >
               <img
                 src={data?.videoImage ?? welcomeRoom1}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                 alt="Welcome video"
               />
-              <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/20 transition-colors">
-                <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
-                  <Play className="w-5 h-5 text-black fill-black ml-1" />
-                </div>
-              </div>
+              {isCloudinaryVideo && (
+                <VideoPlayer
+                  videoUrl={data?.videoUrl}
+                  posterImage={data?.videoImage}
+                  playButtonSize="medium"
+                />
+              )}
             </div>
 
           {/* IMAGE 1 */}
@@ -394,19 +398,20 @@ const WelcomeSection = ({ data }: { data?: IWelcomeSection | null }) => {
 
           {/* VIDEO */}
           <div 
-            className="relative aspect-square w-full max-w-[420px] overflow-hidden rounded-xl group cursor-pointer"
-            onClick={() => data?.videoUrl && setIsVideoModalOpen(true)}
+            className="relative aspect-square w-full max-w-[420px] overflow-hidden rounded-xl group"
           >
             <img
               src={data?.videoImage ?? welcomeRoom1}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               alt="Welcome video"
             />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/20 transition-colors">
-              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-xl transition-transform group-hover:scale-110">
-                <Play className="w-5 h-5 text-black fill-black ml-1" />
-              </div>
-            </div>
+            {isCloudinaryVideo && (
+              <VideoPlayer
+                videoUrl={data?.videoUrl}
+                posterImage={data?.videoImage}
+                playButtonSize="medium"
+              />
+            )}
           </div>
 
           {/* IMAGES COLUMN */}
@@ -445,7 +450,7 @@ const WelcomeSection = ({ data }: { data?: IWelcomeSection | null }) => {
                 <img className="w-5 h-5 invert" src={welcomeicon1} alt="" />
                 <span className="text-xs font-semibold  tracking-widest"
                       style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                  Luxe & Confort
+                  {data?.features?.feature1 ?? ''}
                 </span>
               </div>
 
@@ -455,7 +460,7 @@ const WelcomeSection = ({ data }: { data?: IWelcomeSection | null }) => {
                 <img className="w-5 h-5 invert" src={welcomeicon} alt="" />
                 <span className="text-xs font-semibold  tracking-widest"
                       style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                  Service Premium
+                  {data?.features?.feature2 ?? ''}
                 </span>
               </div>
             </div>
@@ -469,11 +474,6 @@ const WelcomeSection = ({ data }: { data?: IWelcomeSection | null }) => {
 
       </div>
     </section>
-      <VideoModal 
-        isOpen={isVideoModalOpen} 
-        videoUrl={data?.videoUrl}
-        onClose={() => setIsVideoModalOpen(false)}
-      />
     </>
   );
 };
@@ -905,10 +905,12 @@ const MarqueeBlackSection = ({ data }: { data?: any | null }) => {
 /* ================= VIDEO SECTION ================= */
 const VideoSection = ({ data }: { data?: any | null }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const sliderRef = useRef(null);
   
   const galleryImages = data?.galleryImages ?? [bedroom1, bedroom2, bedroom3];
+  
+  // Déterminer si c'est une vidéo Cloudinary ou YouTube
+  const isCloudinaryVideo = data?.videoUrl && data.videoUrl.includes('cloudinary.com');
   
   // COHÉRENCE GRID : 1440px max-width pour l'alignement global
   const gridContainer = "max-w-[1440px] w-full mx-auto px-4 xs:px-5 sm:px-6 md:px-10 lg:px-16 xl:px-20";
@@ -958,27 +960,20 @@ const VideoSection = ({ data }: { data?: any | null }) => {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 xs:gap-5 sm:gap-6 mb-8 xs:mb-10 sm:mb-12 md:mb-14 lg:mb-16 relative z-10">
               
               {/* Main Video Block */}
-              <div className="lg:col-span-3 relative aspect-video xs:aspect-[16/10] overflow-hidden rounded-sm group shadow-lg sm:shadow-xl bg-gray-200 cursor-pointer"
-                   onClick={() => data?.videoUrl && setIsVideoModalOpen(true)}>
+              <div className="lg:col-span-3 relative aspect-video xs:aspect-[16/10] overflow-hidden rounded-sm group shadow-lg sm:shadow-xl bg-gray-200">
                 <img
                   src={data?.mainImage ?? bedroomMain}
                   alt={data?.mainImageAlt ?? 'Chambre luxueuse'}
                   className="w-full h-full object-cover grayscale group-hover:grayscale-0 
                            transition-all duration-1000 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <button 
-                    className="w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 
-                             rounded-full border border-white/40 flex items-center justify-center 
-                             backdrop-blur-md bg-white/10 transition-all duration-500 
-                             hover:scale-110 hover:bg-[#FF1B7C] hover:border-[#FF1B7C]"
-                    aria-label="Lire la vidéo"
-                    style={{ fontFamily: "'Montserrat', sans-serif" }}
-                  >
-                    <Play className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 
-                                   text-white fill-white ml-0.5 xs:ml-1" />
-                  </button>
-                </div>
+                {isCloudinaryVideo && (
+                  <VideoPlayer
+                    videoUrl={data?.videoUrl}
+                    posterImage={data?.mainImage}
+                    playButtonSize="large"
+                  />
+                )}
               </div>
 
             {/* Side Gallery - DESKTOP (inchangé) */}
@@ -1085,11 +1080,6 @@ const VideoSection = ({ data }: { data?: any | null }) => {
         </div>
       </div>
     </section>
-      <VideoModal 
-        isOpen={isVideoModalOpen} 
-        videoUrl={data?.videoUrl}
-        onClose={() => setIsVideoModalOpen(false)}
-      />
     </>
   );
 };

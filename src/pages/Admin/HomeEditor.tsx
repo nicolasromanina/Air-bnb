@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { homeApi } from '@/services/homeApi';
+import VideoUploader from '@/components/admin/VideoUploader';
 import { 
   Save, Upload, Image as ImageIcon, Trash2, Plus, 
   Eye, EyeOff, MoveUp, MoveDown, Settings, Palette,
@@ -1352,6 +1353,19 @@ const HomeEditor: React.FC = () => {
                 </div>
 
                 <div>
+                  <h4 className="text-lg font-medium mb-4">Vidéo Cloudinary</h4>
+                  <VideoUploader
+                    value={pageData.welcomeSection.videoUrl}
+                    onChange={(url) => setPageData(prev => ({
+                      ...prev,
+                      welcomeSection: { ...prev.welcomeSection, videoUrl: url }
+                    }))}
+                    label="Télécharger une vidéo"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">Vous pouvez utiliser une vidéo Cloudinary à la place de YouTube</p>
+                </div>
+
+                <div>
                   <h4 className="text-lg font-medium mb-4">Images</h4>
                   <div className="space-y-4">
                     <ImageEditor
@@ -1907,6 +1921,19 @@ const HomeEditor: React.FC = () => {
                     className="w-full border rounded-lg p-3 font-mono text-sm"
                   />
                   <p className="text-xs text-gray-500 mt-2">Utilisez l'URL YouTube en format embed (avec /embed/)</p>
+                </div>
+
+                <div>
+                  <h4 className="text-lg font-medium mb-4">Vidéo Cloudinary</h4>
+                  <VideoUploader
+                    value={pageData.videoSection.videoUrl}
+                    onChange={(url) => setPageData(prev => ({
+                      ...prev,
+                      videoSection: { ...prev.videoSection, videoUrl: url }
+                    }))}
+                    label="Télécharger une vidéo"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">Vous pouvez utiliser une vidéo Cloudinary à la place de YouTube</p>
                 </div>
 
                 <div>
