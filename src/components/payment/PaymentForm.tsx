@@ -1,4 +1,5 @@
 import { CreditCard, AlertCircle, Loader2 } from "lucide-react";
+import ImprovedDatePicker from '../ImprovedDatePicker';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -373,21 +374,17 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
             {editMode && (
               <div className="col-span-2 mt-3 pt-3 border-t border-border space-y-3">
                 <div>
-                  <label className="text-xs text-muted-foreground font-semibold mb-1 block">Nouvelle date d'arrivée</label>
-                  <input
-                    type="date"
+                  <label className="text-xs text-muted-foreground font-semibold mb-2 block">Nouvelle date d'arrivée</label>
+                  <ImprovedDatePicker
                     value={editCheckIn}
-                    onChange={(e) => setEditCheckIn(e.target.value)}
-                    className="w-full px-3 py-2 rounded border border-input text-sm"
+                    onChange={setEditCheckIn}
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground font-semibold mb-1 block">Nouvelle date de départ</label>
-                  <input
-                    type="date"
+                  <label className="text-xs text-muted-foreground font-semibold mb-2 block">Nouvelle date de départ</label>
+                  <ImprovedDatePicker
                     value={editCheckOut}
-                    onChange={(e) => setEditCheckOut(e.target.value)}
-                    className="w-full px-3 py-2 rounded border border-input text-sm"
+                    onChange={setEditCheckOut}
                   />
                 </div>
                 <button

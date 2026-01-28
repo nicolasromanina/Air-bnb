@@ -152,7 +152,9 @@ const SearchBar: React.FC<SearchBarProps> = ({ variant = 'default', className = 
             onChange={(e) => setTravelers(e.target.value)}
             className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-pink-500 transition-colors appearance-none cursor-pointer"
           >
+            <option value="">Voyageurs</option>
             {[1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20].map((num) => (
+              <option key={num} value={num}>{num} {num === 1 ? 'voyageur' : 'voyageurs'}</option>
             ))}
           </select>
         </div>

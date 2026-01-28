@@ -6,6 +6,7 @@ import { api } from '@/services/api';
 import { roomDetailApi, RoomDetail } from '@/services/roomDetailApi';
 import { formatGuests, formatBedrooms } from '@/utils/numberExtractor';
 import { toast } from 'sonner';
+import ImprovedDatePicker from '../ImprovedDatePicker';
 
 const PINK_ACCENT = "#FF385C";
 
@@ -427,14 +428,20 @@ function AppartmentDetail() {
                         </div>
 
                         {/* Date picker for reservation */}
-                        <div className="mt-6 grid grid-cols-2 gap-3 items-end">
+                        <div className="mt-6 grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-xs font-semibold text-gray-500 mb-1 block">Arrivée</label>
-                                <input type="date" value={checkInDate} onChange={e => setCheckInDate(e.target.value)} className="w-full rounded-md border px-3 py-2 text-sm" />
+                                <label className="text-xs font-semibold text-gray-500 mb-2 block">Arrivée</label>
+                                <ImprovedDatePicker
+                                    value={checkInDate}
+                                    onChange={setCheckInDate}
+                                />
                             </div>
                             <div>
-                                <label className="text-xs font-semibold text-gray-500 mb-1 block">Départ</label>
-                                <input type="date" value={checkOutDate} onChange={e => setCheckOutDate(e.target.value)} className="w-full rounded-md border px-3 py-2 text-sm" />
+                                <label className="text-xs font-semibold text-gray-500 mb-2 block">Départ</label>
+                                <ImprovedDatePicker
+                                    value={checkOutDate}
+                                    onChange={setCheckOutDate}
+                                />
                             </div>
                         </div>
 
