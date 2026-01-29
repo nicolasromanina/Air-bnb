@@ -144,12 +144,21 @@ const Profile: React.FC = () => {
   const handleSave = async () => {
     try {
       setIsSaving(true);
+      
+      // Valider le numéro de téléphone s'il est renseigné
+      if (formData.phone && !/^\+?[1-9]\d{1,14}$/.test(formData.phone)) {
+        toast.error('Format de téléphone invalide. Exemple: +33612345678 ou +1234567890');
+        setIsSaving(false);
+        return;
+      }
+
       // Envoyer uniquement les champs acceptés par le backend
       const dataToSend = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        phone: formData.phone,
+        ...(formData.phone ? { phone: formData.phone } : {}), // Envoyer phone seulement s'il est renseigné
       };
+      
       const response = await api.updateUserProfile(dataToSend);
       if (response.success) {
         // Le backend retourne { success: true, user: {...} }
@@ -346,14 +355,17 @@ const Profile: React.FC = () => {
                     </span>
                   </label>
                   {isEditing ? (
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF1B7C] focus:border-transparent outline-none"
-                      placeholder="Votre téléphone"
-                    />
+                    <>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF1B7C] focus:border-transparent outline-none"
+                        placeholder="Ex: +33612345678 ou +1234567890"
+                      />
+                      <p className="text-xs text-gray-500 mt-2">Format international: +[code pays][numéro]</p>
+                    </>
                   ) : (
                     <p className="px-4 py-2 text-gray-700 bg-gray-50 rounded-lg">
                       {profileData.phone || '-'}
