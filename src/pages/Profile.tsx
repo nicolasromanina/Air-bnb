@@ -144,7 +144,13 @@ const Profile: React.FC = () => {
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      const response = await api.updateUserProfile(formData);
+      // Envoyer uniquement les champs acceptés par le backend
+      const dataToSend = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+      };
+      const response = await api.updateUserProfile(dataToSend);
       if (response.success) {
         // Le backend retourne { success: true, user: {...} }
         const userData = response.data?.user || response.data;
@@ -162,6 +168,7 @@ const Profile: React.FC = () => {
           createdAt: userData?.createdAt,
         };
         setProfileData(profileInfo);
+        setFormData(profileInfo);
         setIsEditing(false);
         toast.success('Profil mis à jour avec succès');
       } else {
