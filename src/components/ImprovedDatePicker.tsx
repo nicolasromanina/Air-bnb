@@ -10,6 +10,9 @@ interface ImprovedDatePickerProps {
   maxDate?: string;
   error?: string;
   className?: string;
+  focused?: boolean;
+  setFocused?: () => void;
+  setUnfocused?: () => void;
 }
 
 const ImprovedDatePicker: React.FC<ImprovedDatePickerProps> = ({
@@ -20,7 +23,10 @@ const ImprovedDatePicker: React.FC<ImprovedDatePickerProps> = ({
   minDate,
   maxDate,
   error,
-  className = ''
+  className = '',
+  focused = false,
+  setFocused,
+  setUnfocused
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState<Date>(
@@ -33,6 +39,7 @@ const ImprovedDatePicker: React.FC<ImprovedDatePickerProps> = ({
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
+        if (setUnfocused) setUnfocused();
       }
     };
 
@@ -40,7 +47,7 @@ const ImprovedDatePicker: React.FC<ImprovedDatePickerProps> = ({
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [isOpen]);
+  }, [isOpen, setUnfocused]);
 
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -55,6 +62,7 @@ const ImprovedDatePicker: React.FC<ImprovedDatePickerProps> = ({
     const dateString = selectedDate.toISOString().split('T')[0];
     onChange(dateString);
     setIsOpen(false);
+    if (setUnfocused) setUnfocused();
   };
 
   const handlePrevMonth = () => {
@@ -123,82 +131,87 @@ const ImprovedDatePicker: React.FC<ImprovedDatePickerProps> = ({
   return (
     <div ref={containerRef} className={`relative w-full ${className}`}>
       {label && (
-        <label className="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-tight">
+        <label className="block text-xs font-bold text-gray-700 mb-3 pl-1 uppercase tracking-widest">
           {label}
         </label>
       )}
 
       {/* Input visuel */}
       <div
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full px-4 py-3 border-2 rounded-lg cursor-pointer flex items-center gap-2 transition-all ${
-          error
+        onClick={() => {
+          setIsOpen(!isOpen);
+          if (!isOpen && setFocused) setFocused();
+        }}
+        className={`w-full px-4 py-3.5 border-2 rounded-xl cursor-pointer flex items-center gap-2 transition-all duration-300 font-medium
+          ${error
             ? 'border-red-500 bg-red-50'
-            : isOpen
-            ? 'border-pink-500 bg-pink-50'
-            : 'border-gray-300 bg-white hover:border-gray-400'
-        }`}
+            : isOpen || focused
+            ? 'border-pink-500 bg-pink-50/30 shadow-lg transform scale-105'
+            : 'border-gray-200 bg-gray-50/50 hover:border-gray-300'
+          }`}
       >
-        <Calendar size={18} className={error ? 'text-red-500' : 'text-gray-600'} />
+        <div className={`transition-colors ${error ? 'text-red-500' : isOpen || focused ? 'text-pink-500' : 'text-gray-500'}`}>
+          <Calendar size={18} strokeWidth={2.5} />
+        </div>
         <span
           className={`flex-1 text-sm ${
-            value ? 'font-medium text-gray-900' : 'text-gray-500'
+            value ? 'font-semibold text-gray-900' : 'text-gray-500'
           }`}
         >
           {value ? formatDate(value) : placeholder}
         </span>
       </div>
 
-      {error && <p className="text-red-500 text-xs mt-1 font-medium">{error}</p>}
+      {error && <p className="text-red-500 text-xs mt-1.5 font-medium pl-1">{error}</p>}
 
       {/* Calendrier */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-50 p-4">
+        <div className="absolute top-full left-0 right-0 mt-3 bg-white border-2 border-gray-200 rounded-2xl shadow-2xl z-50 p-5">
           {/* En-tête du calendrier */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-5">
             <button
               onClick={handlePrevMonth}
-              className="p-1 hover:bg-gray-100 rounded transition-colors"
+              className="p-2 hover:bg-pink-100 rounded-lg transition-all duration-300 text-gray-600 hover:text-pink-600"
             >
-              <ChevronLeft size={20} className="text-gray-600" />
+              <ChevronLeft size={20} strokeWidth={2.5} />
             </button>
-            <h3 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
+            <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wider">
               {monthName}
             </h3>
             <button
               onClick={handleNextMonth}
-              className="p-1 hover:bg-gray-100 rounded transition-colors"
+              className="p-2 hover:bg-pink-100 rounded-lg transition-all duration-300 text-gray-600 hover:text-pink-600"
             >
-              <ChevronRight size={20} className="text-gray-600" />
+              <ChevronRight size={20} strokeWidth={2.5} />
             </button>
           </div>
 
           {/* Jours de la semaine */}
-          <div className="grid grid-cols-7 gap-1 mb-2">
+          <div className="grid grid-cols-7 gap-2 mb-3">
             {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day) => (
-              <div key={day} className="text-center text-xs font-semibold text-gray-500 py-2">
+              <div key={day} className="text-center text-xs font-bold text-gray-600 py-2 uppercase">
                 {day}
               </div>
             ))}
           </div>
 
           {/* Jours du calendrier */}
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-2 mb-5">
             {days.map((day, idx) => (
               <button
                 key={idx}
                 onClick={() => day && !isDateDisabled(day) && handleSelectDate(day)}
                 disabled={!day || isDateDisabled(day)}
-                className={`aspect-square text-sm font-medium rounded transition-all ${
+                className={`aspect-square text-sm font-semibold rounded-lg transition-all duration-200 ${
                   !day
                     ? ''
                     : isDateDisabled(day)
-                    ? 'text-gray-300 cursor-not-allowed'
+                    ? 'text-gray-300 cursor-not-allowed bg-gray-50'
                     : isDateSelected(day)
-                    ? 'bg-pink-500 text-white font-bold'
+                    ? 'bg-gradient-to-r from-pink-500 to-pink-600 text-white font-bold shadow-lg'
                     : isToday(day)
-                    ? 'bg-pink-100 text-pink-600 font-semibold border border-pink-300'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-pink-100 text-pink-600 font-bold border-2 border-pink-300'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-pink-600'
                 }`}
               >
                 {day}
@@ -207,20 +220,24 @@ const ImprovedDatePicker: React.FC<ImprovedDatePickerProps> = ({
           </div>
 
           {/* Boutons d'action */}
-          <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
+          <div className="flex gap-2 pt-4 border-t border-gray-200">
             <button
-              onClick={() => setIsOpen(false)}
-              className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+              onClick={() => {
+                setIsOpen(false);
+                if (setUnfocused) setUnfocused();
+              }}
+              className="flex-1 px-3 py-2.5 text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-300 uppercase tracking-wide"
             >
-              Annuler
+              Fermer
             </button>
             {value && (
               <button
                 onClick={() => {
                   onChange('');
                   setIsOpen(false);
+                  if (setUnfocused) setUnfocused();
                 }}
-                className="flex-1 px-3 py-2 text-sm font-medium text-red-600 bg-red-100 hover:bg-red-200 rounded transition-colors"
+                className="flex-1 px-3 py-2.5 text-sm font-bold text-red-600 bg-red-100 hover:bg-red-200 rounded-lg transition-all duration-300 uppercase tracking-wide"
               >
                 Effacer
               </button>
