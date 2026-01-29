@@ -12,7 +12,7 @@ const createApiClient = (): AxiosInstance => {
     headers: {
       'Content-Type': 'application/json',
     },
-    timeout: 30000, // 30 secondes timeout (augmenté de 10s pour Render)
+    timeout: 90000, // 90 secondes timeout pour emails (Render peut être lent)
   });
 };
 
@@ -35,12 +35,21 @@ apiClient.interceptors.request.use((config) => {
 const handleApiError = (error: any): never => {
   console.error('API Error:', error.response?.data || error.message);
   
+  // Gestion spécifique des timeouts
+  if (error.code === 'ECONNABORTED') {
+    throw new Error('Délai d\'attente dépassé. Le serveur met trop de temps à répondre. Veuillez réessayer.');
+  }
+  
+  if (error.message && error.message.includes('timeout')) {
+    throw new Error('La requête a expiré (délai dépassé). Veuillez vérifier votre connexion internet et réessayer.');
+  }
+  
   if (error.response) {
     // Erreur serveur (4xx, 5xx)
     throw new Error(error.response.data.error || 'Une erreur est survenue');
   } else if (error.request) {
     // Pas de réponse du serveur
-    throw new Error('Impossible de contacter le serveur');
+    throw new Error('Impossible de contacter le serveur. Veuillez vérifier votre connexion internet.');
   } else {
     // Erreur de configuration
     throw new Error('Erreur de configuration');
@@ -124,15 +133,16 @@ export const contactServices = {
     consent: boolean;
   }): Promise<ApiResponse<any>> {
     try {
-      // Timeout plus long pour les envois d'email (45 secondes)
+      // Timeout très long pour les envois d'email (90 secondes)
+      // Car Render peut être lent et SMTP peut prendre du temps
       const response: AxiosResponse<ApiResponse<any>> = await apiClient.post('/contact-messages/submit', data, {
-        timeout: 45000,
+        timeout: 90000, // 90 secondes pour l'envoi d'email
       });
       return response.data;
     } catch (error: any) {
       // Gestion spécifique des timeouts
       if (error.code === 'ECONNABORTED') {
-        throw new Error('Délai d\'attente dépassé. Le serveur met trop de temps à répondre. Veuillez réessayer.');
+        throw new Error('Délai d\'attente dépassé. Le serveur met trop de temps à répondre. Veuillez réessayer dans quelques instants.');
       }
       if (error.message?.includes('timeout')) {
         throw new Error('La requête a expiré. Veuillez vérifier votre connexion internet et réessayer.');

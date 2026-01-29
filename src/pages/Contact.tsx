@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { toast } from 'sonner';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import NavbarSpacer from '@/components/NavbarSpacer';
@@ -176,6 +177,9 @@ const Contact: React.FC = () => {
     setSubmitMessage(null);
 
     try {
+      // Afficher un toast de chargement
+      const toastId = toast.loading('Envoi de votre message en cours...');
+
       const response = await contactServices.submitContactForm({
         fullName: formState.fullName,
         phone: formState.phone,
@@ -185,10 +189,18 @@ const Contact: React.FC = () => {
       });
 
       if (response.status === 201 || response.status === 200) {
+        // Succès
+        toast.dismiss(toastId);
+        toast.success('Votre message a été envoyé avec succès!', {
+          duration: 5000,
+          description: 'Nous vous répondrons dans les meilleurs délais.'
+        });
+        
         setSubmitMessage({
           type: 'success',
           text: response.message || 'Votre message a été envoyé avec succès!'
         });
+        
         setFormState({
           fullName: '',
           phone: '',
@@ -196,11 +208,18 @@ const Contact: React.FC = () => {
           message: '',
           consent: false
         });
+        
         // Masquer le message de succès après 5 secondes
         setTimeout(() => {
           setSubmitMessage(null);
         }, 5000);
       } else {
+        // Erreur
+        toast.dismiss(toastId);
+        toast.error('Erreur lors de l\'envoi', {
+          description: response.message || 'Une erreur est survenue'
+        });
+        
         setSubmitMessage({
           type: 'error',
           text: response.message || 'Une erreur est survenue'
@@ -208,17 +227,27 @@ const Contact: React.FC = () => {
       }
     } catch (error) {
       let errorText = 'Une erreur est survenue lors de l\'envoi du message';
+      let errorDescription = 'Veuillez vérifier votre connexion internet et réessayer.';
       
       if (error instanceof Error) {
         errorText = error.message;
         
         // Gestion spécifique des erreurs de timeout
-        if (error.message.includes('Délai d\'attente') || error.message.includes('timeout')) {
-          errorText = 'La requête a expiré. Le serveur met trop de temps à répondre. Veuillez vérifier votre connexion internet et réessayer dans quelques instants.';
+        if (error.message.includes('Délai d\'attente') || error.message.includes('timeout') || error.message.includes('expiré')) {
+          errorText = 'Délai d\'attente dépassé';
+          errorDescription = 'Le serveur met trop de temps à répondre. Veuillez vérifier votre connexion internet et réessayer dans quelques instants.';
         } else if (error.message.includes('Impossible de contacter')) {
-          errorText = 'Impossible de contacter le serveur. Veuillez vérifier votre connexion internet.';
+          errorText = 'Problème de connexion';
+          errorDescription = 'Impossible de contacter le serveur. Veuillez vérifier votre connexion internet.';
         }
       }
+      
+      // Afficher l'erreur avec Sonner
+      toast.dismiss();
+      toast.error(errorText, {
+        duration: 6000,
+        description: errorDescription
+      });
       
       setSubmitMessage({
         type: 'error',
