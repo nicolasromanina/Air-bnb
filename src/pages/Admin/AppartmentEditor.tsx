@@ -1804,7 +1804,7 @@ const AppartmentEditor: React.FC = () => {
 
                                               setUploadingOptionImages({ ...uploadingOptionImages, [idx]: true });
                                               try {
-                                                const response = await imageUploadService.uploadRoomDetailImage(file);
+                                                const response = await imageUploadService.uploadOptionImage(file);
                                                 if (response.success && response.data?.url) {
                                                   const updatedOptions = [...(roomDetail.additionalOptions || [])];
                                                   updatedOptions[idx] = { ...updatedOptions[idx], image: response.data.url };

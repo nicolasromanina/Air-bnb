@@ -245,5 +245,34 @@ export const imageUploadService = {
       console.error('Erreur upload room detail video:', error);
       throw error;
     }
+  },
+
+  /**
+   * Upload une image pour les options supplémentaires d'une chambre
+   */
+  uploadOptionImage: async (file: File): Promise<UploadResponse> => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${config.apiBaseUrl}/room-details/upload-option-image`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token || ''}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de l\'upload de l\'image');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur upload option image:', error);
+      throw error;
+    }
   }
 };
