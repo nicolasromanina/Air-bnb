@@ -609,187 +609,13 @@ function AppartmentDetail() {
                 
                 {/* --- SECTION VIDEO & INFOS --- */}
                 <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-                    {/* Enhanced Gallery */}
-                    <div className="space-y-4">
-                        {/* Main image with enhanced UX */}
-                        <div 
-                            className="relative rounded-sm overflow-hidden aspect-[4/3] bg-gray-100 group cursor-zoom-in"
-                            onClick={() => {
-                                setCurrentImageIndex(0);
-                                setShowFullScreenGallery(true);
-                            }}
-                            ref={imageContainerRef}
-                            onTouchStart={handleTouchStart}
-                            onTouchEnd={handleTouchEnd}
-                        >
-                            {imageLoading[currentImageIndex] && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
-                                    <div className="w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin" />
-                                </div>
-                            )}
-                            
-                            <AnimatePresence mode="wait">
-                                <motion.img 
-                                    key={currentImageIndex}
-                                    initial={{ opacity: 0, scale: 1.05 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.95 }}
-                                    transition={{ duration: 0.3 }}
-                                    src={
-                                        roomDetail?.images?.[currentImageIndex] 
-                                            ? (roomDetail.images[currentImageIndex].includes('cloudinary.com') || roomDetail.images[currentImageIndex].includes('airbnb-backend')
-                                                ? roomDetail.images[currentImageIndex]
-                                                : `https://airbnb-backend.onrender.com${roomDetail.images[currentImageIndex]}`)
-                                            : "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200"
-                                    } 
-                                    className={`w-full h-full object-cover transition-opacity duration-300 ${
-                                        imageLoading[currentImageIndex] ? 'opacity-0' : 'opacity-100'
-                                    }`}
-                                    alt={`Image principale ${currentImageIndex + 1}`}
-                                    onLoad={() => handleImageLoad(currentImageIndex)}
-                                    onError={(e) => {
-                                        (e.currentTarget as HTMLImageElement).src = "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200";
-                                        handleImageError(currentImageIndex);
-                                    }}
-                                />
-                            </AnimatePresence>
-                            
-                            {/* Enhanced overlay with actions */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div className="absolute top-4 right-4 flex gap-2">
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setIsFavorite(!isFavorite);
-                                        }}
-                                        className="bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-all"
-                                        aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-                                    >
-                                        <Heart size={18} fill={isFavorite ? "#FF385C" : "none"} />
-                                    </button>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowFullScreenGallery(true);
-                                        }}
-                                        className="bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-all"
-                                        aria-label="Voir en plein écran"
-                                    >
-                                        <Maximize2 size={18} />
-                                    </button>
-                                </div>
-                                
-                                {/* Navigation arrows */}
-                                {roomDetail?.images && roomDetail.images.length > 1 && (
-                                    <>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigatePrevImage();
-                                            }}
-                                            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-all opacity-0 group-hover:opacity-100"
-                                            aria-label="Image précédente"
-                                        >
-                                            <ChevronLeft size={20} />
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigateNextImage();
-                                            }}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-all opacity-0 group-hover:opacity-100"
-                                            aria-label="Image suivante"
-                                        >
-                                            <ChevronRight size={20} />
-                                        </button>
-                                    </>
-                                )}
-                                
-                                {/* Image info */}
-                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                                    <div className="flex justify-between items-center text-white">
-                                        <div>
-                                            <p className="text-sm font-medium">
-                                                {currentImageIndex + 1} / {roomDetail?.images?.length || 1}
-                                            </p>
-                                            <p className="text-xs opacity-80">
-                                                Cliquez pour voir en plein écran
-                                            </p>
-                                        </div>
-                                        <ChevronDown size={20} className="transform rotate-180" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Enhanced thumbnails */}
-                        {roomDetail?.images && roomDetail.images.length > 1 && (
-                            <div className="grid grid-cols-3 gap-3">
-                                {roomDetail.images.slice(0, 3).map((img, i) => (
-                                    <motion.button
-                                        key={i}
-                                        onClick={() => setCurrentImageIndex(i)}
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        className={`relative aspect-square rounded-sm overflow-hidden border-2 transition-all ${
-                                            currentImageIndex === i 
-                                                ? 'border-black shadow-lg' 
-                                                : 'border-gray-100 hover:border-gray-300'
-                                        }`}
-                                        aria-label={`Voir l'image ${i + 1}`}
-                                    >
-                                        {imageLoading[i] && (
-                                            <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
-                                                <div className="w-6 h-6 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
-                                            </div>
-                                        )}
-                                        <img 
-                                            src={
-                                                img.includes('cloudinary.com') || img.includes('airbnb-backend')
-                                                    ? img
-                                                    : `https://airbnb-backend.onrender.com${img}`
-                                            }
-                                            className={`w-full h-full object-cover transition-opacity duration-300 ${
-                                                imageLoading[i] ? 'opacity-0' : 'opacity-100'
-                                            }`}
-                                            alt={`Miniature ${i + 1}`}
-                                            onLoad={() => handleImageLoad(i)}
-                                            onError={(e) => {
-                                                (e.currentTarget as HTMLImageElement).src = "https://via.placeholder.com/150?text=Image+Error";
-                                                handleImageError(i);
-                                            }}
-                                        />
-                                        {currentImageIndex === i && (
-                                            <div className="absolute inset-0 bg-black/20" />
-                                        )}
-                                    </motion.button>
-                                ))}
-                                {roomDetail.images.length > 3 && (
-                                    <button
-                                        onClick={() => setShowFullScreenGallery(true)}
-                                        className="relative aspect-square rounded-sm overflow-hidden border-2 border-gray-100 hover:border-gray-300 bg-gray-50 flex items-center justify-center group"
-                                    >
-                                        <div className="text-center">
-                                            <div className="text-sm font-bold text-gray-600">+{roomDetail.images.length - 3}</div>
-                                            <div className="text-xs text-gray-400">Voir toutes</div>
-                                        </div>
-                                    </button>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Video section */}
-                        {roomDetail?.videoUrl && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="mt-8 space-y-3"
-                            >
-                                <div className="flex items-center gap-2">
-                                    <Play size={16} className="text-gray-600" />
-                                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Vidéo de présentation</h3>
-                                </div>
-                                <div className="relative rounded-sm overflow-hidden aspect-[4/3] bg-gray-100 group cursor-pointer">
+                    {/* Video Background with Clickable Images Below */}
+                    <div className="space-y-6">
+                        {/* Video Section - Background Style like Apartment Page */}
+                        <div className="relative rounded-sm overflow-hidden aspect-[4/3] bg-gray-100 group cursor-pointer">
+                            {/* Video Background */}
+                            {roomDetail?.videoUrl ? (
+                                <div className="relative w-full h-full">
                                     <video
                                         src={roomDetail.videoUrl}
                                         className="w-full h-full object-cover"
@@ -798,11 +624,98 @@ function AppartmentDetail() {
                                                 ? roomDetail.images[0]
                                                 : `https://airbnb-backend.onrender.com${roomDetail.images[0]}`)
                                             : undefined}
-                                        controls
+                                        autoPlay
+                                        muted
+                                        loop
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                    {/* Dark overlay for play button visibility */}
+                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                    
+                                    {/* Play button overlay */}
+                                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                                        <div className="relative w-24 h-24 lg:w-32 lg:h-32 rounded-full border-2 border-white flex items-center justify-center bg-white/20 backdrop-blur-md shadow-lg group-hover:bg-white/30 transition-colors">
+                                            <Play className="w-10 h-10 lg:w-14 lg:h-14 text-white fill-white ml-1" />
+                                        </div>
+                                    </div>
                                 </div>
-                            </motion.div>
+                            ) : (
+                                // Fallback to first image if no video
+                                <>
+                                    {imageLoading[0] && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-gray-200 z-5">
+                                            <div className="w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin" />
+                                        </div>
+                                    )}
+                                    <img
+                                        src={
+                                            roomDetail?.images?.[0] 
+                                                ? (roomDetail.images[0].includes('cloudinary.com') || roomDetail.images[0].includes('airbnb-backend')
+                                                    ? roomDetail.images[0]
+                                                    : `https://airbnb-backend.onrender.com${roomDetail.images[0]}`)
+                                                : "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200"
+                                        }
+                                        className={`w-full h-full object-cover transition-opacity duration-300 ${
+                                            imageLoading[0] ? 'opacity-0' : 'opacity-100'
+                                        }`}
+                                        alt="Image principale"
+                                        onLoad={() => handleImageLoad(0)}
+                                        onError={() => handleImageError(0)}
+                                    />
+                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                </>
+                            )}
+                        </div>
+
+                        {/* Clickable Images Grid Below Video */}
+                        {roomDetail?.images && roomDetail.images.length > 0 && (
+                            <div className="space-y-3">
+                                <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Galerie photos</h4>
+                                <div className="grid grid-cols-3 gap-3">
+                                    {roomDetail.images.map((img, i) => (
+                                        <motion.button
+                                            key={i}
+                                            onClick={() => {
+                                                setCurrentImageIndex(i);
+                                                setShowFullScreenGallery(true);
+                                            }}
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            className={`relative aspect-square rounded-sm overflow-hidden border-2 transition-all group/img cursor-zoom-in ${
+                                                currentImageIndex === i 
+                                                    ? 'border-black shadow-lg' 
+                                                    : 'border-gray-100 hover:border-gray-300'
+                                            }`}
+                                            aria-label={`Voir l'image ${i + 1}`}
+                                        >
+                                            {imageLoading[i] && (
+                                                <div className="absolute inset-0 bg-gray-200 flex items-center justify-center z-5">
+                                                    <div className="w-6 h-6 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
+                                                </div>
+                                            )}
+                                            <img 
+                                                src={
+                                                    img.includes('cloudinary.com') || img.includes('airbnb-backend')
+                                                        ? img
+                                                        : `https://airbnb-backend.onrender.com${img}`
+                                                }
+                                                className={`w-full h-full object-cover transition-all duration-300 ${
+                                                    imageLoading[i] ? 'opacity-0' : 'opacity-100'
+                                                } group-hover/img:scale-110`}
+                                                alt={`Image ${i + 1}`}
+                                                onLoad={() => handleImageLoad(i)}
+                                                onError={(e) => {
+                                                    (e.currentTarget as HTMLImageElement).src = "https://via.placeholder.com/150?text=Image+Error";
+                                                    handleImageError(i);
+                                                }}
+                                            />
+                                            {/* Overlay on hover */}
+                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                                <Maximize2 size={20} className="text-white" />
+                                            </div>
+                                        </motion.button>
+                                    ))}
+                                </div>
+                            </div>
                         )}
                     </div>
 
