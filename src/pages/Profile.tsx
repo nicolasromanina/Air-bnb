@@ -69,9 +69,24 @@ const Profile: React.FC = () => {
       try {
         setIsLoading(true);
         const response = await api.getUserProfile();
-        if (response.success && response.data) {
-          setProfileData(response.data);
-          setFormData(response.data);
+        if (response.success) {
+          // Le backend retourne { success: true, user: {...} }
+          const userData = response.data?.user || response.data;
+          const profileInfo = {
+            _id: userData?._id || userData?.id,
+            firstName: userData?.firstName || '',
+            lastName: userData?.lastName || '',
+            email: userData?.email || '',
+            phone: userData?.phone || '',
+            address: userData?.address || '',
+            city: userData?.city || '',
+            zipCode: userData?.zipCode || '',
+            country: userData?.country || '',
+            profileImage: userData?.profileImage || '',
+            createdAt: userData?.createdAt,
+          };
+          setProfileData(profileInfo);
+          setFormData(profileInfo);
         } else {
           // Si la requête échoue, utiliser les données disponibles
           if (user) {
@@ -130,8 +145,23 @@ const Profile: React.FC = () => {
     try {
       setIsSaving(true);
       const response = await api.updateUserProfile(formData);
-      if (response.success && response.data) {
-        setProfileData(response.data);
+      if (response.success) {
+        // Le backend retourne { success: true, user: {...} }
+        const userData = response.data?.user || response.data;
+        const profileInfo = {
+          _id: userData?._id || userData?.id,
+          firstName: userData?.firstName || '',
+          lastName: userData?.lastName || '',
+          email: userData?.email || '',
+          phone: userData?.phone || '',
+          address: userData?.address || '',
+          city: userData?.city || '',
+          zipCode: userData?.zipCode || '',
+          country: userData?.country || '',
+          profileImage: userData?.profileImage || '',
+          createdAt: userData?.createdAt,
+        };
+        setProfileData(profileInfo);
         setIsEditing(false);
         toast.success('Profil mis à jour avec succès');
       } else {

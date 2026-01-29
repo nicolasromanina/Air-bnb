@@ -244,11 +244,11 @@ class ApiService {
 
   // ========== PROFIL UTILISATEUR ==========
   async getUserProfile(): Promise<ApiResponse<any>> {
-    return this.request('/users/profile');
+    return this.request('/auth/me');
   }
 
   async updateUserProfile(profileData: any): Promise<ApiResponse<any>> {
-    return this.request('/users/profile', {
+    return this.request('/auth/profile', {
       method: 'PUT',
       body: JSON.stringify(profileData),
     });
