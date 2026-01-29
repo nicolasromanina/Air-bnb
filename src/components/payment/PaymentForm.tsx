@@ -1,4 +1,4 @@
-import { CreditCard, AlertCircle, Loader2 } from "lucide-react";
+import { CreditCard, AlertCircle, Loader2, Calendar, Users, Bed } from "lucide-react";
 import ImprovedDatePicker from '../ImprovedDatePicker';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -71,59 +71,61 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
   const [isRedirecting, setIsRedirecting] = useState(false);
   const { user, isAuthenticated } = useAuth();
   
-  // CORRECTION : basePrice est le PRIX PAR NUIT, pas le total
+  const [suggestedDate, setSuggestedDate] = useState<Date | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editCheckIn, setEditCheckIn] = useState(reservationDetails?.checkIn ? new Date(reservationDetails.checkIn).toISOString().split('T')[0] : '');
+  const [editCheckOut, setEditCheckOut] = useState(reservationDetails?.checkOut ? new Date(reservationDetails.checkOut).toISOString().split('T')[0] : '');
+  
+  // Fonction pour désactiver les dates passées pour l'arrivée
+  const disablePastDates = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date < today;
+  };
+
+  // Fonction pour désactiver les dates <= à la date d'arrivée pour le départ
+  const getDisableDepartureDates = () => {
+    if (!editCheckIn) return () => false;
+    const arrivalDate = new Date(editCheckIn);
+    arrivalDate.setHours(0, 0, 0, 0);
+    return (date: Date) => {
+      date.setHours(0, 0, 0, 0);
+      return date <= arrivalDate;
+    };
+  };
+
+  // Calcul du montant final
   const calculateFinalAmount = () => {
     const nights = reservationDetails?.nights || 1;
     
-    console.log("🔢 DONNÉES D'ENTRÉE:", {
-      nights,
-      basePriceProp: basePrice,
-      reservationDetailsPricePerNight: reservationDetails?.pricePerNight,
-      reservationDetailsBasePrice: reservationDetails?.basePrice,
-      selectedOptionsCount: selectedOptions?.length || reservationDetails?.selectedOptions?.length || 0,
-      optionsPriceProp: optionsPrice
-    });
-    
-    // 1. DÉTERMINER LE PRIX PAR NUIT - CORRECTION IMPORTANTE
     let pricePerNightValue = 0;
     
-    // Priorité 1: Si pricePerNight est fourni dans reservationDetails
     if (reservationDetails?.pricePerNight !== undefined && reservationDetails?.pricePerNight !== null) {
       const pn = typeof reservationDetails.pricePerNight === 'string' 
         ? parseFloat(reservationDetails.pricePerNight) 
         : reservationDetails.pricePerNight;
       if (!isNaN(pn) && pn > 0) {
         pricePerNightValue = pn;
-        console.log("✅ PRIX PAR NUIT depuis reservationDetails.pricePerNight:", pn);
       }
     }
-    // Priorité 2: SI basePrice EST FOURNI, C'EST LE PRIX PAR NUIT (pas le total)
     else if (basePrice !== undefined && basePrice !== null) {
       const bp = typeof basePrice === 'string' ? parseFloat(basePrice) : basePrice;
       if (!isNaN(bp) && bp > 0) {
-        // IMPORTANT : basePrice est le prix par nuit, pas besoin de diviser
         pricePerNightValue = bp;
-        console.log("✅ PRIX PAR NUIT depuis basePrice (c'est déjà le prix par nuit):", bp);
       }
     }
-    // Fallback
     else {
-      pricePerNightValue = 300; // Par défaut
-      console.log("⚠️ Prix par nuit par défaut:", pricePerNightValue);
+      pricePerNightValue = 300;
     }
     
-    // 2. CALCULER LE TOTAL DU LOGEMENT : prix par nuit × nombre de nuits
     const calculatedBasePrice = pricePerNightValue * nights;
-    console.log("💰 CALCUL FINAL:", pricePerNightValue, "€/nuit ×", nights, "nuits =", calculatedBasePrice, "€");
     
-    // 3. CALCULER LE PRIX DES OPTIONS
     let calculatedOptionsPrice = 0;
     
     if (optionsPrice !== undefined && optionsPrice !== null) {
       const op = typeof optionsPrice === 'string' ? parseFloat(optionsPrice) : optionsPrice;
       if (!isNaN(op) && op > 0) {
         calculatedOptionsPrice = op;
-        console.log("✅ OptionsPrice direct:", op);
       }
     } else {
       const opts = selectedOptions || reservationDetails?.selectedOptions || [];
@@ -133,25 +135,14 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
           const quantity = option.quantity || 1;
           return sum + (optionPrice * quantity);
         }, 0);
-        console.log("✅ Options calculées:", calculatedOptionsPrice);
       }
     }
     
-    // 4. TOTAL FINAL
     const finalTotal = calculatedBasePrice + calculatedOptionsPrice;
-    
-    console.log("🎯 RÉSULTAT FINAL:", {
-      nights,
-      pricePerNight: pricePerNightValue,
-      basePriceTotal: calculatedBasePrice,
-      optionsPrice: calculatedOptionsPrice,
-      finalTotal,
-      formule: `${pricePerNightValue}€/nuit × ${nights} nuits = ${calculatedBasePrice}€ + ${calculatedOptionsPrice}€ (options) = ${finalTotal}€`
-    });
     
     return {
       finalAmount: finalTotal,
-      basePrice: calculatedBasePrice, // C'est le TOTAL pour le séjour
+      basePrice: calculatedBasePrice,
       optionsPrice: calculatedOptionsPrice,
       nights,
       pricePerNight: pricePerNightValue
@@ -160,16 +151,6 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
 
   const { finalAmount, basePrice: calculatedBasePrice, optionsPrice: calculatedOptionsPrice, nights, pricePerNight } = calculateFinalAmount();
 
-  useEffect(() => {
-    console.log("📊 PaymentForm monté avec:", { 
-      prixParNuit: pricePerNight, 
-      nuits: nights, 
-      totalLogement: calculatedBasePrice,
-      options: calculatedOptionsPrice,
-      totalFinal: finalAmount 
-    });
-  }, []);
-  
   const {
     register,
     handleSubmit,
@@ -198,8 +179,6 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
     setIsRedirecting(true);
     
     try {
-      console.log("🔧 Paiement pour:", finalAmount, "€");
-
       const extractNumber = (value: any): number => {
         if (typeof value === 'number' && !isNaN(value)) return value;
         if (typeof value === 'string') {
@@ -245,8 +224,6 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
       const response = await api.createPayment(paymentRequest);
 
       if (response.success && response.data?.url) {
-        console.log("✅ Redirection pour:", finalAmount, "€");
-        
         const completeReservationData = {
           ...reservationDetails,
           checkIn: checkInDate.toISOString(),
@@ -278,11 +255,6 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
       setIsRedirecting(false);
     }
   };
-
-  const [suggestedDate, setSuggestedDate] = useState<Date | null>(null);
-  const [editMode, setEditMode] = useState(false);
-  const [editCheckIn, setEditCheckIn] = useState(reservationDetails?.checkIn ? new Date(reservationDetails.checkIn).toISOString().split('T')[0] : '');
-  const [editCheckOut, setEditCheckOut] = useState(reservationDetails?.checkOut ? new Date(reservationDetails.checkOut).toISOString().split('T')[0] : '');
 
   const handleUseSuggested = () => {
     if (!suggestedDate || !reservationDetails) return;
@@ -329,7 +301,7 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
   const ErrorMessage = ({ message }: { message?: string }) => {
     if (!message) return null;
     return (
-      <p className="flex items-center gap-1 text-xs text-red-500 mt-1.5">
+      <p className="flex items-center gap-1 text-xs text-red-500 mt-1.5 animate-fadeIn">
         <AlertCircle size={12} />
         {message}
       </p>
@@ -340,124 +312,188 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
   const displaySelectedOptions = selectedOptions || reservationDetails?.selectedOptions || [];
 
   return (
-    <form onSubmit={handleSubmit(handlePayment)} className="space-y-4">
+    <form onSubmit={handleSubmit(handlePayment)} className="space-y-6">
       {/* RÉCAPITULATIF */}
-      <div className="bg-card rounded-lg border border-border p-6 space-y-4">
-        <h3 className="font-bold text-foreground">Récapitulatif de votre réservation</h3>
+      <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-sm p-6 space-y-5 transition-all duration-300 hover:shadow-md">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="bg-primary/10 p-2 rounded-lg">
+            <Calendar className="text-primary" size={20} />
+          </div>
+          <h3 className="font-bold text-lg text-gray-900">Récapitulatif de votre réservation</h3>
+        </div>
         
         {reservationDetails?.title && (
-          <div className="pb-4 border-b border-border">
-            <h4 className="font-semibold text-lg text-foreground">{reservationDetails.title}</h4>
+          <div className="pb-4 border-b border-gray-200">
+            <h4 className="font-semibold text-lg text-gray-900 mb-1">{reservationDetails.title}</h4>
             {reservationDetails.apartmentNumber && (
-              <p className="text-sm text-muted-foreground">{reservationDetails.apartmentNumber}</p>
+              <p className="text-sm text-gray-600">{reservationDetails.apartmentNumber}</p>
             )}
           </div>
         )}
 
         {reservationDetails?.checkIn && reservationDetails?.checkOut && (
-          <div className="grid grid-cols-2 gap-4 py-2">
-            <div>
-              <p className="text-xs text-muted-foreground font-semibold mb-1">Arrivée</p>
-              <p className="text-sm font-medium">{new Date(reservationDetails.checkIn).toLocaleDateString('fr-FR')}</p>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 py-2">
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                <p className="text-xs text-gray-500 font-semibold mb-1 flex items-center gap-1">
+                  <Calendar size={12} />
+                  Arrivée
+                </p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {new Date(reservationDetails.checkIn).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                <p className="text-xs text-gray-500 font-semibold mb-1 flex items-center gap-1">
+                  <Calendar size={12} />
+                  Départ
+                </p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {new Date(reservationDetails.checkOut).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground font-semibold mb-1">Départ</p>
-              <p className="text-sm font-medium">{new Date(reservationDetails.checkOut).toLocaleDateString('fr-FR')}</p>
+            
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+              <p className="text-xs text-blue-800 font-semibold mb-1">Durée du séjour</p>
+              <p className="text-sm font-semibold text-blue-900">
+                {nights} nuit{nights > 1 ? 's' : ''} × {pricePerNight.toFixed(2)}€/nuit = {calculatedBasePrice.toFixed(2)}€
+              </p>
             </div>
+
             <button
               type="button"
-              onClick={() => setEditMode(!editMode)}
-              className="col-span-2 mt-2 text-xs text-primary font-semibold hover:underline"
+              onClick={() => {
+                setEditMode(!editMode);
+                if (!editMode) {
+                  setEditCheckIn(reservationDetails.checkIn ? new Date(reservationDetails.checkIn).toISOString().split('T')[0] : '');
+                  setEditCheckOut(reservationDetails.checkOut ? new Date(reservationDetails.checkOut).toISOString().split('T')[0] : '');
+                }
+              }}
+              className="w-full py-2 px-3 text-sm font-medium text-primary border border-primary/30 rounded-lg hover:bg-primary/5 transition-all duration-200 flex items-center justify-center gap-2"
             >
-              {editMode ? '✕ Annuler' : '✏️ Modifier les dates'}
+              {editMode ? (
+                <>
+                  <span>✕</span>
+                  Annuler la modification
+                </>
+              ) : (
+                <>
+                  <Calendar size={14} />
+                  Modifier les dates
+                </>
+              )}
             </button>
+            
             {editMode && (
-              <div className="col-span-2 mt-3 pt-3 border-t border-border space-y-3">
-                <div>
-                  <label className="text-xs text-muted-foreground font-semibold mb-2 block">Nouvelle date d'arrivée</label>
+              <div className="animate-fadeIn mt-3 pt-4 border-t border-gray-200 space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-700 font-medium mb-2 block">Nouvelle date d'arrivée</label>
                   <ImprovedDatePicker
                     value={editCheckIn}
                     onChange={setEditCheckIn}
+                    shouldDisableDate={disablePastDates}
+                    className="w-full"
                   />
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground font-semibold mb-2 block">Nouvelle date de départ</label>
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-700 font-medium mb-2 block">Nouvelle date de départ</label>
                   <ImprovedDatePicker
                     value={editCheckOut}
                     onChange={setEditCheckOut}
+                    shouldDisableDate={getDisableDepartureDates()}
+                    className="w-full"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={handleApplyNewDates}
-                  className="w-full mt-2 px-3 py-2 bg-primary text-primary-foreground rounded text-sm font-semibold hover:bg-primary/90"
+                  className="w-full mt-2 px-4 py-3 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0"
                 >
                   Appliquer les nouvelles dates
                 </button>
               </div>
             )}
-            <div className="col-span-2 mt-2 pt-2 border-t border-border">
-              <p className="text-xs text-muted-foreground font-semibold mb-1">Durée du séjour</p>
-              <p className="text-sm font-medium">
-                {nights} nuit{nights > 1 ? 's' : ''} × {pricePerNight.toFixed(2)}€/nuit = {calculatedBasePrice.toFixed(2)}€
-              </p>
-            </div>
           </div>
         )}
 
         {(reservationDetails?.guests || reservationDetails?.bedrooms) && (
-          <div className="grid grid-cols-2 gap-4 py-2 border-t border-border">
+          <div className="grid grid-cols-2 gap-4 py-3 border-t border-gray-200">
             {reservationDetails.guests && (
-              <div>
-                <p className="text-xs text-muted-foreground font-semibold mb-1">Personnes</p>
-                <p className="text-sm font-medium">{reservationDetails.guests}</p>
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="bg-primary/10 p-2 rounded-lg">
+                  <Users className="text-primary" size={16} />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold">Personnes</p>
+                  <p className="text-sm font-semibold text-gray-900">{reservationDetails.guests}</p>
+                </div>
               </div>
             )}
             {reservationDetails.bedrooms && (
-              <div>
-                <p className="text-xs text-muted-foreground font-semibold mb-1">Chambres</p>
-                <p className="text-sm font-medium">{reservationDetails.bedrooms}</p>
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="bg-primary/10 p-2 rounded-lg">
+                  <Bed className="text-primary" size={16} />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold">Chambres</p>
+                  <p className="text-sm font-semibold text-gray-900">{reservationDetails.bedrooms}</p>
+                </div>
               </div>
             )}
           </div>
         )}
 
         {reservationDetails?.includes && reservationDetails.includes.length > 0 && (
-          <div className="py-2 border-t border-border">
-            <p className="text-xs text-muted-foreground font-semibold mb-2">Inclus</p>
-            <ul className="space-y-1">
+          <div className="py-3 border-t border-gray-200">
+            <p className="text-xs text-gray-500 font-semibold mb-3">Inclus dans votre séjour</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {reservationDetails.includes.map((item: string, idx: number) => (
-                <li key={idx} className="text-sm text-muted-foreground flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                <div key={idx} className="flex items-center gap-2 text-sm text-gray-700 p-2 hover:bg-gray-50 rounded transition-colors">
+                  <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
                   {item}
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
       </div>
 
       {/* OPTIONS */}
       {displaySelectedOptions.length > 0 && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <h4 className="font-semibold text-green-900 mb-3">Options incluses</h4>
-          <div className="space-y-2">
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-5 shadow-sm transition-all duration-300 hover:shadow-md">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-green-100 p-2 rounded-lg">
+              <span className="text-green-600 font-bold">✓</span>
+            </div>
+            <h4 className="font-semibold text-green-900 text-lg">Options incluses</h4>
+          </div>
+          <div className="space-y-3">
             {displaySelectedOptions.map((option, idx) => {
               const optionTotal = option.price * (option.quantity || 1);
               return (
-                <div key={idx} className="flex justify-between items-start text-sm">
-                  <div>
-                    <span className="text-green-900">{option.name}</span>
-                    {option.quantity > 1 && <span className="text-green-700 ml-2">×{option.quantity}</span>}
+                <div key={idx} className="flex justify-between items-center p-3 bg-white/50 rounded-lg border border-green-100 hover:bg-white transition-colors">
+                  <div className="flex items-center gap-3">
+                    <span className="text-green-600 text-lg">•</span>
+                    <div>
+                      <span className="text-green-900 font-medium">{option.name}</span>
+                      {option.quantity > 1 && (
+                        <span className="text-green-700 ml-2 text-sm">×{option.quantity}</span>
+                      )}
+                    </div>
                   </div>
-                  <span className="font-semibold text-green-900">{optionTotal.toFixed(2)}€</span>
+                  <span className="font-semibold text-green-900 bg-green-50 px-3 py-1 rounded-full">
+                    {optionTotal.toFixed(2)}€
+                  </span>
                 </div>
               );
             })}
-            <div className="border-t border-green-200 pt-2 mt-2">
-              <div className="flex justify-between font-semibold text-green-900">
-                <span>Total options</span>
-                <span>{calculatedOptionsPrice.toFixed(2)}€</span>
+            <div className="border-t border-green-200 pt-3 mt-2">
+              <div className="flex justify-between items-center font-semibold text-green-900">
+                <span className="text-lg">Total options</span>
+                <span className="text-xl bg-green-100 px-4 py-2 rounded-lg">
+                  {calculatedOptionsPrice.toFixed(2)}€
+                </span>
               </div>
             </div>
           </div>
@@ -465,165 +501,218 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
       )}
 
       {/* RÉPARTITION DES COÛTS */}
-      <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 rounded-lg p-5 text-sm">
-        <div className="space-y-2.5">
-          <div className="flex justify-between items-start">
-            <div>
-              <span className="text-foreground font-medium">Coût du logement</span>
-              <div className="text-xs text-muted-foreground mt-1">
-                {pricePerNight.toFixed(2)}€ par nuit
-              </div>
-            </div>
+      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border border-primary/20 rounded-xl p-6 shadow-sm transition-all duration-300 hover:shadow-md">
+        <div className="space-y-4">
+          <div className="flex justify-between items-center pb-3 border-b border-primary/20">
+            <span className="text-lg font-semibold text-gray-900">Coût du logement</span>
             <div className="text-right">
-              <div className="font-semibold text-foreground">
-                {calculatedBasePrice.toFixed(2)}€
-              </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xl font-bold text-primary">{calculatedBasePrice.toFixed(2)}€</div>
+              <div className="text-sm text-gray-600">
                 ({pricePerNight.toFixed(2)}€ × {nights} nuit{nights > 1 ? 's' : ''})
               </div>
             </div>
           </div>
           
           {calculatedOptionsPrice > 0 && (
-            <div className="flex justify-between">
-              <span className="text-foreground font-medium">Options supplémentaires</span>
-              <span className="font-semibold text-green-600">{calculatedOptionsPrice.toFixed(2)}€</span>
+            <div className="flex justify-between items-center pb-3 border-b border-primary/20">
+              <span className="text-lg font-semibold text-green-700">Options supplémentaires</span>
+              <span className="text-xl font-bold text-green-600">{calculatedOptionsPrice.toFixed(2)}€</span>
             </div>
           )}
           
-          <div className="border-t border-primary/20 pt-2.5">
-            <div className="flex justify-between">
-              <span className="text-foreground font-bold text-base">MONTANT TOTAL</span>
-              <span className="text-primary font-bold text-lg">{finalAmount.toFixed(2)}€</span>
+          <div className="pt-2">
+            <div className="flex justify-between items-center">
+              <span className="text-xl font-bold text-gray-900">MONTANT TOTAL</span>
+              <div className="text-right">
+                <div className="text-3xl font-bold text-primary animate-pulse-slow">{finalAmount.toFixed(2)}€</div>
+                <div className="text-xs text-gray-500 mt-1">TTC</div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* FORMULAIRE */}
-      <div>
-        <label className="block text-sm font-medium mb-1.5 text-foreground">
-          Prénom(s) <span className="text-primary">*</span>
-        </label>
-        <input
-          type="text"
-          placeholder="Veuillez saisir votre prénom"
-          className={`w-full px-4 py-3 rounded-lg border ${
-            errors.firstName 
-              ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" 
-              : "border-input focus:border-primary focus:ring-2 focus:ring-primary/20"
-          } bg-background text-foreground placeholder:text-muted-foreground outline-none transition-colors`}
-          {...register("firstName")}
-          disabled={isLoading}
-        />
-        <ErrorMessage message={errors.firstName?.message} />
-      </div>
+      <div className="space-y-6 bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <h3 className="text-lg font-bold text-gray-900 mb-2">Informations personnelles</h3>
+        
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold mb-2 text-gray-700">
+              Prénom(s) <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Veuillez saisir votre prénom"
+              className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 ${
+                errors.firstName 
+                  ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 animate-shake" 
+                  : "border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20"
+              } bg-white text-gray-900 placeholder:text-gray-400 outline-none`}
+              {...register("firstName")}
+              disabled={isLoading}
+            />
+            <ErrorMessage message={errors.firstName?.message} />
+          </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1.5 text-foreground">
-          Nom <span className="text-primary">*</span>
-        </label>
-        <input
-          type="text"
-          placeholder="Nom de famille"
-          className={`w-full px-4 py-3 rounded-lg border ${
-            errors.lastName 
-              ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" 
-              : "border-input focus:border-primary focus:ring-2 focus:ring-primary/20"
-          } bg-background text-foreground placeholder:text-muted-foreground outline-none transition-colors`}
-          {...register("lastName")}
-          disabled={isLoading}
-        />
-        <ErrorMessage message={errors.lastName?.message} />
-      </div>
+          <div>
+            <label className="block text-sm font-semibold mb-2 text-gray-700">
+              Nom <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Nom de famille"
+              className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 ${
+                errors.lastName 
+                  ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 animate-shake" 
+                  : "border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20"
+              } bg-white text-gray-900 placeholder:text-gray-400 outline-none`}
+              {...register("lastName")}
+              disabled={isLoading}
+            />
+            <ErrorMessage message={errors.lastName?.message} />
+          </div>
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1.5 text-foreground">
-          Adresse Email <span className="text-primary">*</span>
-        </label>
-        <input
-          type="email"
-          placeholder="Votre adresse mail"
-          className={`w-full px-4 py-3 rounded-lg border ${
-            errors.email 
-              ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" 
-              : "border-input focus:border-primary focus:ring-2 focus:ring-primary/20"
-          } bg-background text-foreground placeholder:text-muted-foreground outline-none transition-colors`}
-          {...register("email")}
-          disabled={isLoading}
-        />
-        <ErrorMessage message={errors.email?.message} />
+        <div>
+          <label className="block text-sm font-semibold mb-2 text-gray-700">
+            Adresse Email <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            placeholder="Votre adresse mail"
+            className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 ${
+              errors.email 
+                ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 animate-shake" 
+                : "border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20"
+            } bg-white text-gray-900 placeholder:text-gray-400 outline-none`}
+            {...register("email")}
+            disabled={isLoading}
+          />
+          <ErrorMessage message={errors.email?.message} />
+        </div>
       </div>
 
       {!isAuthenticated && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
-          <p className="font-medium">Connexion requise</p>
-          <p>Veuillez vous connecter pour effectuer un paiement.</p>
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-xl p-5 shadow-sm animate-pulse-slow">
+          <div className="flex items-center gap-3">
+            <div className="bg-amber-100 p-2 rounded-lg">
+              <span className="text-amber-600 font-bold">!</span>
+            </div>
+            <div>
+              <p className="font-semibold text-amber-900">Connexion requise</p>
+              <p className="text-sm text-amber-800">Veuillez vous connecter pour effectuer un paiement.</p>
+            </div>
+          </div>
         </div>
       )}
 
-      <div className="pt-2">
-        <label className="block text-sm font-medium mb-1.5 text-center text-foreground">
+      {/* MODES DE PAIEMENT */}
+      <div className="bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <h3 className="text-sm font-semibold mb-4 text-center text-gray-900">
           Mode de Paiement
-        </label>
+        </h3>
         <div className="flex items-center justify-center gap-6 py-3">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-5" />
-          <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-6" />
-          <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/American_Express_logo_%282018%29.svg" alt="American Express" className="h-5" />
-          <span className="font-bold text-xs tracking-wider text-foreground">DISCOVER</span>
+          {[
+            { src: "https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg", alt: "Visa", className: "h-8 transition-transform hover:scale-110" },
+            { src: "https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg", alt: "Mastercard", className: "h-9 transition-transform hover:scale-110" },
+            { src: "https://upload.wikimedia.org/wikipedia/commons/f/fa/American_Express_logo_%282018%29.svg", alt: "American Express", className: "h-8 transition-transform hover:scale-110" },
+            { text: "DISCOVER", className: "font-bold text-sm tracking-wider text-gray-900 bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent" }
+          ].map((payment, idx) => (
+            <div key={idx} className="transition-all duration-300 hover:-translate-y-1">
+              {payment.src ? (
+                <img src={payment.src} alt={payment.alt} className={payment.className} />
+              ) : (
+                <span className={payment.className}>{payment.text}</span>
+              )}
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="bg-secondary/50 rounded-lg p-4 flex items-start gap-3">
-        <CreditCard className="text-primary shrink-0 mt-0.5" size={20} />
-        <div className="text-sm text-muted-foreground">
-          <p className="font-medium text-foreground mb-1">Paiement sécurisé</p>
-          <p>Vous serez redirigé vers la page de paiement sécurisée pour finaliser votre transaction.</p>
+      {/* SÉCURITÉ */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-5 shadow-sm transition-all duration-300 hover:shadow-md">
+        <div className="flex items-start gap-4">
+          <div className="bg-blue-100 p-3 rounded-lg">
+            <CreditCard className="text-blue-600" size={24} />
+          </div>
+          <div>
+            <p className="font-semibold text-blue-900 text-lg mb-1">Paiement 100% sécurisé</p>
+            <p className="text-sm text-blue-800">
+              Vos informations de paiement sont cryptées et protégées. Vous serez redirigé vers une page sécurisée pour finaliser votre transaction.
+            </p>
+          </div>
         </div>
-      </div>
-
-      <div className="border-t border-border pt-4 mt-4">
-        <div className="flex justify-between items-center text-lg font-bold">
-          <span className="text-foreground">Total à payer</span>
-          <span className="text-primary">{finalAmount.toFixed(2)}€</span>
-        </div>
-        <p className="text-xs text-muted-foreground text-center mt-2">
-          En cliquant sur "Effectuer le paiement", vous acceptez nos conditions générales de vente
-        </p>
       </div>
 
       {suggestedDate && (
-        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-yellow-800 mb-2">Les dates sélectionnées sont réservées.</p>
-          <div className="flex items-center gap-3">
-            <span className="text-sm">Suggestion : commencer à partir du <strong>{suggestedDate.toLocaleDateString('fr-FR')}</strong></span>
-            <button
-              type="button"
-              onClick={handleUseSuggested}
-              className="ml-auto inline-flex items-center px-3 py-2 bg-primary text-white rounded text-sm"
-            >
-              Commencer à partir de cette date
-            </button>
+        <div className="mt-4 p-5 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-300 rounded-xl animate-fadeIn">
+          <div className="flex items-start gap-3">
+            <div className="bg-yellow-100 p-2 rounded-lg">
+              <span className="text-yellow-600 font-bold">!</span>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-yellow-900 mb-2">Les dates sélectionnées sont réservées.</p>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <span className="text-sm text-yellow-800">
+                  Suggestion : commencer à partir du <strong>{suggestedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={handleUseSuggested}
+                  className="sm:ml-auto px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-semibold hover:bg-yellow-700 transition-all duration-200 transform hover:-translate-y-0.5"
+                >
+                  Utiliser cette date
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
       
-      <button
-        type="submit"
-        disabled={isLoading || !isAuthenticated}
-        className="w-full bg-primary text-primary-foreground py-4 rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="animate-spin" size={18} />
-            Préparation du paiement...
-          </>
-        ) : !isAuthenticated ? (
-          "Connexion requise"
-        ) : (
-          `Effectuer le paiement de ${finalAmount.toFixed(2)}€`
-        )}
-      </button>
+      {/* BOUTON DE PAIEMENT */}
+      <div className="border-t border-gray-200 pt-6 mt-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <span className="text-lg font-bold text-gray-900">Total à payer</span>
+            <p className="text-xs text-gray-500 mt-1">
+              En cliquant ci-dessous, vous acceptez nos conditions générales de vente
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold text-primary">{finalAmount.toFixed(2)}€</div>
+            <div className="text-xs text-gray-500">Toutes taxes comprises</div>
+          </div>
+        </div>
+        
+        <button
+          type="submit"
+          disabled={isLoading || !isAuthenticated}
+          className={`w-full py-4 rounded-xl text-lg font-bold transition-all duration-300 ${
+            isLoading || !isAuthenticated
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-gradient-to-r from-primary to-primary/90 text-white hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0'
+          } flex items-center justify-center gap-3`}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="animate-spin" size={22} />
+              <span className="animate-pulse">Préparation du paiement...</span>
+            </>
+          ) : !isAuthenticated ? (
+            "Connexion requise"
+          ) : (
+            <>
+              <CreditCard size={20} />
+              Payer {finalAmount.toFixed(2)}€
+            </>
+          )}
+        </button>
+        
+        <p className="text-center text-xs text-gray-500 mt-3 animate-pulse-slow">
+          ✅ Paiement sécurisé • 128-bit SSL • Sans frais cachés
+        </p>
+      </div>
     </form>
   );
 };

@@ -809,8 +809,11 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
   };
 
   return (
-    <section className="bg-white py-8 xs:py-10 sm:py-12 md:py-16 lg:py-20 overflow-hidden"
-             style={{ fontFamily: "'Montserrat', sans-serif" }}>
+    <section 
+      id="destinationsearch"
+      className="bg-white py-8 xs:py-10 sm:py-12 md:py-16 lg:py-20 overflow-hidden"
+      style={{ fontFamily: "'Montserrat', sans-serif" }}
+    >
       <div className={gridContainer}>
         <div className="bg-[#E5E5E5] rounded-sm relative z-10 py-10 sm:py-14 md:py-16 lg:py-20 px-4 xs:px-6 sm:px-8 md:px-10 lg:px-12 xl:px-16">
 
@@ -868,7 +871,7 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
             </div>
 
             {/* ================= FORMULAIRE ================= */}
-            <div className="lg:col-span-5 flex flex-col justify-center">
+            <div id="search-form" className="lg:col-span-5 flex flex-col justify-center">
               <div className="w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[400px] md:max-w-[420px] mx-auto lg:mx-0">
                 <h2 className="text-xl xs:text-2xl sm:text-2xl md:text-3xl xl:text-3xl 
                                font-extrabold leading-tight text-[#1a1a1a] 

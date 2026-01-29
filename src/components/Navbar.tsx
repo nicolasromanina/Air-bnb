@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Search } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import UserMenu from "./UserMenu";
@@ -151,6 +151,26 @@ const Navbar = () => {
 
             {/* CTA Button Desktop */}
             <div className="hidden md:flex items-center gap-4 z-50">
+              {/* Icône de recherche */}
+              <button 
+                onClick={() => {
+                  navigate("/");
+                  setTimeout(() => {
+                    const element = document.getElementById("destinationsearch");
+                    if (element) {
+                      window.scrollTo({ 
+                        top: element.offsetTop - 100, 
+                        behavior: 'smooth' 
+                      });
+                    }
+                  }, 100);
+                }}
+                className="text-gray-800 hover:text-[#FF1B7C] p-2 rounded-sm transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#FF1B7C]"
+                aria-label="Rechercher une destination"
+              >
+                <Search size={20} />
+              </button>
+
               {isAuthenticated ? (
                 <UserMenu />
               ) : (
