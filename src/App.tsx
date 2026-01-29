@@ -70,7 +70,7 @@ const App = () => (
             <Route path="/reservations" element={<Reservations />} />
             <Route path="/profile" 
               element={
-                <AuthGuard requireAuth={true}>
+                <AuthGuard requireAuth={false}>
                   <Profile />
                 </AuthGuard>
               }
