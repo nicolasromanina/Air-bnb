@@ -68,15 +68,33 @@ const Profile: React.FC = () => {
     const loadProfileData = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get('/users/profile');
-        const data = response.data;
-        setProfileData(data);
-        setFormData(data);
+        const response = await api.getUserProfile();
+        if (response.success && response.data) {
+          setProfileData(response.data);
+          setFormData(response.data);
+        } else {
+          // Si la requête échoue, utiliser les données disponibles
+          if (user) {
+            const defaultData = {
+              firstName: user.firstName || '',
+              lastName: user.lastName || '',
+              email: user.email || '',
+              phone: '',
+              address: '',
+              city: '',
+              zipCode: '',
+              country: '',
+              profileImage: '',
+            };
+            setProfileData(defaultData);
+            setFormData(defaultData);
+          }
+        }
       } catch (error) {
         console.error('Erreur lors du chargement du profil:', error);
         // Si la requête échoue, utiliser les données disponibles
         if (user) {
-          setProfileData({
+          const defaultData = {
             firstName: user.firstName || '',
             lastName: user.lastName || '',
             email: user.email || '',
@@ -86,18 +104,9 @@ const Profile: React.FC = () => {
             zipCode: '',
             country: '',
             profileImage: '',
-          });
-          setFormData({
-            firstName: user.firstName || '',
-            lastName: user.lastName || '',
-            email: user.email || '',
-            phone: '',
-            address: '',
-            city: '',
-            zipCode: '',
-            country: '',
-            profileImage: '',
-          });
+          };
+          setProfileData(defaultData);
+          setFormData(defaultData);
         }
       } finally {
         setIsLoading(false);
@@ -120,10 +129,14 @@ const Profile: React.FC = () => {
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      const response = await api.put('/users/profile', formData);
-      setProfileData(response.data);
-      setIsEditing(false);
-      toast.success('Profil mis à jour avec succès');
+      const response = await api.updateUserProfile(formData);
+      if (response.success && response.data) {
+        setProfileData(response.data);
+        setIsEditing(false);
+        toast.success('Profil mis à jour avec succès');
+      } else {
+        toast.error(response.error || 'Erreur lors de la mise à jour du profil');
+      }
     } catch (error) {
       console.error('Erreur lors de la mise à jour du profil:', error);
       toast.error('Erreur lors de la mise à jour du profil');

@@ -242,6 +242,43 @@ class ApiService {
     // Optionnel: Appeler une endpoint de logout backend
   }
 
+  // ========== PROFIL UTILISATEUR ==========
+  async getUserProfile(): Promise<ApiResponse<any>> {
+    return this.request('/users/profile');
+  }
+
+  async updateUserProfile(profileData: any): Promise<ApiResponse<any>> {
+    return this.request('/users/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
+  }
+
+  // ========== MÉTHODES GÉNÉRIQUES ==========
+  async get<T = any>(endpoint: string): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint);
+  }
+
+  async post<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async put<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async delete<T = any>(endpoint: string): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      method: 'DELETE',
+    });
+  }
+
   // ========== PAIEMENTS ==========
   async createPayment(paymentData: PaymentRequest): Promise<ApiResponse<PaymentResponse>> {
     return this.request<PaymentResponse>('/payments/create', {
