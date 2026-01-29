@@ -69,6 +69,7 @@ interface PaymentFormProps {
 
 const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptions, reservationDetails, onSuggestDate }: PaymentFormProps) => {
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const { user, isAuthenticated } = useAuth();
   
   const [suggestedDate, setSuggestedDate] = useState<Date | null>(null);
@@ -177,6 +178,15 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
     }
 
     setIsRedirecting(true);
+    setLoadingProgress(0);
+    
+    // Simuler une progression de chargement
+    const progressInterval = setInterval(() => {
+      setLoadingProgress(prev => {
+        if (prev >= 90) return prev; // Ne pas aller à 100 avant la fin réelle
+        return prev + Math.random() * 30;
+      });
+    }, 500);
     
     try {
       const extractNumber = (value: any): number => {
@@ -222,6 +232,7 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
       };
 
       const response = await api.createPayment(paymentRequest);
+      setLoadingProgress(100);
 
       if (response.success && response.data?.url) {
         const completeReservationData = {
@@ -248,6 +259,28 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
           setSuggestedDate(new Date(suggested));
         }
         throw new Error(response.error || "URL de paiement non reçue");
+      }
+    } catch (error) {
+      clearInterval(progressInterval);
+      setLoadingProgress(0);
+      setIsRedirecting(false);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
+      
+      // Gestion spécifique des erreurs de timeout
+      if (errorMessage.includes('timeout') || errorMessage.includes('Délai')) {
+        toast.error('La préparation du paiement a expiré. Veuillez réessayer.');
+      } else if (errorMessage.includes('Impossible')) {
+        toast.error('Impossible de contacter le serveur. Veuillez vérifier votre connexion.');
+      } else {
+        toast.error(errorMessage);
+      }
+      
+      console.error('Erreur paiement:', error);
+    } finally {
+      clearInterval(progressInterval);
+    }
+  };
       }
     } catch (err) {
       console.error("❌ Payment error:", err);
@@ -688,16 +721,39 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
         <button
           type="submit"
           disabled={isLoading || !isAuthenticated}
-          className={`w-full py-4 rounded-xl text-lg font-bold transition-all duration-300 ${
+          className={`w-full py-4 rounded-xl text-lg font-bold transition-all duration-300 relative overflow-hidden ${
             isLoading || !isAuthenticated
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : 'bg-gradient-to-r from-primary to-primary/90 text-white hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0'
           } flex items-center justify-center gap-3`}
         >
-          {isLoading ? (
-            <>
-              <Loader2 className="animate-spin" size={22} />
-              <span className="animate-pulse">Préparation du paiement...</span>
+          {/* Barre de progression */}
+          {isLoading && (
+            <div 
+              className="absolute left-0 top-0 h-full bg-white/20 transition-all duration-300"
+              style={{ width: `${Math.min(loadingProgress, 100)}%` }}
+            />
+          )}
+          
+          <div className="relative z-10 flex items-center gap-3">
+            {isLoading ? (
+              <>
+                <Loader2 className="animate-spin" size={22} />
+                <span>
+                  {loadingProgress < 30 && "Préparation du paiement..."}
+                  {loadingProgress >= 30 && loadingProgress < 60 && "Vérification des données..."}
+                  {loadingProgress >= 60 && loadingProgress < 90 && "Création de la session..."}
+                  {loadingProgress >= 90 && "Finalisation..."}
+                </span>
+              </>
+            ) : (
+              <>
+                <CreditCard size={22} />
+                <span>Procéder au paiement {finalAmount.toFixed(2)}€</span>
+              </>
+            )}
+          </div>
+        </button>
             </>
           ) : !isAuthenticated ? (
             "Connexion requise"

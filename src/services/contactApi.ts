@@ -12,7 +12,7 @@ const createApiClient = (): AxiosInstance => {
     headers: {
       'Content-Type': 'application/json',
     },
-    timeout: 10000, // 10 secondes timeout
+    timeout: 30000, // 30 secondes timeout (augmenté de 10s pour Render)
   });
 };
 
@@ -124,9 +124,19 @@ export const contactServices = {
     consent: boolean;
   }): Promise<ApiResponse<any>> {
     try {
-      const response: AxiosResponse<ApiResponse<any>> = await apiClient.post('/contact-messages/submit', data);
+      // Timeout plus long pour les envois d'email (45 secondes)
+      const response: AxiosResponse<ApiResponse<any>> = await apiClient.post('/contact-messages/submit', data, {
+        timeout: 45000,
+      });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
+      // Gestion spécifique des timeouts
+      if (error.code === 'ECONNABORTED') {
+        throw new Error('Délai d\'attente dépassé. Le serveur met trop de temps à répondre. Veuillez réessayer.');
+      }
+      if (error.message?.includes('timeout')) {
+        throw new Error('La requête a expiré. Veuillez vérifier votre connexion internet et réessayer.');
+      }
       return handleApiError(error);
     }
   },

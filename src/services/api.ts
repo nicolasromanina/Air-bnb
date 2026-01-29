@@ -281,9 +281,12 @@ class ApiService {
 
   // ========== PAIEMENTS ==========
   async createPayment(paymentData: PaymentRequest): Promise<ApiResponse<PaymentResponse>> {
+    // Timeout plus long pour la création de paiement (60 secondes)
+    // Car Stripe peut prendre du temps pour valider et créer la session
     return this.request<PaymentResponse>('/payments/create', {
       method: 'POST',
       body: JSON.stringify(paymentData),
+      timeout: 60000, // 60 secondes pour les paiements
     });
   }
 

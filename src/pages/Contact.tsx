@@ -207,10 +207,26 @@ const Contact: React.FC = () => {
         });
       }
     } catch (error) {
+      let errorText = 'Une erreur est survenue lors de l\'envoi du message';
+      
+      if (error instanceof Error) {
+        errorText = error.message;
+        
+        // Gestion spécifique des erreurs de timeout
+        if (error.message.includes('Délai d\'attente') || error.message.includes('timeout')) {
+          errorText = 'La requête a expiré. Le serveur met trop de temps à répondre. Veuillez vérifier votre connexion internet et réessayer dans quelques instants.';
+        } else if (error.message.includes('Impossible de contacter')) {
+          errorText = 'Impossible de contacter le serveur. Veuillez vérifier votre connexion internet.';
+        }
+      }
+      
       setSubmitMessage({
         type: 'error',
-        text: error instanceof Error ? error.message : 'Une erreur est survenue lors de l\'envoi du message'
+        text: errorText
       });
+      
+      // Log l'erreur pour le debugging
+      console.error('Erreur lors de la soumission du formulaire:', error);
     } finally {
       setIsSubmitting(false);
     }
