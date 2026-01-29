@@ -424,7 +424,7 @@ function AppartmentDetail() {
         if (!showFullScreenGallery || !roomDetail?.images) return null;
 
         const handleBackdropClick = (e: React.MouseEvent) => {
-            // Fermer UNIQUEMENT si clic sur le fond noir
+            // Fermer UNIQUEMENT si clic sur le fond noir (pas sur les enfants)
             if (e.target === e.currentTarget) {
                 setShowFullScreenGallery(false);
             }
@@ -436,6 +436,12 @@ function AppartmentDetail() {
             setShowFullScreenGallery(false);
         };
 
+        const handleNavClick = (callback: () => void) => (e: React.MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            callback();
+        };
+
         return (
             <div
                 className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-4"
@@ -445,9 +451,8 @@ function AppartmentDetail() {
             >
                 {/* Close button - X */}
                 <button
-                    className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10 bg-black/50 hover:bg-black/70 rounded-full p-3"
+                    className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-50 bg-black/50 hover:bg-black/70 rounded-full p-3"
                     onClick={handleCloseClick}
-                    onTouchEnd={handleCloseClick}
                     aria-label="Fermer la galerie"
                 >
                     <X size={24} />
@@ -481,32 +486,18 @@ function AppartmentDetail() {
                     {roomDetail.images.length > 1 && (
                         <>
                             <button
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    navigatePrevImage();
-                                }}
-                                onTouchEnd={(e) => {
-                                    e.preventDefault();
-                                    navigatePrevImage();
-                                }}
-                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-all z-10"
+                                onClick={handleNavClick(navigatePrevImage)}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-all z-20 hover:scale-110"
                                 aria-label="Image précédente"
+                                type="button"
                             >
                                 <ChevronLeft size={24} />
                             </button>
                             <button
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    navigateNextImage();
-                                }}
-                                onTouchEnd={(e) => {
-                                    e.preventDefault();
-                                    navigateNextImage();
-                                }}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-all z-10"
+                                onClick={handleNavClick(navigateNextImage)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-all z-20 hover:scale-110"
                                 aria-label="Image suivante"
+                                type="button"
                             >
                                 <ChevronRight size={24} />
                             </button>
@@ -529,12 +520,16 @@ function AppartmentDetail() {
                     {roomDetail.images.map((img, index) => (
                         <button
                             key={index}
-                            onClick={() => setCurrentImageIndex(index)}
-                            className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-all ${
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setCurrentImageIndex(index);
+                            }}
+                            className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-all z-10 hover:z-20 ${
                                 currentImageIndex === index 
                                     ? 'border-white scale-110' 
                                     : 'border-transparent hover:border-white/50'
                             }`}
+                            type="button"
                         >
                             <img
                                 src={
@@ -675,7 +670,6 @@ function AppartmentDetail() {
                         {/* Clickable Images Grid Below Video */}
                         {roomDetail?.images && roomDetail.images.length > 0 && (
                             <div className="space-y-3">
-                                <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Galerie photos</h4>
                                 <div className="grid grid-cols-3 gap-3">
                                     {roomDetail.images.map((img, i) => (
                                         <motion.button
@@ -800,12 +794,6 @@ function AppartmentDetail() {
                                         disabled={!checkInDate}
                                     />
                                 </div>
-                            </div>
-                            <div className="text-xs text-gray-500 flex items-center gap-2">
-                                <Check size={12} />
-                                <span>
-                                    {nights} nuit{nights > 1 ? 's' : ''} • {guests} personne{guests > 1 ? 's' : ''}
-                                </span>
                             </div>
                         </div>
 
