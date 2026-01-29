@@ -19,17 +19,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ variant = 'default', className = 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation basique
-    if (!destination.trim()) {
-      alert('Veuillez sélectionner une destination');
-      return;
-    }
-
-    if (!checkIn) {
-      alert('Veuillez sélectionner une date d\'arrivée');
-      return;
-    }
-
     // Construire les paramètres de recherche
     const searchParams = new URLSearchParams();
     searchParams.set('destination', destination);
