@@ -335,19 +335,6 @@ const LastSection: React.FC<LastSectionProps> = ({
                   >
                     {description}
                   </motion.p>
-
-                  {/* CTA Button with improved accessibility */}
-                  <motion.a
-                    href={ctaLink}
-                    variants={itemVariants}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="inline-flex items-center gap-2 bg-black text-white px-6 py-3 rounded-lg font-semibold text-sm uppercase tracking-wider hover:bg-gray-900 transition-all group/cta w-fit focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
-                    aria-label={`${ctaText} (ouvre dans la même page)`}
-                  >
-                    {ctaText}
-                    <ArrowRight size={16} className="group-hover/cta:translate-x-1 transition-transform" />
-                  </motion.a>
                 </motion.div>
 
                 {/* Tagline */}
@@ -593,19 +580,6 @@ const LastSection: React.FC<LastSectionProps> = ({
                   transition={{ delay: 0.3 }}
                   className="mt-4 md:mt-6 flex flex-wrap items-center justify-between text-sm text-gray-600 gap-2"
                 >
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="flex items-center gap-1">
-                      <Check size={12} className="text-green-500 flex-shrink-0" />
-                      <span className="text-xs">Certifié qualité</span>
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Check size={12} className="text-green-500 flex-shrink-0" />
-                      <span className="text-xs">Garantie 2 ans</span>
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {features.length} points clés • {images.length} visuels
-                  </div>
                 </motion.div>
               </div>
             </div>

@@ -8,6 +8,7 @@ import { formatGuests, formatBedrooms } from '@/utils/numberExtractor';
 import { toast } from 'sonner';
 import ImprovedDatePicker from '../ImprovedDatePicker';
 import { motion, AnimatePresence } from 'framer-motion';
+import VideoPlayer from '../VideoPlayer';
 
 const PINK_ACCENT = "#FF385C";
 
@@ -616,27 +617,32 @@ function AppartmentDetail() {
                             {/* Video Background */}
                             {roomDetail?.videoUrl ? (
                                 <div className="relative w-full h-full">
-                                    <video
-                                        src={roomDetail.videoUrl}
+                                    <img
+                                        src={
+                                            roomDetail.images?.[0] 
+                                                ? (roomDetail.images[0].includes('cloudinary.com') || roomDetail.images[0].includes('airbnb-backend')
+                                                    ? roomDetail.images[0]
+                                                    : `https://airbnb-backend.onrender.com${roomDetail.images[0]}`)
+                                                : "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200"
+                                        }
                                         className="w-full h-full object-cover"
-                                        poster={roomDetail.images?.[0] 
-                                            ? (roomDetail.images[0].includes('cloudinary.com') || roomDetail.images[0].includes('airbnb-backend')
-                                                ? roomDetail.images[0]
-                                                : `https://airbnb-backend.onrender.com${roomDetail.images[0]}`)
-                                            : undefined}
-                                        autoPlay
-                                        muted
-                                        loop
+                                        alt="Video poster"
                                     />
                                     {/* Dark overlay for play button visibility */}
                                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                     
-                                    {/* Play button overlay */}
-                                    <div className="absolute inset-0 flex items-center justify-center z-10">
-                                        <div className="relative w-24 h-24 lg:w-32 lg:h-32 rounded-full border-2 border-white flex items-center justify-center bg-white/20 backdrop-blur-md shadow-lg group-hover:bg-white/30 transition-colors">
-                                            <Play className="w-10 h-10 lg:w-14 lg:h-14 text-white fill-white ml-1" />
-                                        </div>
-                                    </div>
+                                    {/* VideoPlayer Component with Play Button */}
+                                    <VideoPlayer
+                                        videoUrl={roomDetail.videoUrl}
+                                        posterImage={
+                                            roomDetail.images?.[0] 
+                                                ? (roomDetail.images[0].includes('cloudinary.com') || roomDetail.images[0].includes('airbnb-backend')
+                                                    ? roomDetail.images[0]
+                                                    : `https://airbnb-backend.onrender.com${roomDetail.images[0]}`)
+                                                : undefined
+                                        }
+                                        playButtonSize="large"
+                                    />
                                 </div>
                             ) : (
                                 // Fallback to first image if no video
