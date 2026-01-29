@@ -1,5 +1,5 @@
-import { Users, Bed, Play, ChevronDown, Minus, Plus, ArrowLeft, Check, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { Users, Bed, Play, ChevronDown, Minus, Plus, ArrowLeft, Check, ChevronLeft, ChevronRight, X, Maximize2, Heart, Share2, Calendar, Clock, Loader2 } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SelectedOption } from '../reservation/AdditionalOptionsSelector';
 import { api } from '@/services/api';
@@ -7,13 +7,13 @@ import { roomDetailApi, RoomDetail } from '@/services/roomDetailApi';
 import { formatGuests, formatBedrooms } from '@/utils/numberExtractor';
 import { toast } from 'sonner';
 import ImprovedDatePicker from '../ImprovedDatePicker';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const PINK_ACCENT = "#FF385C";
 
 function AppartmentDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
-    console.log('[DETAIL] 🏠 AppartmentDetail component rendering for room ID:', id);
     
     // --- ÉTATS ET LOGIQUE ---
     const [checkInDate, setCheckInDate] = useState<string>('');
@@ -28,37 +28,33 @@ function AppartmentDetail() {
     const [roomDetail, setRoomDetail] = useState<RoomDetail | null>(null);
     const [loadingRoomDetail, setLoadingRoomDetail] = useState(true);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [showFullScreenGallery, setShowFullScreenGallery] = useState(false);
+    const [imageLoading, setImageLoading] = useState<boolean[]>([]);
+    const [touchStart, setTouchStart] = useState<number | null>(null);
+    const [isScrolling, setIsScrolling] = useState(false);
+    const galleryRef = useRef<HTMLDivElement>(null);
+    const imageContainerRef = useRef<HTMLDivElement>(null);
 
     // Fetch room details from API
     const fetchRoomDetail = useCallback(async () => {
         try {
             if (!id || isNaN(parseInt(id))) {
-                console.error('[DETAIL] ❌ Invalid room ID:', id);
+                toast.error('ID de chambre invalide');
                 setLoadingRoomDetail(false);
                 return;
             }
             
-            console.log('[DETAIL] 🔄 Fetching room detail for room ID:', id);
             const response = await roomDetailApi.getRoomDetail(parseInt(id));
-            console.log('[DETAIL] 📥 API Response received:', { success: response.success, hasData: !!response.data });
             
             if (response.success && response.data) {
-                console.log('[DETAIL] ✅ Room detail fetched successfully:', {
-                    roomId: response.data.roomId,
-                    title: response.data.title,
-                    subtitle: response.data.subtitle,
-                    price: response.data.price,
-                    guests: response.data.guests,
-                    bedrooms: response.data.bedrooms,
-                    imagesCount: response.data.images?.length || 0,
-                    includes: response.data.includes,
-                    amenities: response.data.amenities,
-                    features: response.data.features
-                });
                 setRoomDetail(response.data);
+                // Initialize loading states for images
+                if (response.data.images) {
+                    setImageLoading(new Array(response.data.images.length).fill(true));
+                }
             } else {
-                console.warn('[DETAIL] ⚠️ API returned no data, using fallback');
-                // Fallback to hardcoded data if API fails
+                // Fallback data
                 setRoomDetail({
                     id: parseInt(id),
                     roomId: parseInt(id),
@@ -70,93 +66,82 @@ function AppartmentDetail() {
                     bedrooms: "2 chambres à coucher",
                     images: [
                         "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200",
-                        "https://picsum.photos/400/400?random=11",
-                        "https://picsum.photos/400/400?random=12"
+                        "https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg?auto=compress&cs=tinysrgb&w=1200",
+                        "https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=1200"
                     ],
-                    features: ["Feature 1", "Feature 2", "Feature 3"]
+                    features: ["Wi-Fi gratuit", "Climatisation", "Cuisine équipée"]
                 } as any);
+                setImageLoading(new Array(3).fill(true));
             }
         } catch (error) {
-                console.error('[FETCH] Error fetching room detail:', error);
-                // Fallback to hardcoded data
-                setRoomDetail({
-                    id: parseInt(id || '0'),
-                    roomId: parseInt(id || '0'),
-                    title: "Aptent taciti sociosqu ad litora",
-                    subtitle: "Nunc vulputate libero et velit interdum, ac aliquet odio mattis.",
-                    description: "Sed dignissim, metus nec fringilla accumsan, risus sem sollicitudin lacus, ut interdum tellus elit sed risus.",
-                    price: 300,
-                    guests: "jusqu'à 4 invitées",
-                    bedrooms: "2 chambres à coucher",
-                    images: [
-                        "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200"
-                    ],
-                    features: ["Feature 1", "Feature 2"]
-                } as any);
-            } finally {
-                setLoadingRoomDetail(false);
-            }
+            console.error('Error fetching room detail:', error);
+            toast.error('Erreur de chargement des détails');
+            setRoomDetail({
+                id: parseInt(id || '0'),
+                roomId: parseInt(id || '0'),
+                title: "Aptent taciti sociosqu ad litora",
+                subtitle: "Nunc vulputate libero et velit interdum, ac aliquet odio mattis.",
+                description: "Sed dignissim, metus nec fringilla accumsan, risus sem sollicitudin lacus, ut interdum tellus elit sed risus.",
+                price: 300,
+                guests: "jusqu'à 4 invitées",
+                bedrooms: "2 chambres à coucher",
+                images: [
+                    "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200"
+                ],
+                features: ["Wi-Fi gratuit", "Climatisation"]
+            } as any);
+            setImageLoading(new Array(1).fill(true));
+        } finally {
+            setLoadingRoomDetail(false);
+        }
     }, [id]);
 
-    // Listener for room detail updates
+    // Listen for updates
     useEffect(() => {
-        console.log('[DETAIL] 🚀 Component mounted, fetching initial room detail for room:', id);
         fetchRoomDetail();
 
-        // Écouter les mises à jour de données
         const handleDataUpdate = (event: Event) => {
             const customEvent = event as CustomEvent;
             const updatedRoomId = customEvent.detail?.roomId;
-            const updatedData = customEvent.detail?.data;
-            const timestamp = customEvent.detail?.timestamp;
             
-            console.log('[DETAIL] 📢 Data update event received:', {
-                eventType: (event as any).type,
-                updatedRoomId,
-                currentRoomId: parseInt(id || '0'),
-                hasData: !!updatedData,
-                timestamp: new Date(timestamp).toLocaleTimeString()
-            });
-            
-            // Si c'est la chambre actuelle ou une mise à jour générale
             if (!updatedRoomId || updatedRoomId === parseInt(id || '0')) {
-                console.log('[DETAIL] 🔄 Refetching room detail for room:', id, '| Updated at:', new Date(timestamp).toLocaleTimeString());
                 fetchRoomDetail();
-            } else {
-                console.log('[DETAIL] ℹ️ Update is for a different room:', updatedRoomId, '| Current room:', id);
             }
         };
 
         window.addEventListener('roomDetailUpdated', handleDataUpdate);
         window.addEventListener('apartmentDataUpdated', handleDataUpdate);
 
-        console.log('[DETAIL] ✅ Event listeners attached for room:', id);
-
         return () => {
             window.removeEventListener('roomDetailUpdated', handleDataUpdate);
             window.removeEventListener('apartmentDataUpdated', handleDataUpdate);
-            console.log('[DETAIL] 🗑️ Event listeners removed for room:', id);
         };
     }, [id, fetchRoomDetail]);
 
-    // Initialisation dates
+    // Initialize dates
     useEffect(() => {
         const today = new Date();
         const tomorrow = new Date(today);
         tomorrow.setDate(today.getDate() + 2);
-        setCheckInDate(today.toISOString().split('T')[0]);
-        setCheckOutDate(tomorrow.toISOString().split('T')[0]);
+        
+        const formatDate = (date: Date) => date.toISOString().split('T')[0];
+        setCheckInDate(formatDate(today));
+        setCheckOutDate(formatDate(tomorrow));
     }, []);
 
-    // Calcul des nuits
+    // Calculate nights
     useEffect(() => {
         if (checkInDate && checkOutDate) {
-            const diffDays = Math.ceil((new Date(checkOutDate).getTime() - new Date(checkInDate).getTime()) / (1000 * 60 * 60 * 24));
-            if (diffDays > 0) setNights(diffDays);
+            const diffDays = Math.ceil(
+                (new Date(checkOutDate).getTime() - new Date(checkInDate).getTime()) / (1000 * 60 * 60 * 24)
+            );
+            if (diffDays > 0) {
+                setNights(diffDays);
+            }
         }
     }, [checkInDate, checkOutDate]);
 
-    // Fetch API des options
+    // Fetch options
     useEffect(() => {
         const fetchOptions = async () => {
             try {
@@ -173,16 +158,114 @@ function AppartmentDetail() {
         fetchOptions();
     }, []);
 
-    const apartment = roomDetail || { 
-        title: "Aptent taciti sociosqu ad litora",
-        subtitle: "Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra.",
-        price: 300,
-        guests: "jusqu'à 4 invitées",
-        bedrooms: "2 chambres à coucher",
-        description: "Sed dignissim, metus nec fringilla accumsan, risus sem sollicitudin lacus, ut interdum tellus elit sed risus. Maecenas eget condimentum velit, sit amet feugiat lectus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos."
+    // Handle image loading
+    const handleImageLoad = (index: number) => {
+        setImageLoading(prev => {
+            const newState = [...prev];
+            newState[index] = false;
+            return newState;
+        });
     };
 
-    // Calcul du prix dynamique par option
+    const handleImageError = (index: number) => {
+        setImageLoading(prev => {
+            const newState = [...prev];
+            newState[index] = false;
+            return newState;
+        });
+    };
+
+    // Image navigation with keyboard support
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (showFullScreenGallery && roomDetail?.images) {
+                if (e.key === 'Escape') {
+                    setShowFullScreenGallery(false);
+                } else if (e.key === 'ArrowRight') {
+                    setCurrentImageIndex(prev => 
+                        (prev + 1) % roomDetail.images.length
+                    );
+                } else if (e.key === 'ArrowLeft') {
+                    setCurrentImageIndex(prev => 
+                        (prev - 1 + roomDetail.images.length) % roomDetail.images.length
+                    );
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [showFullScreenGallery, roomDetail?.images]);
+
+    // Touch handling for mobile
+    const handleTouchStart = (e: React.TouchEvent) => {
+        setTouchStart(e.touches[0].clientX);
+    };
+
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        if (touchStart === null || !roomDetail?.images) return;
+        
+        const touchEnd = e.changedTouches[0].clientX;
+        const diff = touchStart - touchEnd;
+
+        if (Math.abs(diff) > 50) {
+            if (diff > 0) {
+                // Swipe left, next image
+                setCurrentImageIndex(prev => 
+                    (prev + 1) % roomDetail.images.length
+                );
+            } else {
+                // Swipe right, previous image
+                setCurrentImageIndex(prev => 
+                    (prev - 1 + roomDetail.images.length) % roomDetail.images.length
+                );
+            }
+        }
+        setTouchStart(null);
+    };
+
+    // Improved date validation
+    const validateDates = (checkIn: string, checkOut: string): boolean => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const checkInDate = new Date(checkIn);
+        const checkOutDate = new Date(checkOut);
+        
+        if (checkInDate < today) {
+            toast.error("La date d'arrivée ne peut pas être dans le passé");
+            return false;
+        }
+        
+        if (checkOutDate <= checkInDate) {
+            toast.error("La date de départ doit être après la date d'arrivée");
+            return false;
+        }
+        
+        return true;
+    };
+
+    // Date change handlers with validation
+    const handleCheckInChange = (date: string) => {
+        setCheckInDate(date);
+        
+        // If check-out is before or equal to new check-in, adjust it
+        if (checkOutDate && new Date(checkOutDate) <= new Date(date)) {
+            const newCheckOut = new Date(date);
+            newCheckOut.setDate(newCheckOut.getDate() + 1);
+            setCheckOutDate(newCheckOut.toISOString().split('T')[0]);
+        }
+    };
+
+    const handleCheckOutChange = (date: string) => {
+        if (new Date(date) > new Date(checkInDate)) {
+            setCheckOutDate(date);
+        } else {
+            toast.error("La date de départ doit être après la date d'arrivée");
+        }
+    };
+
+    // Calculate option price
     const calculateOptionPrice = (option: any): number => {
         switch (option.pricingType) {
             case 'per_day': return option.price * nights;
@@ -198,6 +281,7 @@ function AppartmentDetail() {
         if (isSelected) {
             setSelectedOptions(selectedOptions.filter(o => o.optionId !== option._id));
             setOptionsPrice(prev => prev - currentOptionPrice);
+            toast.success(`${option.name} retiré des options`);
         } else {
             setSelectedOptions([...selectedOptions, {
                 optionId: option._id, 
@@ -207,35 +291,21 @@ function AppartmentDetail() {
                 pricingType: option.pricingType
             }]);
             setOptionsPrice(prev => prev + currentOptionPrice);
+            toast.success(`${option.name} ajouté aux options`);
         }
     };
 
+    // Enhanced reservation handler
     const handleReservation = () => {
-        // Validation des dates AVANT de créer la réservation
-        const checkInDate_ = new Date(checkInDate);
-        const checkOutDate_ = new Date(checkOutDate);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        // Vérifier que les dates sont valides
-        if (isNaN(checkInDate_.getTime()) || isNaN(checkOutDate_.getTime())) {
-            toast.error('Veuillez sélectionner des dates valides');
+        if (!validateDates(checkInDate, checkOutDate)) {
             return;
         }
 
-        // Vérifier que la date d'arrivée n'est pas avant aujourd'hui
-        if (checkInDate_ < today) {
-            toast.error('La date d\'arrivée doit être à partir d\'aujourd\'hui ou ultérieurement');
-            return;
-        }
+        // Animation feedback
+        setIsScrolling(true);
+        setTimeout(() => setIsScrolling(false), 1000);
 
-        // Vérifier que la date de départ est après la date d'arrivée
-        if (checkOutDate_ <= checkInDate_) {
-            toast.error('La date de départ doit être après la date d\'arrivée');
-            return;
-        }
-
-        // Build a complete reservation object matching backend schema requirements
+        // Build reservation data
         const aptIdNum = id ? Number(id) : undefined;
         const extractNumber = (val: any) => {
             if (typeof val === 'number' && !isNaN(val)) return val;
@@ -247,7 +317,6 @@ function AppartmentDetail() {
         };
 
         const bedroomsNum = extractNumber(apartment.bedrooms);
-
         const basePrice = Number(apartment.price) || 0;
         const computedTotal = Number((basePrice * nights) + Number(optionsPrice || 0));
 
@@ -273,219 +342,572 @@ function AppartmentDetail() {
             selectedOptions: selectedOptions || [],
         };
 
-        // Persist for Payment page and navigate
+        // Persist and navigate with smooth transition
         localStorage.setItem('currentReservation', JSON.stringify(reservationData));
-        navigate('/payment', { state: reservationData });
+        
+        toast.success('Réservation en cours...');
+        setTimeout(() => {
+            navigate('/payment', { 
+                state: reservationData,
+                replace: true 
+            });
+        }, 500);
     };
+
+    // Share functionality
+    const handleShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: apartment.title,
+                    text: apartment.subtitle,
+                    url: window.location.href,
+                });
+                toast.success('Partagé avec succès');
+            } catch (error) {
+                console.log('Partage annulé');
+            }
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            toast.success('Lien copié dans le presse-papier');
+        }
+    };
+
+    const apartment = roomDetail || { 
+        title: "Aptent taciti sociosqu ad litora",
+        subtitle: "Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra.",
+        price: 300,
+        guests: "jusqu'à 4 invitées",
+        bedrooms: "2 chambres à coucher",
+        description: "Sed dignissim, metus nec fringilla accumsan, risus sem sollicitudin lacus, ut interdum tellus elit sed risus. Maecenas eget condimentum velit, sit amet feugiat lectus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos."
+    };
+
+    // Full-screen gallery component
+    const FullScreenGallery = () => {
+        if (!showFullScreenGallery || !roomDetail?.images) return null;
+
+        return (
+            <AnimatePresence>
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-4"
+                    onClick={() => setShowFullScreenGallery(false)}
+                    ref={galleryRef}
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={handleTouchEnd}
+                >
+                    {/* Close button */}
+                    <button
+                        className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10 bg-black/50 rounded-full p-2"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowFullScreenGallery(false);
+                        }}
+                        aria-label="Fermer la galerie"
+                    >
+                        <X size={24} />
+                    </button>
+
+                    {/* Main image */}
+                    <div className="relative max-w-[90vw] max-h-[80vh] flex items-center justify-center">
+                        <motion.div
+                            key={currentImageIndex}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            transition={{ duration: 0.3 }}
+                            className="relative"
+                        >
+                            {imageLoading[currentImageIndex] && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+                                </div>
+                            )}
+                            <img
+                                src={
+                                    roomDetail.images[currentImageIndex].includes('cloudinary.com') || 
+                                    roomDetail.images[currentImageIndex].includes('airbnb-backend')
+                                        ? roomDetail.images[currentImageIndex]
+                                        : `https://airbnb-backend.onrender.com${roomDetail.images[currentImageIndex]}`
+                                }
+                                alt={`Image ${currentImageIndex + 1}`}
+                                className={`max-w-full max-h-[80vh] object-contain transition-opacity duration-300 ${
+                                    imageLoading[currentImageIndex] ? 'opacity-0' : 'opacity-100'
+                                }`}
+                                onLoad={() => handleImageLoad(currentImageIndex)}
+                                onError={() => handleImageError(currentImageIndex)}
+                            />
+                        </motion.div>
+
+                        {/* Navigation arrows */}
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setCurrentImageIndex(prev => 
+                                    (prev - 1 + roomDetail.images.length) % roomDetail.images.length
+                                );
+                            }}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-all"
+                            aria-label="Image précédente"
+                        >
+                            <ChevronLeft size={24} />
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setCurrentImageIndex(prev => 
+                                    (prev + 1) % roomDetail.images.length
+                                );
+                            }}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-all"
+                            aria-label="Image suivante"
+                        >
+                            <ChevronRight size={24} />
+                        </button>
+                    </div>
+
+                    {/* Image counter and description */}
+                    <div className="mt-4 text-center text-white">
+                        <div className="text-lg font-semibold">
+                            {currentImageIndex + 1} / {roomDetail.images.length}
+                        </div>
+                        {roomDetail.images[currentImageIndex] && (
+                            <div className="text-sm text-gray-300 mt-2">
+                                {apartment.title} - Image {currentImageIndex + 1}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Thumbnails */}
+                    <div className="flex gap-2 mt-6 overflow-x-auto py-2 max-w-full px-4">
+                        {roomDetail.images.map((img, index) => (
+                            <button
+                                key={index}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentImageIndex(index);
+                                }}
+                                className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-all ${
+                                    currentImageIndex === index 
+                                        ? 'border-white scale-110' 
+                                        : 'border-transparent hover:border-white/50'
+                                }`}
+                            >
+                                <img
+                                    src={
+                                        img.includes('cloudinary.com') || img.includes('airbnb-backend')
+                                            ? img
+                                            : `https://airbnb-backend.onrender.com${img}`
+                                    }
+                                    alt={`Miniature ${index + 1}`}
+                                    className="w-full h-full object-cover"
+                                />
+                            </button>
+                        ))}
+                    </div>
+                </motion.div>
+            </AnimatePresence>
+        );
+    };
+
+    // Loading skeleton
+    if (loadingRoomDetail) {
+        return (
+            <div className="min-h-screen bg-white flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-gray-200 border-t-black rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-gray-600">Chargement des détails...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-white font-sans text-[#1A1A1A] pb-20">
-            <nav className="max-w-[1140px] mx-auto px-6 py-10">
-                <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-black transition-colors uppercase tracking-widest">
-                    <ArrowLeft size={18} /> Retour
+            {/* Full-screen gallery */}
+            <FullScreenGallery />
+
+            {/* Header with action buttons */}
+            <nav className="max-w-[1140px] mx-auto px-6 py-6 flex justify-between items-center">
+                <button 
+                    onClick={() => navigate(-1)} 
+                    className="flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-black transition-colors uppercase tracking-widest group"
+                >
+                    <motion.div
+                        whileHover={{ x: -3 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                    >
+                        <ArrowLeft size={18} />
+                    </motion.div>
+                    Retour
                 </button>
+                
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={handleShare}
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        aria-label="Partager"
+                    >
+                        <Share2 size={18} />
+                    </button>
+                    <button
+                        onClick={() => setIsFavorite(!isFavorite)}
+                        className={`p-2 rounded-full transition-colors ${
+                            isFavorite 
+                                ? 'bg-red-50 text-red-500' 
+                                : 'hover:bg-gray-100 text-gray-600'
+                        }`}
+                        aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                    >
+                        <Heart size={18} fill={isFavorite ? "#FF385C" : "none"} />
+                    </button>
+                </div>
             </nav>
 
             <div className="max-w-[1140px] mx-auto px-6 space-y-24">
                 
                 {/* --- SECTION VIDEO & INFOS --- */}
                 <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-                    {/* Galerie d'images */}
+                    {/* Enhanced Gallery */}
                     <div className="space-y-4">
-                        {/* Image principale */}
-                        <div className="relative rounded-sm overflow-hidden aspect-[4/3] bg-gray-100 group">
-                            {loadingRoomDetail ? (
-                                <div className="flex items-center justify-center h-full bg-gray-200">
-                                    <div className="text-gray-400">Chargement...</div>
+                        {/* Main image with enhanced UX */}
+                        <div 
+                            className="relative rounded-sm overflow-hidden aspect-[4/3] bg-gray-100 group cursor-zoom-in"
+                            onClick={() => setShowFullScreenGallery(true)}
+                            ref={imageContainerRef}
+                            onTouchStart={handleTouchStart}
+                            onTouchEnd={handleTouchEnd}
+                        >
+                            {imageLoading[currentImageIndex] && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+                                    <div className="w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin" />
                                 </div>
-                            ) : (
-                                <>
-                                    <img 
-                                        src={
-                                            roomDetail?.images?.[currentImageIndex] 
-                                                ? (roomDetail.images[currentImageIndex].includes('cloudinary.com') || roomDetail.images[currentImageIndex].includes('airbnb-backend')
-                                                    ? roomDetail.images[currentImageIndex]
-                                                    : `https://airbnb-backend.onrender.com${roomDetail.images[currentImageIndex]}`)
-                                                : "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200"
-                                        } 
-                                        className="w-full h-full object-cover" 
-                                        alt={`Room detail ${currentImageIndex + 1}`}
-                                        onError={(e) => {
-                                            (e.currentTarget as HTMLImageElement).src = "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200";
-                                        }}
-                                    />
-                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
-                                        <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-xl cursor-pointer hover:scale-110 transition-transform">
-                                            <Play size={24} fill="black" className="ml-1" />
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Navigation arrows */}
-                                    {roomDetail?.images && roomDetail.images.length > 1 && (
-                                        <>
-                                            <button
-                                                onClick={() => setCurrentImageIndex((prev) => (prev - 1 + roomDetail.images.length) % roomDetail.images.length)}
-                                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 transition-all"
-                                            >
-                                                <ChevronLeft size={20} />
-                                            </button>
-                                            <button
-                                                onClick={() => setCurrentImageIndex((prev) => (prev + 1) % roomDetail.images.length)}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 transition-all"
-                                            >
-                                                <ChevronRight size={20} />
-                                            </button>
-                                            
-                                            {/* Image counter */}
-                                            <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium">
-                                                {currentImageIndex + 1} / {roomDetail.images.length}
-                                            </div>
-                                        </>
-                                    )}
-                                </>
                             )}
+                            
+                            <AnimatePresence mode="wait">
+                                <motion.img 
+                                    key={currentImageIndex}
+                                    initial={{ opacity: 0, scale: 1.05 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    transition={{ duration: 0.3 }}
+                                    src={
+                                        roomDetail?.images?.[currentImageIndex] 
+                                            ? (roomDetail.images[currentImageIndex].includes('cloudinary.com') || roomDetail.images[currentImageIndex].includes('airbnb-backend')
+                                                ? roomDetail.images[currentImageIndex]
+                                                : `https://airbnb-backend.onrender.com${roomDetail.images[currentImageIndex]}`)
+                                            : "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200"
+                                    } 
+                                    className={`w-full h-full object-cover transition-opacity duration-300 ${
+                                        imageLoading[currentImageIndex] ? 'opacity-0' : 'opacity-100'
+                                    }`}
+                                    alt={`Image principale ${currentImageIndex + 1}`}
+                                    onLoad={() => handleImageLoad(currentImageIndex)}
+                                    onError={(e) => {
+                                        (e.currentTarget as HTMLImageElement).src = "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200";
+                                        handleImageError(currentImageIndex);
+                                    }}
+                                />
+                            </AnimatePresence>
+                            
+                            {/* Enhanced overlay with actions */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <div className="absolute top-4 right-4 flex gap-2">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsFavorite(!isFavorite);
+                                        }}
+                                        className="bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-all"
+                                        aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                                    >
+                                        <Heart size={18} fill={isFavorite ? "#FF385C" : "none"} />
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowFullScreenGallery(true);
+                                        }}
+                                        className="bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-all"
+                                        aria-label="Voir en plein écran"
+                                    >
+                                        <Maximize2 size={18} />
+                                    </button>
+                                </div>
+                                
+                                {/* Navigation arrows */}
+                                {roomDetail?.images && roomDetail.images.length > 1 && (
+                                    <>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setCurrentImageIndex(prev => 
+                                                    (prev - 1 + roomDetail.images.length) % roomDetail.images.length
+                                                );
+                                            }}
+                                            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-all opacity-0 group-hover:opacity-100"
+                                            aria-label="Image précédente"
+                                        >
+                                            <ChevronLeft size={20} />
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setCurrentImageIndex(prev => 
+                                                    (prev + 1) % roomDetail.images.length
+                                                );
+                                            }}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-all opacity-0 group-hover:opacity-100"
+                                            aria-label="Image suivante"
+                                        >
+                                            <ChevronRight size={20} />
+                                        </button>
+                                    </>
+                                )}
+                                
+                                {/* Image info */}
+                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                                    <div className="flex justify-between items-center text-white">
+                                        <div>
+                                            <p className="text-sm font-medium">
+                                                {currentImageIndex + 1} / {roomDetail?.images?.length || 1}
+                                            </p>
+                                            <p className="text-xs opacity-80">
+                                                Cliquez pour voir en plein écran
+                                            </p>
+                                        </div>
+                                        <ChevronDown size={20} className="transform rotate-180" />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Miniatures */}
+                        {/* Enhanced thumbnails */}
                         {roomDetail?.images && roomDetail.images.length > 1 && (
-                            <div className="grid grid-cols-3 gap-4">
-                                {roomDetail.images.map((img, i) => (
-                                    <button
+                            <div className="grid grid-cols-3 gap-3">
+                                {roomDetail.images.slice(0, 3).map((img, i) => (
+                                    <motion.button
                                         key={i}
                                         onClick={() => setCurrentImageIndex(i)}
-                                        className={`aspect-square rounded-sm overflow-hidden border-2 transition-all ${
-                                            currentImageIndex === i ? 'border-black' : 'border-gray-100 hover:border-gray-300'
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        className={`relative aspect-square rounded-sm overflow-hidden border-2 transition-all ${
+                                            currentImageIndex === i 
+                                                ? 'border-black shadow-lg' 
+                                                : 'border-gray-100 hover:border-gray-300'
                                         }`}
+                                        aria-label={`Voir l'image ${i + 1}`}
                                     >
+                                        {imageLoading[i] && (
+                                            <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+                                                <div className="w-6 h-6 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
+                                            </div>
+                                        )}
                                         <img 
                                             src={
                                                 img.includes('cloudinary.com') || img.includes('airbnb-backend')
                                                     ? img
                                                     : `https://airbnb-backend.onrender.com${img}`
                                             }
-                                            className="w-full h-full object-cover" 
-                                            alt={`Thumbnail ${i + 1}`}
+                                            className={`w-full h-full object-cover transition-opacity duration-300 ${
+                                                imageLoading[i] ? 'opacity-0' : 'opacity-100'
+                                            }`}
+                                            alt={`Miniature ${i + 1}`}
+                                            onLoad={() => handleImageLoad(i)}
                                             onError={(e) => {
                                                 (e.currentTarget as HTMLImageElement).src = "https://via.placeholder.com/150?text=Image+Error";
+                                                handleImageError(i);
                                             }}
                                         />
-                                    </button>
+                                        {currentImageIndex === i && (
+                                            <div className="absolute inset-0 bg-black/20" />
+                                        )}
+                                    </motion.button>
                                 ))}
+                                {roomDetail.images.length > 3 && (
+                                    <button
+                                        onClick={() => setShowFullScreenGallery(true)}
+                                        className="relative aspect-square rounded-sm overflow-hidden border-2 border-gray-100 hover:border-gray-300 bg-gray-50 flex items-center justify-center group"
+                                    >
+                                        <div className="text-center">
+                                            <div className="text-sm font-bold text-gray-600">+{roomDetail.images.length - 3}</div>
+                                            <div className="text-xs text-gray-400">Voir toutes</div>
+                                        </div>
+                                    </button>
+                                )}
                             </div>
                         )}
 
-                        {/* Section vidéo */}
+                        {/* Video section */}
                         {roomDetail?.videoUrl && (
-                            <div className="mt-6 space-y-3">
-                                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Vidéo de la chambre</h3>
+                            <motion.div 
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mt-8 space-y-3"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Play size={16} className="text-gray-600" />
+                                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Vidéo de présentation</h3>
+                                </div>
                                 <div className="relative rounded-sm overflow-hidden aspect-[4/3] bg-gray-100 group cursor-pointer">
                                     <video
                                         src={roomDetail.videoUrl}
                                         className="w-full h-full object-cover"
-                                        poster={roomDetail.images?.[0] ? (roomDetail.images[0].includes('cloudinary.com') || roomDetail.images[0].includes('airbnb-backend')
-                                            ? roomDetail.images[0]
-                                            : `https://airbnb-backend.onrender.com${roomDetail.images[0]}`)
+                                        poster={roomDetail.images?.[0] 
+                                            ? (roomDetail.images[0].includes('cloudinary.com') || roomDetail.images[0].includes('airbnb-backend')
+                                                ? roomDetail.images[0]
+                                                : `https://airbnb-backend.onrender.com${roomDetail.images[0]}`)
                                             : undefined}
+                                        controls
                                     />
-                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 cursor-pointer">
-                                        <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform">
-                                            <Play size={24} fill="black" className="ml-1" />
-                                        </div>
-                                    </div>
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                 </div>
-                            </div>
+                            </motion.div>
                         )}
                     </div>
 
-                    <div className="space-y-6">
-                        <h1 className="text-[42px] font-black leading-tight tracking-tight">{apartment.title}</h1>
-                        <p className="text-gray-600 text-[15px] leading-relaxed">{apartment.subtitle}</p>
-                        <div className="flex gap-3">
-                            <span className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-[12px] font-bold text-gray-700 bg-gray-50 uppercase tracking-tight"><Users size={14} /> {formatGuests(apartment.guests)}</span>
-                            <span className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-[12px] font-bold text-gray-700 bg-gray-50 uppercase tracking-tight"><Bed size={14} /> {formatBedrooms(apartment.bedrooms)}</span>
+                    {/* Info section */}
+                    <motion.div 
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="space-y-6"
+                    >
+                        <div>
+                            <h1 className="text-[42px] font-black leading-tight tracking-tight mb-3">{apartment.title}</h1>
+                            <p className="text-gray-600 text-[15px] leading-relaxed">{apartment.subtitle}</p>
                         </div>
-                        <div className="bg-[#F3F4F6] py-6 px-8 rounded-sm text-center text-sm font-medium text-gray-600">{roomDetail?.subtitle || 'Class aptent taciti per inceptos himenaeos.'}</div>
+                        
+                        <div className="flex gap-3">
+                            <motion.span 
+                                whileHover={{ scale: 1.05 }}
+                                className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-[12px] font-bold text-gray-700 bg-gray-50 uppercase tracking-tight"
+                            >
+                                <Users size={14} /> {formatGuests(apartment.guests)}
+                            </motion.span>
+                            <motion.span 
+                                whileHover={{ scale: 1.05 }}
+                                className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-[12px] font-bold text-gray-700 bg-gray-50 uppercase tracking-tight"
+                            >
+                                <Bed size={14} /> {formatBedrooms(apartment.bedrooms)}
+                            </motion.span>
+                        </div>
+                        
+                        <div className="bg-[#F3F4F6] py-6 px-8 rounded-sm text-center text-sm font-medium text-gray-600">
+                            {roomDetail?.subtitle || 'Class aptent taciti per inceptos himenaeos.'}
+                        </div>
+                        
                         <div className="pt-4 border-t border-gray-100">
-                            <h3 className="text-[17px] font-bold mb-4  tracking-tighter">Information générale</h3>
+                            <h3 className="text-[17px] font-bold mb-4 tracking-tighter flex items-center gap-2">
+                                <Calendar size={18} />
+                                Informations générales
+                            </h3>
                             <InfoRow label="Prix standard" value={`${apartment.price}€ / nuit`} isBold />
                             <InfoRow label="Nombre de personnes" value={formatGuests(apartment.guests)} />
                             <InfoRow label="Nombre de chambres" value={formatBedrooms(apartment.bedrooms)} />
-                            {roomDetail?.city && (
-                                <InfoRow label="Ville" value={roomDetail.city} />
-                            )}
-                            {roomDetail?.country && (
-                                <InfoRow label="Pays" value={roomDetail.country} />
-                            )}
-                            {roomDetail?.accommodationType && (
-                                <InfoRow label="Type de logement" value={roomDetail.accommodationType} />
-                            )}
+                            {roomDetail?.city && <InfoRow label="Ville" value={roomDetail.city} />}
+                            {roomDetail?.country && <InfoRow label="Pays" value={roomDetail.country} />}
+                            {roomDetail?.accommodationType && <InfoRow label="Type de logement" value={roomDetail.accommodationType} />}
                             {roomDetail?.includes && roomDetail.includes.length > 0 && (
                                 <InfoRow label="Inclus" value={roomDetail.includes.join(', ')} isPink />
                             )}
                             {roomDetail?.amenities && roomDetail.amenities.length > 0 && (
                                 <InfoRow label="Équipements et services" value={roomDetail.amenities.join(', ')} />
                             )}
-                            {roomDetail?.additionalOptions && roomDetail.additionalOptions.length > 0 && (
-                                <div className="border-t border-gray-100 mt-4 pt-4">
-                                    <p className="text-sm font-semibold text-gray-800 mb-2">Options supplémentaires:</p>
-                                    <ul className="space-y-1">
-                                        {roomDetail.additionalOptions.map((option, idx) => (
-                                            <li key={idx} className="text-sm text-gray-600 flex justify-between items-center">
-                                                <span>• {option.name}</span>
-                                                <span className="font-semibold text-pink-600">
-                                                    {option.price}€ ({option.pricingType === 'fixed' ? 'Fixe' : option.pricingType === 'per_day' ? 'Par nuit' : 'Par personne'})
-                                                </span>
-                                            </li>
-                                        ))}
-                                    </ul>
+                        </div>
+
+                        {/* Enhanced date picker */}
+                        <div className="mt-6 space-y-4">
+                            <h4 className="text-[15px] font-bold flex items-center gap-2">
+                                <Clock size={16} />
+                                Sélectionnez vos dates
+                            </h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-500 mb-2 block">Date d'arrivée</label>
+                                    <ImprovedDatePicker
+                                        value={checkInDate}
+                                        onChange={handleCheckInChange}
+                                        minDate={new Date().toISOString().split('T')[0]}
+                                        highlightToday={true}
+                                    />
                                 </div>
-                            )}
-                        </div>
-
-                        {/* Date picker for reservation */}
-                        <div className="mt-6 grid grid-cols-2 gap-3">
-                            <div>
-                                <label className="text-xs font-semibold text-gray-500 mb-2 block">Arrivée</label>
-                                <ImprovedDatePicker
-                                    value={checkInDate}
-                                    onChange={setCheckInDate}
-                                />
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-500 mb-2 block">Date de départ</label>
+                                    <ImprovedDatePicker
+                                        value={checkOutDate}
+                                        onChange={handleCheckOutChange}
+                                        minDate={checkInDate || new Date().toISOString().split('T')[0]}
+                                        disabled={!checkInDate}
+                                    />
+                                </div>
                             </div>
-                            <div>
-                                <label className="text-xs font-semibold text-gray-500 mb-2 block">Départ</label>
-                                <ImprovedDatePicker
-                                    value={checkOutDate}
-                                    onChange={setCheckOutDate}
-                                />
+                            <div className="text-xs text-gray-500 flex items-center gap-2">
+                                <Check size={12} />
+                                <span>
+                                    {nights} nuit{nights > 1 ? 's' : ''} • {guests} personne{guests > 1 ? 's' : ''}
+                                </span>
                             </div>
                         </div>
 
-                        <button onClick={handleReservation} className="w-full mt-4 bg-black text-white py-5 rounded-md font-bold text-[16px] uppercase tracking-widest hover:bg-zinc-800 transition-all">Reserver maintenant</button>
+                        {/* Reservation button with enhanced feedback */}
+                        <motion.button 
+                            onClick={handleReservation}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            animate={isScrolling ? { y: [0, -5, 0] } : {}}
+                            transition={{ y: { repeat: 2, duration: 0.3 } }}
+                            className={`w-full mt-4 bg-black text-white py-5 rounded-md font-bold text-[16px] uppercase tracking-widest hover:bg-zinc-800 transition-all relative overflow-hidden ${
+                                isScrolling ? 'ring-2 ring-black ring-opacity-20' : ''
+                            }`}
+                        >
+                            <span className="relative z-10">Réserver maintenant</span>
+                            <motion.div
+                                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                                initial={{ x: '-100%' }}
+                                animate={{ x: '100%' }}
+                                transition={{ duration: 1, repeat: Infinity }}
+                            />
+                        </motion.button>
 
-                        {/* Caractéristiques de la chambre */}
+                        {/* Features with animations */}
                         {roomDetail?.features && roomDetail.features.length > 0 && (
-                            <div className="mt-6 pt-6 border-t border-gray-100">
+                            <motion.div 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.4 }}
+                                className="mt-6 pt-6 border-t border-gray-100"
+                            >
                                 <h3 className="text-[17px] font-bold mb-4 uppercase tracking-tighter">Caractéristiques</h3>
                                 <div className="space-y-2">
                                     {roomDetail.features.map((feature, idx) => (
-                                        <div key={idx} className="flex items-center gap-2">
-                                            <Check size={18} className="text-green-500" />
+                                        <motion.div 
+                                            key={idx}
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: idx * 0.1 }}
+                                            className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded transition-colors"
+                                        >
+                                            <Check size={18} className="text-green-500 flex-shrink-0" />
                                             <span className="text-[14px] text-gray-700">{feature}</span>
-                                        </div>
+                                        </motion.div>
                                     ))}
                                 </div>
-                            </div>
+                            </motion.div>
                         )}
-                    </div>
+                    </motion.div>
                 </section>
 
                 {/* --- SECTION DÉTAILS & OPTIONS --- */}
                 <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 pt-16 border-t border-gray-100">
                     <div className="space-y-8">
                         <div>
-                            <h2 className="text-[32px] font-bold mb-1">Détails de l’appartement</h2>
+                            <h2 className="text-[32px] font-bold mb-1">Détails de l'appartement</h2>
                             <p className="text-gray-500 text-sm">{roomDetail?.accommodationType || 'Détails complets du logement'}</p>
                         </div>
+                        
                         <div>
                             <h3 className="text-[20px] font-bold mb-4">Description</h3>
                             <div className="bg-[#F8F9FA] p-10 rounded-[32px] text-gray-700 leading-relaxed text-[15px]">
@@ -493,10 +915,7 @@ function AppartmentDetail() {
                             </div>
                         </div>
 
-                   
-                
-
-                        {/* Caractéristiques principales */}
+                        {/* Main features */}
                         {roomDetail?.features && roomDetail.features.length > 0 && (
                             <div className="space-y-3">
                                 <h3 className="text-[17px] font-bold uppercase tracking-tighter flex items-center gap-2 text-orange-900">
@@ -504,30 +923,43 @@ function AppartmentDetail() {
                                 </h3>
                                 <div className="space-y-2">
                                     {roomDetail.features.map((feature, idx) => (
-                                        <div key={idx} className="flex items-center gap-3 p-2 hover:bg-orange-50 rounded transition-colors">
+                                        <motion.div 
+                                            key={idx}
+                                            whileHover={{ x: 5 }}
+                                            className="flex items-center gap-3 p-2 hover:bg-orange-50 rounded transition-colors"
+                                        >
                                             <Check size={18} className="text-orange-600 flex-shrink-0" />
                                             <span className="text-[14px] text-orange-900">{feature}</span>
-                                        </div>
+                                        </motion.div>
                                     ))}
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    {/* Bloc Incluses et sur demande */}
-                    <div className="bg-[#F8F9FA] rounded-[40px] p-8 md:p-12 border border-gray-100">
+                    {/* Options section */}
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="bg-[#F8F9FA] rounded-[40px] p-8 md:p-12 border border-gray-100"
+                    >
                         <div className="text-center mb-8">
-                            <h3 className="text-[22px] font-bold mb-1">Incluses et sur demande</h3>
-                            <p className="text-gray-500 text-sm">Options spécifiques à cette chambre</p>
+                            <h3 className="text-[22px] font-bold mb-1">Options supplémentaires</h3>
+                            <p className="text-gray-500 text-sm">Personnalisez votre séjour</p>
                         </div>
                         
-                        {/* Affichage des options de la chambre */}
                         {roomDetail?.additionalOptions && roomDetail.additionalOptions.length > 0 ? (
                             <>
-                                {/* Affichage des images des options */}
+                                {/* Option images preview */}
                                 <div className="flex justify-center gap-3 mb-10 flex-wrap">
                                     {roomDetail.additionalOptions.slice(0, 4).map((option, i) => (
-                                        <div key={i} className="w-20 h-20 rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md transition flex items-center justify-center text-2xl bg-gradient-to-br from-pink-100 to-pink-50">
+                                        <motion.div 
+                                            key={i}
+                                            whileHover={{ scale: 1.1, rotate: 5 }}
+                                            className="w-20 h-20 rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all cursor-pointer"
+                                            onClick={() => setExpandedOption(option.optionId)}
+                                        >
                                             {option.image ? (
                                                 <img
                                                     src={option.image}
@@ -535,97 +967,133 @@ function AppartmentDetail() {
                                                     className="w-full h-full object-cover"
                                                     onError={(e) => {
                                                         (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                                        (e.currentTarget as HTMLImageElement).parentElement!.innerHTML = '✨';
                                                     }}
                                                 />
                                             ) : (
-                                                <span>✨</span>
+                                                <div className="w-full h-full flex items-center justify-center text-2xl bg-gradient-to-br from-pink-100 to-pink-50">
+                                                    ✨
+                                                </div>
                                             )}
-                                        </div>
+                                        </motion.div>
                                     ))}
                                 </div>
 
-                                {/* Liste des options de la chambre */}
+                                {/* Options list */}
                                 <div className="space-y-3">
                                     {roomDetail.additionalOptions.map((option) => (
-                                        <div key={option.optionId} className={`bg-white border border-gray-200 rounded-xl overflow-hidden transition-all ${expandedOption === option.optionId ? 'shadow-xl ring-1 ring-black/5' : ''}`}>
+                                        <motion.div 
+                                            key={option.optionId}
+                                            layout
+                                            className={`bg-white border border-gray-200 rounded-xl overflow-hidden transition-all ${
+                                                expandedOption === option.optionId ? 'shadow-xl ring-1 ring-black/5' : ''
+                                            }`}
+                                        >
                                             <button 
                                                 onClick={() => setExpandedOption(expandedOption === option.optionId ? null : option.optionId)} 
                                                 className="w-full p-5 flex justify-between items-center group gap-4"
                                             >
-                                                {/* Option image/icon */}
-                                                <div className="w-12 h-12 rounded-lg flex-shrink-0 bg-gradient-to-br from-pink-100 to-pink-50 flex items-center justify-center text-xl overflow-hidden">
+                                                <motion.div 
+                                                    whileHover={{ rotate: 10 }}
+                                                    className="w-12 h-12 rounded-lg flex-shrink-0 bg-gradient-to-br from-pink-100 to-pink-50 flex items-center justify-center text-xl overflow-hidden"
+                                                >
                                                     {option.image ? (
                                                         <img
                                                             src={option.image}
                                                             alt={option.name}
                                                             className="w-full h-full object-cover"
-                                                            onError={(e) => {
-                                                                (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                                                (e.currentTarget as HTMLImageElement).parentElement!.textContent = '✨';
-                                                            }}
                                                         />
                                                     ) : (
                                                         <span>✨</span>
                                                     )}
-                                                </div>
-                                                <span className={`text-[15px] font-bold flex-1 transition-colors ${selectedOptions.some(o => o.optionId === option.optionId) ? 'text-[#FF385C]' : 'text-gray-800'}`}>
+                                                </motion.div>
+                                                <span className={`text-[15px] font-bold flex-1 transition-colors text-left ${
+                                                    selectedOptions.some(o => o.optionId === option.optionId) ? 'text-[#FF385C]' : 'text-gray-800'
+                                                }`}>
                                                     {option.name}
-                                                    {selectedOptions.some(o => o.optionId === option.optionId) && <Check size={14} className="inline ml-2" />}
+                                                    {selectedOptions.some(o => o.optionId === option.optionId) && (
+                                                        <Check size={14} className="inline ml-2" />
+                                                    )}
                                                 </span>
-                                                <div className="bg-gray-50 p-1.5 rounded-full group-hover:bg-gray-100 transition-colors">
-                                                    <ChevronDown size={18} className={`text-gray-400 transition-transform duration-300 ${expandedOption === option.optionId ? 'rotate-180' : ''}`} />
-                                                </div>
+                                                <motion.div 
+                                                    animate={{ rotate: expandedOption === option.optionId ? 180 : 0 }}
+                                                    className="bg-gray-50 p-1.5 rounded-full group-hover:bg-gray-100 transition-colors"
+                                                >
+                                                    <ChevronDown size={18} className="text-gray-400" />
+                                                </motion.div>
                                             </button>
 
-                                            {expandedOption === option.optionId && (
-                                                <div className="p-8 pt-0 border-t border-gray-50 grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-top-2 duration-300">
-                                                    <div className="space-y-4">
-                                                        {option.image ? (
-                                                            <div className="w-full h-48 bg-white rounded-lg overflow-hidden flex items-center justify-center text-5xl border border-gray-100">
-                                                                <img
-                                                                    src={option.image}
-                                                                    alt={option.name}
-                                                                    className="w-full h-full object-cover"
-                                                                    onError={(e) => {
-                                                                        (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                        ) : (
-                                                            <div className="w-full h-48 bg-gradient-to-br from-pink-100 to-pink-50 rounded-lg flex items-center justify-center text-5xl">
-                                                                ✨
-                                                            </div>
-                                                        )}
-                                                        <h4 className="text-[12px] font-black uppercase text-black tracking-widest">{option.name}</h4>
-                                                        <p className="text-[13px] text-gray-400 leading-relaxed font-medium">Option supplémentaire pour votre séjour</p>
-                                                        <div className="text-2xl font-black text-gray-900">{option.price}€</div>
-                                                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Disponible pour : {apartment.title}</div>
-                                                    </div>
-                                                    <div className="flex flex-col justify-between">
-                                                        <div className="space-y-4">
-                                                            <div className="flex justify-between text-[10px] font-black uppercase text-gray-400 tracking-widest">
-                                                                <span>{option.pricingType === 'per_guest' ? 'Nombre de pers.' : 'Nombre de nuit'}</span>
-                                                                <span>Prix</span>
-                                                            </div>
-                                                            <div className="flex justify-between items-center">
-                                                                <div className="flex items-center bg-black rounded-lg p-1 px-2">
-                                                                    <button onClick={() => option.pricingType === 'per_guest' ? setGuests(Math.max(1, guests-1)) : setNights(Math.max(1, nights-1))} className="text-white p-1 hover:text-gray-300"><Minus size={14}/></button>
-                                                                    <span className="text-white px-3 text-sm font-bold min-w-[20px] text-center">{option.pricingType === 'per_guest' ? guests : nights}</span>
-                                                                    <button onClick={() => option.pricingType === 'per_guest' ? setGuests(guests+1) : setNights(nights+1)} className="text-white p-1 hover:text-gray-300"><Plus size={14}/></button>
+                                            <AnimatePresence>
+                                                {expandedOption === option.optionId && (
+                                                    <motion.div 
+                                                        initial={{ opacity: 0, height: 0 }}
+                                                        animate={{ opacity: 1, height: 'auto' }}
+                                                        exit={{ opacity: 0, height: 0 }}
+                                                        className="overflow-hidden"
+                                                    >
+                                                        <div className="p-8 pt-0 border-t border-gray-50 grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                            <div className="space-y-4">
+                                                                <div className="w-full h-48 bg-gradient-to-br from-pink-100 to-pink-50 rounded-lg flex items-center justify-center text-5xl overflow-hidden">
+                                                                    {option.image ? (
+                                                                        <img
+                                                                            src={option.image}
+                                                                            alt={option.name}
+                                                                            className="w-full h-full object-cover"
+                                                                        />
+                                                                    ) : (
+                                                                        <span>✨</span>
+                                                                    )}
                                                                 </div>
-                                                                <span className="font-black text-[22px] text-gray-900">{calculateOptionPrice(option)}€</span>
+                                                                <h4 className="text-[12px] font-black uppercase text-black tracking-widest">{option.name}</h4>
+                                                                <p className="text-[13px] text-gray-400 leading-relaxed font-medium">Option supplémentaire pour votre séjour</p>
+                                                                <div className="text-2xl font-black text-gray-900">{option.price}€</div>
+                                                                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Disponible pour : {apartment.title}</div>
+                                                            </div>
+                                                            <div className="flex flex-col justify-between">
+                                                                <div className="space-y-4">
+                                                                    <div className="flex justify-between text-[10px] font-black uppercase text-gray-400 tracking-widest">
+                                                                        <span>{option.pricingType === 'per_guest' ? 'Nombre de pers.' : 'Nombre de nuit'}</span>
+                                                                        <span>Prix</span>
+                                                                    </div>
+                                                                    <div className="flex justify-between items-center">
+                                                                        <div className="flex items-center bg-black rounded-lg p-1 px-2">
+                                                                            <button 
+                                                                                onClick={() => option.pricingType === 'per_guest' ? setGuests(Math.max(1, guests-1)) : setNights(Math.max(1, nights-1))} 
+                                                                                className="text-white p-1 hover:text-gray-300"
+                                                                            >
+                                                                                <Minus size={14}/>
+                                                                            </button>
+                                                                            <span className="text-white px-3 text-sm font-bold min-w-[20px] text-center">
+                                                                                {option.pricingType === 'per_guest' ? guests : nights}
+                                                                            </span>
+                                                                            <button 
+                                                                                onClick={() => option.pricingType === 'per_guest' ? setGuests(guests+1) : setNights(nights+1)} 
+                                                                                className="text-white p-1 hover:text-gray-300"
+                                                                            >
+                                                                                <Plus size={14}/>
+                                                                            </button>
+                                                                        </div>
+                                                                        <span className="font-black text-[22px] text-gray-900">{calculateOptionPrice(option)}€</span>
+                                                                    </div>
+                                                                </div>
+                                                                <motion.button 
+                                                                    onClick={() => handleOptionToggle(option)}
+                                                                    whileHover={{ scale: 1.05 }}
+                                                                    whileTap={{ scale: 0.95 }}
+                                                                    className={`w-full mt-8 py-4 rounded-xl font-black text-[12px] uppercase tracking-widest transition-all ${
+                                                                        selectedOptions.some(o => o.optionId === option.optionId) 
+                                                                            ? 'bg-gray-100 text-gray-500' 
+                                                                            : 'bg-[#FF385C] text-white hover:brightness-110 shadow-lg shadow-pink-200'
+                                                                    }`}
+                                                                >
+                                                                    {selectedOptions.some(o => o.optionId === option.optionId) ? 'Retirer du panier' : 'Ajouter au séjour'}
+                                                                </motion.button>
                                                             </div>
                                                         </div>
-                                                        <button 
-                                                            onClick={() => handleOptionToggle(option)}
-                                                            className={`w-full mt-8 py-4 rounded-xl font-black text-[12px] uppercase tracking-widest transition-all ${selectedOptions.some(o => o.optionId === option.optionId) ? 'bg-gray-100 text-gray-500' : 'bg-[#FF385C] text-white hover:brightness-110 shadow-lg shadow-pink-200'}`}
-                                                        >
-                                                            {selectedOptions.some(o => o.optionId === option.optionId) ? 'Retirer du panier' : 'Passer au paiement'}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </motion.div>
                                     ))}
                                 </div>
                             </>
@@ -634,13 +1102,23 @@ function AppartmentDetail() {
                                 <p className="text-sm font-medium">Aucune option supplémentaire pour cette chambre</p>
                             </div>
                         )}
-                        {/* Résumé du prix total des options */}
+                        
+                        {/* Options summary */}
                         {selectedOptions.length > 0 && (
-                           <div className="mt-6 text-center text-[12px] font-bold uppercase text-gray-400 tracking-widest animate-pulse">
-                               Total options : {optionsPrice}€
-                           </div>
+                            <motion.div 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mt-6 text-center"
+                            >
+                                <div className="text-[12px] font-bold uppercase text-gray-400 tracking-widest mb-2">
+                                    Total des options
+                                </div>
+                                <div className="text-2xl font-black text-[#FF385C]">
+                                    {optionsPrice}€
+                                </div>
+                            </motion.div>
                         )}
-                    </div> 
+                    </motion.div>
                 </section>
             </div>
         </div>
@@ -649,12 +1127,15 @@ function AppartmentDetail() {
 
 function InfoRow({ label, value, isBold, isPink }: any) {
     return (
-        <div className="flex justify-between items-baseline py-2 border-b border-gray-50 last:border-0">
+        <motion.div 
+            whileHover={{ backgroundColor: "rgba(0,0,0,0.02)" }}
+            className="flex justify-between items-baseline py-3 px-2 rounded transition-colors border-b border-gray-50 last:border-0"
+        >
             <span className="text-gray-400 text-[13px] font-semibold uppercase tracking-tight">{label}</span>
             <span className={`${isBold ? 'text-[20px] font-black' : 'text-[14px] font-bold'} ${isPink ? 'text-[#FF385C]' : 'text-gray-900'}`}>
                 {value}
             </span>
-        </div>
+        </motion.div>
     );
 }
 
