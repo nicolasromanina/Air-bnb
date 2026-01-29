@@ -64,11 +64,6 @@ const Profile: React.FC = () => {
   });
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/auth');
-      return;
-    }
-
     // Charger les données du profil
     const loadProfileData = async () => {
       try {
