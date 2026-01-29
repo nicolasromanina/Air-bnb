@@ -176,20 +176,25 @@ function AppartmentDetail() {
         });
     };
 
-    // Image navigation with keyboard support
+    // Image navigation with keyboard support - FULLSCREEN ONLY
     useEffect(() => {
+        if (!showFullScreenGallery || !roomDetail?.images) return;
+
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (showFullScreenGallery && roomDetail?.images) {
-                if (e.key === 'Escape') {
-                    setShowFullScreenGallery(false);
-                } else if (e.key === 'ArrowRight' || e.key === 'd') {
-                    navigateNextImage();
-                } else if (e.key === 'ArrowLeft' || e.key === 'q') {
-                    navigatePrevImage();
-                }
+            // ONLY process if fullscreen gallery is open
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                setShowFullScreenGallery(false);
+            } else if (e.key === 'ArrowRight' || e.key === 'd') {
+                e.preventDefault();
+                navigateNextImage();
+            } else if (e.key === 'ArrowLeft' || e.key === 'q') {
+                e.preventDefault();
+                navigatePrevImage();
             }
         };
 
+        // Add listener only when fullscreen is active
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [showFullScreenGallery, roomDetail?.images]);
@@ -230,22 +235,26 @@ function AppartmentDetail() {
         setTouchStart(null);
     };
 
-    // Touch handling for Full Screen gallery
+    // Touch handling for Full Screen gallery - STABLE & RELIABLE
     const handleFullScreenTouchStart = (e: React.TouchEvent) => {
-        setTouchStartFullScreen(e.touches[0].clientX);
+        if (e.touches.length === 1) {
+            setTouchStartFullScreen(e.touches[0].clientX);
+        }
     };
 
     const handleFullScreenTouchEnd = (e: React.TouchEvent) => {
         if (touchStartFullScreen === null || !roomDetail?.images) return;
         
-        const touchEnd = e.changedTouches[0].clientX;
-        const diff = touchStartFullScreen - touchEnd;
+        if (e.changedTouches.length === 1) {
+            const touchEnd = e.changedTouches[0].clientX;
+            const diff = touchStartFullScreen - touchEnd;
 
-        if (Math.abs(diff) > 50) {
-            if (diff > 0) {
-                navigateNextImage();
-            } else {
-                navigatePrevImage();
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) {
+                    navigateNextImage();
+                } else {
+                    navigatePrevImage();
+                }
             }
         }
         setTouchStartFullScreen(null);
@@ -409,144 +418,136 @@ function AppartmentDetail() {
         description: "Sed dignissim, metus nec fringilla accumsan, risus sem sollicitudin lacus, ut interdum tellus elit sed risus. Maecenas eget condimentum velit, sit amet feugiat lectus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos."
     };
 
-    // Full-screen gallery component - CORRIGÉ
+    // Full-screen gallery component - MODE PLEIN ÉCRAN STABLE ET FONCTIONNEL
     const FullScreenGallery = () => {
         if (!showFullScreenGallery || !roomDetail?.images) return null;
 
-        return (
-            <AnimatePresence>
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-4"
-                    onClick={(e) => {
-                        // Ne ferme que si on clique sur le fond (pas sur l'image ou les boutons)
-                        if (e.target === e.currentTarget) {
-                            setShowFullScreenGallery(false);
-                        }
-                    }}
-                    ref={galleryRef}
-                    onTouchStart={handleFullScreenTouchStart}
-                    onTouchEnd={handleFullScreenTouchEnd}
-                >
-                    {/* Close button */}
-                    <button
-                        className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10 bg-black/50 hover:bg-black/70 rounded-full p-3"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setShowFullScreenGallery(false);
-                        }}
-                        aria-label="Fermer la galerie"
-                    >
-                        <X size={24} />
-                    </button>
+        const handleBackdropClick = (e: React.MouseEvent) => {
+            // Fermer UNIQUEMENT si clic sur le fond noir
+            if (e.target === e.currentTarget) {
+                setShowFullScreenGallery(false);
+            }
+        };
 
-                    {/* Main image container */}
-                    <div className="relative w-full h-[80vh] max-w-[90vw] flex items-center justify-center">
-                        <motion.div
-                            key={currentImageIndex}
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ duration: 0.3 }}
-                            className="relative w-full h-full flex items-center justify-center"
-                            onClick={(e) => e.stopPropagation()} // Empêche la fermeture
+        const handleCloseClick = (e: React.MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowFullScreenGallery(false);
+        };
+
+        return (
+            <div
+                className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-4"
+                onClick={handleBackdropClick}
+                onTouchStart={handleFullScreenTouchStart}
+                onTouchEnd={handleFullScreenTouchEnd}
+            >
+                {/* Close button - X */}
+                <button
+                    className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10 bg-black/50 hover:bg-black/70 rounded-full p-3"
+                    onClick={handleCloseClick}
+                    onTouchEnd={handleCloseClick}
+                    aria-label="Fermer la galerie"
+                >
+                    <X size={24} />
+                </button>
+
+                {/* Main image container */}
+                <div className="relative w-full h-[80vh] max-w-[90vw] flex items-center justify-center">
+                    <div className="relative w-full h-full flex items-center justify-center">
+                        {imageLoading[currentImageIndex] && (
+                            <div className="absolute inset-0 flex items-center justify-center z-20">
+                                <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+                            </div>
+                        )}
+                        <img
+                            src={
+                                roomDetail.images[currentImageIndex]?.includes('cloudinary.com') || 
+                                roomDetail.images[currentImageIndex]?.includes('airbnb-backend')
+                                    ? roomDetail.images[currentImageIndex]
+                                    : `https://airbnb-backend.onrender.com${roomDetail.images[currentImageIndex]}`
+                            }
+                            alt={`Image ${currentImageIndex + 1}`}
+                            className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${
+                                imageLoading[currentImageIndex] ? 'opacity-0' : 'opacity-100'
+                            }`}
+                            onLoad={() => handleImageLoad(currentImageIndex)}
+                            onError={() => handleImageError(currentImageIndex)}
+                        />
+                    </div>
+
+                    {/* Navigation arrows */}
+                    {roomDetail.images.length > 1 && (
+                        <>
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    navigatePrevImage();
+                                }}
+                                onTouchEnd={(e) => {
+                                    e.preventDefault();
+                                    navigatePrevImage();
+                                }}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-all z-10"
+                                aria-label="Image précédente"
+                            >
+                                <ChevronLeft size={24} />
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    navigateNextImage();
+                                }}
+                                onTouchEnd={(e) => {
+                                    e.preventDefault();
+                                    navigateNextImage();
+                                }}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-all z-10"
+                                aria-label="Image suivante"
+                            >
+                                <ChevronRight size={24} />
+                            </button>
+                        </>
+                    )}
+                </div>
+
+                {/* Image counter and description */}
+                <div className="mt-4 text-center text-white">
+                    <div className="text-lg font-semibold">
+                        {currentImageIndex + 1} / {roomDetail.images.length}
+                    </div>
+                    <div className="text-sm text-gray-300 mt-2">
+                        {apartment.title} - Image {currentImageIndex + 1}
+                    </div>
+                </div>
+
+                {/* Thumbnails */}
+                <div className="flex gap-2 mt-6 overflow-x-auto py-2 max-w-full px-4">
+                    {roomDetail.images.map((img, index) => (
+                        <button
+                            key={index}
+                            onClick={() => setCurrentImageIndex(index)}
+                            className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-all ${
+                                currentImageIndex === index 
+                                    ? 'border-white scale-110' 
+                                    : 'border-transparent hover:border-white/50'
+                            }`}
                         >
-                            {imageLoading[currentImageIndex] && (
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin" />
-                                </div>
-                            )}
                             <img
                                 src={
-                                    roomDetail.images[currentImageIndex]?.includes('cloudinary.com') || 
-                                    roomDetail.images[currentImageIndex]?.includes('airbnb-backend')
-                                        ? roomDetail.images[currentImageIndex]
-                                        : `https://airbnb-backend.onrender.com${roomDetail.images[currentImageIndex]}`
+                                    img.includes('cloudinary.com') || img.includes('airbnb-backend')
+                                        ? img
+                                        : `https://airbnb-backend.onrender.com${img}`
                                 }
-                                alt={`Image ${currentImageIndex + 1}`}
-                                className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${
-                                    imageLoading[currentImageIndex] ? 'opacity-0' : 'opacity-100'
-                                }`}
-                                onLoad={() => handleImageLoad(currentImageIndex)}
-                                onError={() => handleImageError(currentImageIndex)}
-                                onClick={(e) => e.stopPropagation()} // Empêche la fermeture
+                                alt={`Miniature ${index + 1}`}
+                                className="w-full h-full object-cover"
                             />
-                        </motion.div>
-
-                        {/* Navigation arrows */}
-                        {roomDetail.images.length > 1 && (
-                            <>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        navigatePrevImage();
-                                    }}
-                                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-all"
-                                    aria-label="Image précédente"
-                                >
-                                    <ChevronLeft size={24} />
-                                </button>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        navigateNextImage();
-                                    }}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-all"
-                                    aria-label="Image suivante"
-                                >
-                                    <ChevronRight size={24} />
-                                </button>
-                            </>
-                        )}
-                    </div>
-
-                    {/* Image counter and description */}
-                    <div 
-                        className="mt-4 text-center text-white"
-                        onClick={(e) => e.stopPropagation()} // Empêche la fermeture
-                    >
-                        <div className="text-lg font-semibold">
-                            {currentImageIndex + 1} / {roomDetail.images.length}
-                        </div>
-                        <div className="text-sm text-gray-300 mt-2">
-                            {apartment.title} - Image {currentImageIndex + 1}
-                        </div>
-                    </div>
-
-                    {/* Thumbnails */}
-                    <div 
-                        className="flex gap-2 mt-6 overflow-x-auto py-2 max-w-full px-4"
-                        onClick={(e) => e.stopPropagation()} // Empêche la fermeture
-                    >
-                        {roomDetail.images.map((img, index) => (
-                            <button
-                                key={index}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setCurrentImageIndex(index);
-                                }}
-                                className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-all ${
-                                    currentImageIndex === index 
-                                        ? 'border-white scale-110' 
-                                        : 'border-transparent hover:border-white/50'
-                                }`}
-                            >
-                                <img
-                                    src={
-                                        img.includes('cloudinary.com') || img.includes('airbnb-backend')
-                                            ? img
-                                            : `https://airbnb-backend.onrender.com${img}`
-                                    }
-                                    alt={`Miniature ${index + 1}`}
-                                    className="w-full h-full object-cover"
-                                />
-                            </button>
-                        ))}
-                    </div>
-                </motion.div>
-            </AnimatePresence>
+                        </button>
+                    ))}
+                </div>
+            </div>
         );
     };
 
@@ -614,6 +615,7 @@ function AppartmentDetail() {
                         <div 
                             className="relative rounded-sm overflow-hidden aspect-[4/3] bg-gray-100 group cursor-zoom-in"
                             onClick={() => {
+                                setCurrentImageIndex(0);
                                 setShowFullScreenGallery(true);
                             }}
                             ref={imageContainerRef}
@@ -648,10 +650,6 @@ function AppartmentDetail() {
                                     onError={(e) => {
                                         (e.currentTarget as HTMLImageElement).src = "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200";
                                         handleImageError(currentImageIndex);
-                                    }}
-                                    onClick={(e) => {
-                                        e.stopPropagation(); // Empêche le double déclenchement
-                                        setShowFullScreenGallery(true);
                                     }}
                                 />
                             </AnimatePresence>
