@@ -46,6 +46,14 @@ const Payment = () => {
 
   // Load promotion data when reservation is available
   useEffect(() => {
+    console.log('[PAYMENT] 🔍 Checking reservation:', {
+      hasReservation: !!reservation,
+      roomId: reservation?.roomId,
+      apartmentId: reservation?.apartmentId,
+      id: reservation?.id,
+      allKeys: reservation ? Object.keys(reservation) : []
+    });
+
     if (reservation?.roomId) {
       const loadPromotion = async () => {
         try {
@@ -60,6 +68,8 @@ const Payment = () => {
           if (response.success && response.data) {
             console.log('[PAYMENT] ✅ Setting promotion data');
             setPromotionData(response.data);
+          } else {
+            console.warn('[PAYMENT] ⚠️ No promotion data received');
           }
         } catch (error) {
           console.error('[PAYMENT] ❌ Failed to load promotion:', error);
@@ -67,6 +77,8 @@ const Payment = () => {
       };
       
       loadPromotion();
+    } else {
+      console.warn('[PAYMENT] ⚠️ No roomId in reservation');
     }
   }, [reservation?.roomId]);
 
