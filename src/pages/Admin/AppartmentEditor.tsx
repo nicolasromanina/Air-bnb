@@ -243,6 +243,29 @@ const AppartmentEditor: React.FC = () => {
     return () => clearTimeout(timer);
   }, [pageData, isSaving]);
 
+  // Auto-save promotion data when it changes (debounced)
+  useEffect(() => {
+    if (!selectedRoomForDetail || !promotionData) return;
+
+    const timer = setTimeout(async () => {
+      if (isSaving) return;
+      try {
+        console.log('[ADMIN] 🔄 Auto-saving promotion...', {
+          roomId: selectedRoomForDetail,
+          title: promotionData.title,
+          hasImage: !!promotionData.image
+        });
+        await api.updatePromotion(selectedRoomForDetail, promotionData);
+        toast.success('✅ Promotion auto-sauvegardée');
+      } catch (error) {
+        console.error('[ADMIN] Promotion auto-save failed:', error);
+        toast.error('Erreur lors de la sauvegarde auto');
+      }
+    }, 5000); // 5 seconds after last change
+
+    return () => clearTimeout(timer);
+  }, [promotionData, selectedRoomForDetail, isSaving]);
+
   const checkConnection = async () => {
     try {
       const status = await apartmentApi.checkConnection();
