@@ -253,12 +253,31 @@ const AppartmentEditor: React.FC = () => {
         console.log('[ADMIN] 🔄 Auto-saving promotion...', {
           roomId: selectedRoomForDetail,
           title: promotionData.title,
-          hasImage: !!promotionData.image
+          hasImage: !!promotionData.image,
+          hasCardImage: !!promotionData.cardImage,
+          isActive: promotionData.isActive,
+          fieldsCount: Object.keys(promotionData).length
         });
-        await api.updatePromotion(selectedRoomForDetail, promotionData);
-        toast.success('✅ Promotion auto-sauvegardée');
+        const response = await api.updatePromotion(selectedRoomForDetail, promotionData);
+        if (response.success) {
+          console.log('[ADMIN] ✅ Promotion auto-saved successfully!', {
+            savedRoomId: response.data?.roomId,
+            savedTitle: response.data?.title,
+            savedImage: !!response.data?.image,
+            timestamp: new Date().toLocaleTimeString()
+          });
+          // Mettre à jour les données locales avec la réponse du serveur
+          if (response.data) {
+            setPromotionData(response.data);
+            console.log('[ADMIN] 🔄 Promotion data updated from server');
+          }
+          toast.success('✅ Promotion auto-sauvegardée');
+        } else {
+          console.error('[ADMIN] ❌ Auto-save failed - Server error:', response.error);
+          toast.error('❌ Erreur auto-save: ' + response.error);
+        }
       } catch (error) {
-        console.error('[ADMIN] Promotion auto-save failed:', error);
+        console.error('[ADMIN] ❌ Auto-save exception:', error);
         toast.error('Erreur lors de la sauvegarde auto');
       }
     }, 5000); // 5 seconds after last change
@@ -525,10 +544,20 @@ const AppartmentEditor: React.FC = () => {
   const loadPromotion = async (roomId: number) => {
     setIsLoadingPromotion(true);
     try {
+      console.log('[ADMIN] 📥 Loading promotion for roomId:', roomId);
       const response = await api.getPromotion(roomId);
       if (response.success && response.data) {
+        console.log('[ADMIN] ✅ Promotion loaded successfully:', {
+          roomId: response.data.roomId,
+          title: response.data.title,
+          hasImage: !!response.data.image,
+          hasCardImage: !!response.data.cardImage,
+          isActive: response.data.isActive,
+          fieldsCount: Object.keys(response.data).length
+        });
         setPromotionData(response.data);
       } else {
+        console.log('[ADMIN] ⚠️ No promotion found, initializing defaults for roomId:', roomId);
         // Si pas de promotion, initialiser avec les données par défaut
         setPromotionData({
           roomId: roomId,
@@ -558,17 +587,36 @@ const AppartmentEditor: React.FC = () => {
   // Sauvegarder la promotion
   const savePromotion = async () => {
     if (!selectedRoomForDetail || !promotionData) {
+      console.error('[ADMIN] ❌ Missing data for save:', { selectedRoomForDetail, hasPromotionData: !!promotionData });
       toast.error('Erreur: données manquantes');
       return;
     }
 
     setIsSaving(true);
     try {
+      console.log('[ADMIN] 💾 Manual save promotion:', {
+        roomId: selectedRoomForDetail,
+        title: promotionData.title,
+        hasImage: !!promotionData.image,
+        hasCardImage: !!promotionData.cardImage,
+        isActive: promotionData.isActive
+      });
       const response = await api.updatePromotion(selectedRoomForDetail, promotionData);
       if (response.success) {
+        console.log('[ADMIN] ✅ Manual save SUCCESS:', {
+          savedRoomId: response.data?.roomId,
+          savedTitle: response.data?.title,
+          timestamp: new Date().toLocaleTimeString()
+        });
+        // Mettre à jour les données locales avec la réponse du serveur
+        if (response.data) {
+          setPromotionData(response.data);
+          console.log('[ADMIN] 🔄 Promotion data updated from server');
+        }
         setSaveMessage({ type: 'success', text: '✅ Promotion sauvegardée!' });
         toast.success('Promotion sauvegardée');
       } else {
+        console.error('[ADMIN] ❌ Manual save FAILED:', response.error);
         setSaveMessage({ type: 'error', text: '❌ Erreur lors de la sauvegarde' });
         toast.error('Erreur lors de la sauvegarde');
       }
@@ -584,12 +632,17 @@ const AppartmentEditor: React.FC = () => {
 
   // Upload image promotion
   const uploadPromotionImage = async (file: File) => {
-    if (!selectedRoomForDetail) return;
+    if (!selectedRoomForDetail) {
+      console.error('[ADMIN] ❌ No room selected for upload');
+      return;
+    }
 
     setUploadingPromoImage(true);
     try {
+      console.log('[ADMIN] 📤 Uploading main image:', { roomId: selectedRoomForDetail, fileName: file.name, fileSize: file.size });
       const response = await api.uploadPromotionImage(selectedRoomForDetail, file);
       if (response.success && response.data?.url) {
+        console.log('[ADMIN] ✅ Image uploaded to Cloudinary:', { url: response.data.url });
         const updatedData = {
           ...promotionData,
           image: response.data.url
@@ -597,17 +650,21 @@ const AppartmentEditor: React.FC = () => {
         setPromotionData(updatedData);
         
         // Sauvegarder immédiatement après l'upload
+        console.log('[ADMIN] 💾 Saving after image upload...');
         const saveResponse = await api.updatePromotion(selectedRoomForDetail, updatedData);
         if (saveResponse.success) {
+          console.log('[ADMIN] ✅ Image saved to database successfully');
           toast.success('Image principale uploadée et sauvegardée');
         } else {
+          console.error('[ADMIN] ❌ Save after upload failed:', saveResponse.error);
           toast.error('Upload réussi mais sauvegarde échouée');
         }
       } else {
+        console.error('[ADMIN] ❌ Image upload failed:', response.error);
         toast.error('Erreur lors de l\'upload');
       }
     } catch (error) {
-      console.error('[ADMIN] Error uploading promotion image:', error);
+      console.error('[ADMIN] ❌ Upload exception:', error);
       toast.error('Erreur lors de l\'upload');
     } finally {
       setUploadingPromoImage(false);
@@ -618,9 +675,15 @@ const AppartmentEditor: React.FC = () => {
     if (!selectedRoomForDetail) return;
 
     setUploadingPromoImage(true);
+    const fileName = file.name;
+    const fileSize = file.size;
+    console.log('[ADMIN] 📤 Uploading card image:', { roomId: selectedRoomForDetail, fileName, fileSize });
+
     try {
       const response = await api.uploadPromotionCardImage(selectedRoomForDetail, file);
       if (response.success && response.data?.url) {
+        console.log('[ADMIN] ✅ Card image uploaded to Cloudinary:', { url: response.data.url });
+        
         const updatedData = {
           ...promotionData,
           cardImage: response.data.url
@@ -628,17 +691,21 @@ const AppartmentEditor: React.FC = () => {
         setPromotionData(updatedData);
         
         // Sauvegarder immédiatement après l'upload
+        console.log('[ADMIN] 💾 Saving card image after upload...');
         const saveResponse = await api.updatePromotion(selectedRoomForDetail, updatedData);
         if (saveResponse.success) {
+          console.log('[ADMIN] ✅ Card image saved to database successfully');
           toast.success('Image carte uploadée et sauvegardée');
         } else {
+          console.error('[ADMIN] ❌ Card image save after upload failed:', saveResponse.error);
           toast.error('Upload réussi mais sauvegarde échouée');
         }
       } else {
+        console.error('[ADMIN] ❌ Card image upload failed:', response.error);
         toast.error('Erreur lors de l\'upload');
       }
     } catch (error) {
-      console.error('[ADMIN] Error uploading promotion card image:', error);
+      console.error('[ADMIN] ❌ Card image upload exception:', error);
       toast.error('Erreur lors de l\'upload');
     } finally {
       setUploadingPromoImage(false);
