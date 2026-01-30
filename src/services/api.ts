@@ -180,14 +180,16 @@ class ApiService {
         return {
           success: false,
           error: data.error || 'Une erreur est survenue',
-          data: data,
+          data: data.data || data,  // Unwrap if server already wraps response
           message: data.message,
         };
       }
 
+      // Server returns { success: true, data: {...}, message?: ... }
+      // We need to extract data properly
       return {
         success: true,
-        data: data,
+        data: data.data || data,  // Extract actual data from server response
         message: data.message,
       };
     } catch (error) {
