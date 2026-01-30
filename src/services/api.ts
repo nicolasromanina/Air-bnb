@@ -484,18 +484,18 @@ class ApiService {
   }
 
   // Promotion endpoints
-  async getPromotion(apartmentId: number): Promise<ApiResponse<any>> {
-    return this.request(`/promotions/${apartmentId}`);
+  async getPromotion(roomId: number): Promise<ApiResponse<any>> {
+    return this.request(`/promotions/${roomId}`);
   }
 
-  async updatePromotion(apartmentId: number, payload: any): Promise<ApiResponse<any>> {
-    return this.request(`/promotions/${apartmentId}`, { method: 'PUT', body: JSON.stringify(payload) });
+  async updatePromotion(roomId: number, payload: any): Promise<ApiResponse<any>> {
+    return this.request(`/promotions/${roomId}`, { method: 'PUT', body: JSON.stringify(payload) });
   }
 
-  async uploadPromotionImage(apartmentId: number, file: File): Promise<ApiResponse<any>> {
+  async uploadPromotionImage(roomId: number, file: File): Promise<ApiResponse<any>> {
     const formData = new FormData();
     formData.append('image', file);
-    return this.request(`/promotions/${apartmentId}/upload`, { 
+    return this.request(`/promotions/${roomId}/upload`, { 
       method: 'POST', 
       body: formData,
       skipContentType: true 

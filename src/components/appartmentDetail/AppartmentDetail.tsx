@@ -113,7 +113,7 @@ function AppartmentDetail() {
             console.error('Failed to load promotion:', error);
             // Set default empty promotion data if loading fails
             setPromotionData({
-                apartmentId: roomId,
+                roomId: roomId,
                 title: '',
                 description: '',
                 image: '',

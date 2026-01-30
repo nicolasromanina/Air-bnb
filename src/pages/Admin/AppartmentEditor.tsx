@@ -508,7 +508,7 @@ const AppartmentEditor: React.FC = () => {
       } else {
         // Si pas de promotion, initialiser avec les données par défaut
         setPromotionData({
-          apartmentId: roomId,
+          roomId: roomId,
           title: 'Nunc vulputate libero et velit interdum, ac aliquet odio mattis.',
           description: 'Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.',
           image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80',

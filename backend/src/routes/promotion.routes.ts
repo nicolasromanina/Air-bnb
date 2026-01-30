@@ -7,15 +7,15 @@ import { upload } from '../middleware/upload.middleware';
 const router = Router();
 
 // Routes publiques
-router.get('/:apartmentId', promotionController.getPromotionByApartmentId);
+router.get('/:roomId', promotionController.getPromotionByRoomId);
 
 // Routes protégées (admin)
-router.put('/:apartmentId', authenticate, promotionController.updatePromotion);
+router.put('/:roomId', authenticate, promotionController.updatePromotion);
 router.post('/', authenticate, promotionController.createPromotion);
 router.delete('/:id', authenticate, promotionController.deletePromotion);
 
 // Upload image
-router.post('/:apartmentId/upload', authenticate, upload.single('image'), uploadToCloudinary, (req, res) => {
+router.post('/:roomId/upload', authenticate, upload.single('image'), uploadToCloudinary, (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, error: 'No file uploaded' });
   }

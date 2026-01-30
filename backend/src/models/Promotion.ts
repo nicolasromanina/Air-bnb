@@ -1,7 +1,7 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
 export interface IPromotion extends Document {
-  apartmentId: number;
+  roomId: number;
   title: string;
   description: string;
   image: string;
@@ -20,7 +20,7 @@ export interface IPromotion extends Document {
 }
 
 const PromotionSchema = new Schema<IPromotion>({
-  apartmentId: {
+  roomId: {
     type: Number,
     required: true,
     unique: true

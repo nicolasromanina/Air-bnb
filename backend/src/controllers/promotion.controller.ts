@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import { Promotion } from '../models/Promotion';
 
-export const getPromotionByApartmentId = async (req: Request, res: Response) => {
+export const getPromotionByRoomId = async (req: Request, res: Response) => {
   try {
-    const { apartmentId } = req.params;
-    const promotion = await Promotion.findOne({ apartmentId: Number(apartmentId) }).lean();
+    const { roomId } = req.params;
+    const promotion = await Promotion.findOne({ roomId: Number(roomId) }).lean();
     
     if (!promotion) {
       return res.status(404).json({ success: false, error: 'Promotion not found' });
@@ -18,11 +18,11 @@ export const getPromotionByApartmentId = async (req: Request, res: Response) => 
 
 export const updatePromotion = async (req: Request, res: Response) => {
   try {
-    const { apartmentId } = req.params;
+    const { roomId } = req.params;
     const updateData = req.body;
 
     const promotion = await Promotion.findOneAndUpdate(
-      { apartmentId: Number(apartmentId) },
+      { roomId: Number(roomId) },
       updateData,
       { new: true, upsert: true }
     ).lean();
@@ -77,4 +77,4 @@ export const deletePromotion = async (req: Request, res: Response) => {
   }
 };
 
-export default { getPromotionByApartmentId, updatePromotion, getPromotion, createPromotion, deletePromotion };
+export default { getPromotionByRoomId, updatePromotion, getPromotion, createPromotion, deletePromotion };
