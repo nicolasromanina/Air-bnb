@@ -502,6 +502,16 @@ class ApiService {
     });
   }
 
+  async uploadPromotionCardImage(roomId: number, file: File): Promise<ApiResponse<any>> {
+    const formData = new FormData();
+    formData.append('image', file);
+    return this.request(`/promotions/${roomId}/upload-card`, { 
+      method: 'POST', 
+      body: formData,
+      skipContentType: true 
+    });
+  }
+
   isAuthenticated(): boolean {
     return !!this.token;
   }

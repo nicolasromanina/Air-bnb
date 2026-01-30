@@ -5,6 +5,7 @@ interface PromoData {
   title?: string;
   description?: string;
   image?: string;
+  cardImage?: string;
   badge?: {
     label: string;
     color: string;
@@ -97,7 +98,7 @@ const PromoSection = ({ promo }: PromSectionProps) => {
                 </div>
               )}
               <img
-                src={data.image}
+                src={data.cardImage || data.image}
                 alt="Promo Card"
                 className="w-full h-48 object-cover"
               />

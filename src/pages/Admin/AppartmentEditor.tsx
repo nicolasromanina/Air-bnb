@@ -571,10 +571,31 @@ const AppartmentEditor: React.FC = () => {
           ...prev,
           image: response.data.url
         }));
-        toast.success('Image uploadée avec succès');
+        toast.success('Image principale uploadée avec succès');
       }
     } catch (error) {
       console.error('[ADMIN] Error uploading promotion image:', error);
+      toast.error('Erreur lors de l\'upload');
+    } finally {
+      setUploadingPromoImage(false);
+    }
+  };
+
+  const uploadPromotionCardImage = async (file: File) => {
+    if (!selectedRoomForDetail) return;
+
+    setUploadingPromoImage(true);
+    try {
+      const response = await api.uploadPromotionCardImage(selectedRoomForDetail, file);
+      if (response.success && response.data?.url) {
+        setPromotionData(prev => ({
+          ...prev,
+          cardImage: response.data.url
+        }));
+        toast.success('Image carte uploadée avec succès');
+      }
+    } catch (error) {
+      console.error('[ADMIN] Error uploading promotion card image:', error);
       toast.error('Erreur lors de l\'upload');
     } finally {
       setUploadingPromoImage(false);
@@ -2038,33 +2059,70 @@ const AppartmentEditor: React.FC = () => {
                       <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-xl space-y-6 border border-yellow-100">
                         {/* Image Upload */}
                         <div>
-                          <label className="block text-sm font-bold mb-3 text-gray-900 uppercase tracking-tight">Image promotion</label>
-                          <div className="flex gap-4">
-                            {promotionData?.image && (
-                              <div className="relative w-28 h-28 rounded-lg overflow-hidden border-2 border-yellow-200 shadow-sm flex-shrink-0">
-                                <img src={promotionData.image} alt="Promo" className="w-full h-full object-cover" />
-                                <button
-                                  onClick={() => setPromotionData({ ...promotionData, image: '' })}
-                                  className="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 shadow-lg"
-                                >
-                                  <X size={16} />
-                                </button>
-                              </div>
-                            )}
-                            <label className="flex-1 border-2 border-dashed border-yellow-300 rounded-lg p-6 text-center cursor-pointer hover:bg-yellow-100/50 transition bg-white">
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => {
-                                  if (e.target.files?.[0]) uploadPromotionImage(e.target.files[0]);
-                                }}
-                                disabled={uploadingPromoImage}
-                                className="hidden"
-                              />
-                              <Upload size={28} className="mx-auto mb-2 text-yellow-600" />
-                              <p className="text-sm font-semibold text-gray-700">Uploader image</p>
-                              <p className="text-xs text-gray-500 mt-1">Format: JPG, PNG (max 5MB)</p>
-                            </label>
+                          <label className="block text-sm font-bold mb-3 text-gray-900 uppercase tracking-tight">Images</label>
+                          
+                          {/* Main Image */}
+                          <div className="mb-6">
+                            <p className="text-xs font-semibold text-gray-600 mb-2">📷 Image principale (grande)</p>
+                            <div className="flex gap-4">
+                              {promotionData?.image && (
+                                <div className="relative w-28 h-28 rounded-lg overflow-hidden border-2 border-yellow-200 shadow-sm flex-shrink-0">
+                                  <img src={promotionData.image} alt="Promo" className="w-full h-full object-cover" />
+                                  <button
+                                    onClick={() => setPromotionData({ ...promotionData, image: '' })}
+                                    className="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 shadow-lg"
+                                  >
+                                    <X size={16} />
+                                  </button>
+                                </div>
+                              )}
+                              <label className="flex-1 border-2 border-dashed border-yellow-300 rounded-lg p-4 text-center cursor-pointer hover:bg-yellow-100/50 transition bg-white">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    if (e.target.files?.[0]) uploadPromotionImage(e.target.files[0]);
+                                  }}
+                                  disabled={uploadingPromoImage}
+                                  className="hidden"
+                                />
+                                <Upload size={24} className="mx-auto mb-2 text-yellow-600" />
+                                <p className="text-sm font-semibold text-gray-700">Uploader image</p>
+                                <p className="text-xs text-gray-500 mt-1">Format: JPG, PNG</p>
+                              </label>
+                            </div>
+                          </div>
+
+                          {/* Card Image */}
+                          <div>
+                            <p className="text-xs font-semibold text-gray-600 mb-2">🎴 Image carte (petite)</p>
+                            <div className="flex gap-4">
+                              {promotionData?.cardImage && (
+                                <div className="relative w-20 h-20 rounded-lg overflow-hidden border-2 border-orange-200 shadow-sm flex-shrink-0">
+                                  <img src={promotionData.cardImage} alt="Card" className="w-full h-full object-cover" />
+                                  <button
+                                    onClick={() => setPromotionData({ ...promotionData, cardImage: '' })}
+                                    className="absolute top-0.5 right-0.5 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                                  >
+                                    <X size={12} />
+                                  </button>
+                                </div>
+                              )}
+                              <label className="flex-1 border-2 border-dashed border-orange-300 rounded-lg p-4 text-center cursor-pointer hover:bg-orange-100/50 transition bg-white">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    if (e.target.files?.[0]) uploadPromotionCardImage(e.target.files[0]);
+                                  }}
+                                  disabled={uploadingPromoImage}
+                                  className="hidden"
+                                />
+                                <Upload size={24} className="mx-auto mb-2 text-orange-600" />
+                                <p className="text-sm font-semibold text-gray-700">Uploader image</p>
+                                <p className="text-xs text-gray-500 mt-1">Format: JPG, PNG</p>
+                              </label>
+                            </div>
                           </div>
                         </div>
 
