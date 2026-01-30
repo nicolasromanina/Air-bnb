@@ -281,13 +281,6 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
       clearInterval(progressInterval);
     }
   };
-      }
-    } catch (err) {
-      console.error("❌ Payment error:", err);
-      toast.error(err instanceof Error ? err.message : "Erreur lors du paiement");
-      setIsRedirecting(false);
-    }
-  };
 
   const handleUseSuggested = () => {
     if (!suggestedDate || !reservationDetails) return;
@@ -753,16 +746,6 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
               </>
             )}
           </div>
-        </button>
-            </>
-          ) : !isAuthenticated ? (
-            "Connexion requise"
-          ) : (
-            <>
-              <CreditCard size={20} />
-              Payer {finalAmount.toFixed(2)}€
-            </>
-          )}
         </button>
         
         <p className="text-center text-xs text-gray-500 mt-3 animate-pulse-slow">
