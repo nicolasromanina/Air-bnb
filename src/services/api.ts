@@ -144,13 +144,14 @@ class ApiService {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit & { skipContentType?: boolean } = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`;
+    const { skipContentType, ...restOptions } = options;
     
     const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      ...options.headers,
+      ...(skipContentType ? {} : { 'Content-Type': 'application/json' }),
+      ...restOptions.headers,
     };
 
     // Ajouter le token d'authentification si disponible
@@ -159,7 +160,7 @@ class ApiService {
     }
 
     const requestOptions: RequestInit = {
-      ...options,
+      ...restOptions,
       headers,
       credentials: 'include' as RequestCredentials,
     };
