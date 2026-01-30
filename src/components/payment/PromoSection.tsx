@@ -37,7 +37,8 @@ const PromoSection = ({ promo }: PromSectionProps) => {
     isActive: true
   };
 
-  if (!data.isActive) {
+  // Only hide if explicitly set to false. If undefined or null, show it (default to visible)
+  if (data.isActive === false) {
     return null;
   }
 
