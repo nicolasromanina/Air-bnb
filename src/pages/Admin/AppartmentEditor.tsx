@@ -17,7 +17,7 @@ import {
   Unlock, Eye as EyeIcon, EyeOff as EyeOffIcon,
   Filter, Search, List, Grid3x3,
   BarChart3, PieChart, TrendingUp,
-  Play, Check
+  Play, Check, X
 } from 'lucide-react';
 import VideoUploader from '@/components/admin/VideoUploader';
 import { apartmentApi, ApartmentPageData } from '@/services/apartmentApi';
