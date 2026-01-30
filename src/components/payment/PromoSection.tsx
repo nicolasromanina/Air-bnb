@@ -1,24 +1,26 @@
-import { useState } from "react";
+import { motion } from 'framer-motion';
+import { Star } from 'lucide-react';
 
-interface PromotionData {
-  title: string;
-  description: string;
-  image: string;
-  badge: {
+interface PromoData {
+  title?: string;
+  description?: string;
+  image?: string;
+  badge?: {
     label: string;
     color: string;
   };
-  features: Array<{
-    text: string;
-  }>;
-  bottomMessage: string;
+  features?: Array<{ text: string; icon?: string }>;
+  bottomMessage?: string;
+  isActive?: boolean;
 }
 
-const PromoSection = ({ data }: { data?: PromotionData }) => {
-  const [imageLoaded, setImageLoaded] = useState(false);
+interface PromSectionProps {
+  promo?: PromoData;
+}
 
-  // Données par défaut
-  const defaultData: PromotionData = {
+const PromoSection = ({ promo }: PromSectionProps) => {
+  // Valeurs par défaut
+  const data = promo || {
     title: 'Nunc vulputate libero et velit interdum, ac aliquet odio mattis.',
     description: 'Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.',
     image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80',
@@ -30,149 +32,116 @@ const PromoSection = ({ data }: { data?: PromotionData }) => {
       { text: 'Rorem ipsum dolor sit amet,' },
       { text: 'consectetur adipiscing elit' }
     ],
-    bottomMessage: 'Cette option premium est automatiquement incluse dans votre réservation. Aucun coût supplémentaire.'
+    bottomMessage: 'Cette option premium est automatiquement incluse dans votre réservation. Aucun coût supplémentaire.',
+    isActive: true
   };
 
-  const promo = data || defaultData;
+  if (!data.isActive) {
+    return null;
+  }
 
   return (
-    <section className="container mx-auto px-4 py-12 md:py-16">
-      <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-        {/* Left Image - Amélioré avec effet de zoom et skeleton */}
-        <div className="relative group overflow-hidden rounded-xl">
-          <div 
-            className={`absolute inset-0 bg-gray-100 animate-pulse rounded-xl ${
-              imageLoaded ? "hidden" : "block"
-            }`}
-          />
+    <motion.section 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.4 }}
+      className="max-w-[1140px] mx-auto px-6 py-20"
+    >
+      <div className="grid md:grid-cols-2 gap-12 items-center">
+        {/* Left Image */}
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+          className="relative"
+        >
           <img
-            src={promo.image}
-            alt="Chambre de luxe"
-            className={`w-full h-[350px] md:h-[450px] object-cover rounded-xl transition-all duration-700 ${
-              imageLoaded ? "opacity-100" : "opacity-0"
-            }`}
-            onLoad={() => setImageLoaded(true)}
-            loading="lazy"
+            src={data.image}
+            alt="Promotion"
+            className="w-full h-[400px] md:h-[500px] object-cover rounded-xl shadow-lg"
           />
-          {/* Indicateur de chargement subtil */}
-          {!imageLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-gray-300 border-t-primary rounded-full animate-spin" />
-            </div>
-          )}
-        </div>
+        </motion.div>
 
-        {/* Right Content - Optimisé pour page de paiement */}
-        <div className="space-y-8">
-          {/* En-tête avec badge de confiance */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-sm font-medium border border-green-100"
-                style={{
-                  backgroundColor: `${promo.badge.color}20`,
-                  color: promo.badge.color,
-                  borderColor: `${promo.badge.color}40`
-                }}
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                {promo.badge.label}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Incluse dans votre réservation
-              </div>
-            </div>
-            
-            <div className="space-y-3">
-              <p className="text-foreground leading-relaxed">
-                <span className="font-bold text-lg md:text-xl">
-                  {promo.title}
-                </span>{" "}
-                <span className="text-muted-foreground">
-                  {promo.description}
-                </span>
-              </p>
-            </div>
-          </div>
-
-          {/* Promo Card - Version simplifiée pour paiement */}
-          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
-            <div className="relative overflow-hidden">
-              <div className="absolute top-4 left-4 bg-gray-900 text-white px-4 py-2.5 rounded-lg shadow-lg z-10">
-                <p className="text-xs font-bold tracking-wide">Inclus</p>
-                <p className="text-xs font-semibold text-gray-200">avec séjour</p>
-              </div>
-              
-              {/* Badge de valeur */}
-              <div className="absolute top-4 right-4">
-                <div className="w-12 h-12 rounded-full flex flex-col items-center justify-center shadow-lg"
-                  style={{
-                    background: `linear-gradient(to bottom right, ${promo.badge.color}, ${promo.badge.color}dd)`
-                  }}
-                >
-                  <span className="text-xs font-bold text-white leading-tight">+Valeur</span>
-                  <span className="text-[10px] text-white opacity-80">ajoutée</span>
-                </div>
-              </div>
-
-              <img
-                src={promo.image}
-                alt="Service promotionnel inclus"
-                className="w-full h-40 object-cover"
-                loading="lazy"
-              />
-            </div>
-            
-            <div className="p-5 bg-gray-50 space-y-3 border-t border-gray-100">
-              <div className="space-y-1.5">
-                {promo.features.map((feature, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                    <p className={`text-sm ${idx === 0 ? 'text-gray-700 font-medium' : 'text-gray-700'}`}>
-                      {feature.text}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              
-              {/* Indicateurs de qualité */}
-              <div className="flex items-center justify-between pt-3">
-                <div className="flex items-center gap-1.5">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <div
-                      key={star}
-                      className="w-2 h-2 rounded-full bg-amber-400"
-                    />
-                  ))}
-                  <span className="text-xs text-gray-500 ml-1">Premium</span>
-                </div>
-                
-                {/* Indicateur visuel de confirmation */}
-                <div className="flex items-center gap-1.5 text-green-600">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-xs font-medium">Confirmé</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Message rassurant pour paiement */}
-          <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg border border-blue-100">
-            <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-              <svg className="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <p className="text-sm text-blue-700">
-              {promo.bottomMessage}
+        {/* Right Content */}
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+          className="space-y-6"
+        >
+          {/* Title */}
+          <div>
+            <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+              {data.title}
+            </h3>
+            <p className="text-gray-600 leading-relaxed">
+              {data.description}
             </p>
           </div>
-        </div>
+
+          {/* Promo Card */}
+          <motion.div 
+            whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}
+            className="bg-white rounded-2xl overflow-hidden shadow-xl max-w-sm border border-gray-100"
+          >
+            {/* Badge and Image */}
+            <div className="relative">
+              {data.badge && (
+                <div 
+                  className="absolute top-4 left-4 rounded-full px-4 py-2 z-10 shadow-lg"
+                  style={{ backgroundColor: data.badge.color }}
+                >
+                  <p className="text-xs font-bold text-white tracking-wide">
+                    {data.badge.label}
+                  </p>
+                </div>
+              )}
+              <img
+                src={data.image}
+                alt="Promo Card"
+                className="w-full h-48 object-cover"
+              />
+            </div>
+
+            {/* Features */}
+            <div className="p-6 bg-gradient-to-br from-gray-50 to-white">
+              <div className="space-y-3 mb-4">
+                {data.features && data.features.length > 0 ? (
+                  data.features.map((feature, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.6 + idx * 0.1 }}
+                      className="flex items-center gap-2"
+                    >
+                      <Star size={14} className="text-yellow-500 flex-shrink-0" />
+                      <p className="text-sm text-gray-700 font-medium">
+                        {feature.text}
+                      </p>
+                    </motion.div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-600">Caractéristiques premium incluses</p>
+                )}
+              </div>
+
+              {/* Bottom Message */}
+              {data.bottomMessage && (
+                <motion.p 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.7 }}
+                  className="text-xs text-gray-500 font-medium leading-relaxed pt-4 border-t border-gray-200"
+                >
+                  ✓ {data.bottomMessage}
+                </motion.p>
+              )}
+            </div>
+          </motion.div>
+        </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 };
 

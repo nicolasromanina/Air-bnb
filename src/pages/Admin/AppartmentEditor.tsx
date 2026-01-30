@@ -2022,105 +2022,140 @@ const AppartmentEditor: React.FC = () => {
 
                   {/* --- SECTION PROMOTION --- */}
                   <div className="mt-8 pt-6 border-t">
-                    <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
-                      <Star size={20} className="text-yellow-500" />
-                      Promotion de cette chambre
-                    </h4>
+                    <div className="flex items-center gap-2 mb-6">
+                      <div className="w-1 h-6 bg-yellow-500 rounded-full"></div>
+                      <h4 className="text-xl font-bold flex items-center gap-2">
+                        <Star size={24} className="text-yellow-500" />
+                        Promotion de cette chambre
+                      </h4>
+                    </div>
 
                     {isLoadingPromotion ? (
-                      <div className="flex justify-center py-8">
-                        <Loader className="animate-spin h-6 w-6 text-blue-500" />
+                      <div className="flex justify-center py-12">
+                        <Loader className="animate-spin h-8 w-8 text-yellow-500" />
                       </div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-xl space-y-6 border border-yellow-100">
                         {/* Image Upload */}
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <label className="block text-sm font-semibold mb-2">Image promotion</label>
+                        <div>
+                          <label className="block text-sm font-bold mb-3 text-gray-900 uppercase tracking-tight">Image promotion</label>
                           <div className="flex gap-4">
                             {promotionData?.image && (
-                              <div className="relative w-24 h-24 rounded-lg overflow-hidden border">
+                              <div className="relative w-28 h-28 rounded-lg overflow-hidden border-2 border-yellow-200 shadow-sm flex-shrink-0">
                                 <img src={promotionData.image} alt="Promo" className="w-full h-full object-cover" />
                                 <button
                                   onClick={() => setPromotionData({ ...promotionData, image: '' })}
-                                  className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                                  className="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 shadow-lg"
                                 >
-                                  <X size={14} />
+                                  <X size={16} />
                                 </button>
                               </div>
                             )}
-                            <label className="flex-1 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-100 transition">
+                            <label className="flex-1 border-2 border-dashed border-yellow-300 rounded-lg p-6 text-center cursor-pointer hover:bg-yellow-100/50 transition bg-white">
                               <input
                                 type="file"
                                 accept="image/*"
                                 onChange={(e) => {
                                   if (e.target.files?.[0]) uploadPromotionImage(e.target.files[0]);
                                 }}
+                                disabled={uploadingPromoImage}
                                 className="hidden"
                               />
-                              <Upload size={24} className="mx-auto mb-2 text-gray-400" />
-                              <p className="text-sm text-gray-600">Cliquer pour uploader</p>
+                              <Upload size={28} className="mx-auto mb-2 text-yellow-600" />
+                              <p className="text-sm font-semibold text-gray-700">Uploader image</p>
+                              <p className="text-xs text-gray-500 mt-1">Format: JPG, PNG (max 5MB)</p>
                             </label>
                           </div>
                         </div>
 
-                        {/* Title */}
-                        <div>
-                          <label className="block text-sm font-semibold mb-1">Titre</label>
-                          <input
-                            type="text"
-                            value={promotionData?.title || ''}
-                            onChange={(e) => setPromotionData({ ...promotionData, title: e.target.value })}
-                            className="w-full border rounded-lg px-3 py-2"
-                            placeholder="Ex: Option Premium"
-                          />
-                        </div>
-
-                        {/* Description */}
-                        <div>
-                          <label className="block text-sm font-semibold mb-1">Description</label>
-                          <textarea
-                            value={promotionData?.description || ''}
-                            onChange={(e) => setPromotionData({ ...promotionData, description: e.target.value })}
-                            className="w-full border rounded-lg px-3 py-2 h-20"
-                            placeholder="Description de la promotion"
-                          />
-                        </div>
-
-                        {/* Badge */}
-                        <div className="grid grid-cols-2 gap-4">
+                        {/* Title and Description */}
+                        <div className="grid grid-cols-1 gap-4">
                           <div>
-                            <label className="block text-sm font-semibold mb-1">Badge label</label>
+                            <label className="block text-sm font-bold mb-2 text-gray-900 uppercase tracking-tight">Titre principal</label>
                             <input
                               type="text"
-                              value={promotionData?.badge?.label || ''}
-                              onChange={(e) => setPromotionData({
-                                ...promotionData,
-                                badge: { ...promotionData?.badge, label: e.target.value }
-                              })}
-                              className="w-full border rounded-lg px-3 py-2"
-                              placeholder="Option Premium"
+                              value={promotionData?.title || ''}
+                              onChange={(e) => setPromotionData({ ...promotionData, title: e.target.value })}
+                              className="w-full border-2 border-yellow-200 rounded-lg px-4 py-2 bg-white font-semibold text-gray-900 placeholder-gray-400"
+                              placeholder="Ex: Nunc vulputate libero..."
                             />
                           </div>
+
                           <div>
-                            <label className="block text-sm font-semibold mb-1">Badge couleur</label>
-                            <input
-                              type="color"
-                              value={promotionData?.badge?.color || '#10b981'}
-                              onChange={(e) => setPromotionData({
-                                ...promotionData,
-                                badge: { ...promotionData?.badge, color: e.target.value }
-                              })}
-                              className="w-full border rounded-lg h-10 cursor-pointer"
+                            <label className="block text-sm font-bold mb-2 text-gray-900 uppercase tracking-tight">Description</label>
+                            <textarea
+                              value={promotionData?.description || ''}
+                              onChange={(e) => setPromotionData({ ...promotionData, description: e.target.value })}
+                              className="w-full border-2 border-yellow-200 rounded-lg px-4 py-2 h-24 bg-white text-gray-900 placeholder-gray-400"
+                              placeholder="Description détaillée de la promotion..."
                             />
+                          </div>
+                        </div>
+
+                        {/* Badge - Styled like component */}
+                        <div>
+                          <label className="block text-sm font-bold mb-3 text-gray-900 uppercase tracking-tight">Badge</label>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-xs font-semibold mb-2 text-gray-700">Label</label>
+                              <input
+                                type="text"
+                                value={promotionData?.badge?.label || ''}
+                                onChange={(e) => setPromotionData({
+                                  ...promotionData,
+                                  badge: { ...promotionData?.badge, label: e.target.value }
+                                })}
+                                className="w-full border-2 border-yellow-200 rounded-lg px-3 py-2 bg-white"
+                                placeholder="Option Premium"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold mb-2 text-gray-700">Couleur</label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="color"
+                                  value={promotionData?.badge?.color || '#10b981'}
+                                  onChange={(e) => setPromotionData({
+                                    ...promotionData,
+                                    badge: { ...promotionData?.badge, color: e.target.value }
+                                  })}
+                                  className="w-12 h-10 border-2 border-yellow-200 rounded-lg cursor-pointer"
+                                />
+                                <input
+                                  type="text"
+                                  value={promotionData?.badge?.color || ''}
+                                  onChange={(e) => setPromotionData({
+                                    ...promotionData,
+                                    badge: { ...promotionData?.badge, color: e.target.value }
+                                  })}
+                                  className="flex-1 border-2 border-yellow-200 rounded-lg px-2 py-1 font-mono text-xs bg-white"
+                                  placeholder="#10b981"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          {/* Badge Preview */}
+                          <div className="mt-3 p-3 bg-white rounded-lg">
+                            <div 
+                              className="inline-block rounded-full px-4 py-2"
+                              style={{ backgroundColor: promotionData?.badge?.color || '#10b981' }}
+                            >
+                              <p className="text-xs font-bold text-white tracking-wide">
+                                {promotionData?.badge?.label || 'Badge Preview'}
+                              </p>
+                            </div>
                           </div>
                         </div>
 
                         {/* Features */}
                         <div>
-                          <label className="block text-sm font-semibold mb-2">Caractéristiques</label>
-                          <div className="space-y-2">
+                          <label className="block text-sm font-bold mb-3 text-gray-900 uppercase tracking-tight">Caractéristiques (★ incluses)</label>
+                          <div className="space-y-2 bg-white p-4 rounded-lg border border-yellow-200">
                             {promotionData?.features?.map((feature: any, idx: number) => (
                               <div key={idx} className="flex gap-2">
+                                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-200 flex-shrink-0">
+                                  <Star size={14} className="text-yellow-700" />
+                                </div>
                                 <input
                                   type="text"
                                   value={feature.text}
@@ -2129,14 +2164,15 @@ const AppartmentEditor: React.FC = () => {
                                     newFeatures[idx].text = e.target.value;
                                     setPromotionData({ ...promotionData, features: newFeatures });
                                   }}
-                                  className="flex-1 border rounded-lg px-3 py-2 text-sm"
+                                  className="flex-1 border rounded-lg px-3 py-1.5 text-sm bg-white"
+                                  placeholder="Caractéristique..."
                                 />
                                 <button
                                   onClick={() => {
                                     const newFeatures = promotionData.features.filter((_: any, i: number) => i !== idx);
                                     setPromotionData({ ...promotionData, features: newFeatures });
                                   }}
-                                  className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
+                                  className="px-3 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition"
                                 >
                                   <Trash2 size={16} />
                                 </button>
@@ -2147,7 +2183,7 @@ const AppartmentEditor: React.FC = () => {
                                 const newFeatures = [...(promotionData?.features || []), { text: '', icon: '' }];
                                 setPromotionData({ ...promotionData, features: newFeatures });
                               }}
-                              className="w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50"
+                              className="w-full px-3 py-2.5 border-2 border-dashed border-yellow-300 rounded-lg text-sm font-semibold text-yellow-700 hover:bg-yellow-50 transition"
                             >
                               + Ajouter caractéristique
                             </button>
@@ -2156,36 +2192,41 @@ const AppartmentEditor: React.FC = () => {
 
                         {/* Bottom Message */}
                         <div>
-                          <label className="block text-sm font-semibold mb-1">Message bas</label>
+                          <label className="block text-sm font-bold mb-2 text-gray-900 uppercase tracking-tight">Message rassurant (bas)</label>
                           <textarea
                             value={promotionData?.bottomMessage || ''}
                             onChange={(e) => setPromotionData({ ...promotionData, bottomMessage: e.target.value })}
-                            className="w-full border rounded-lg px-3 py-2 h-16 text-sm"
-                            placeholder="Message en bas de la promotion"
+                            className="w-full border-2 border-yellow-200 rounded-lg px-4 py-2 h-20 bg-white text-gray-900 placeholder-gray-400"
+                            placeholder="✓ Cette option premium est automatiquement incluse..."
                           />
                         </div>
 
                         {/* Active toggle */}
-                        <label className="flex items-center gap-2 cursor-pointer">
+                        <div className="flex items-center gap-3 bg-white p-4 rounded-lg border border-yellow-200">
                           <input
                             type="checkbox"
                             checked={promotionData?.isActive || false}
                             onChange={(e) => setPromotionData({ ...promotionData, isActive: e.target.checked })}
-                            className="w-4 h-4"
+                            className="w-5 h-5 rounded border-2 border-yellow-300 cursor-pointer"
                           />
-                          <span className="text-sm font-semibold">Actif</span>
-                        </label>
+                          <span className="font-semibold text-gray-900">Promotion active</span>
+                          {promotionData?.isActive && (
+                            <span className="ml-auto text-xs font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                              ✓ Visible sur la page publique
+                            </span>
+                          )}
+                        </div>
 
                         {/* Save button */}
                         <button
                           onClick={savePromotion}
                           disabled={uploadingPromoImage}
-                          className="w-full px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 disabled:opacity-50 font-semibold transition flex items-center justify-center gap-2"
+                          className="w-full px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 disabled:opacity-50 font-bold transition flex items-center justify-center gap-2 shadow-lg"
                         >
                           {uploadingPromoImage ? (
                             <>
-                              <Loader className="animate-spin w-4 h-4" />
-                              Upload...
+                              <Loader className="animate-spin w-5 h-5" />
+                              Upload en cours...
                             </>
                           ) : (
                             <>
