@@ -44,6 +44,7 @@ function AppartmentDetail() {
     // Fetch room details from API
     const fetchRoomDetail = useCallback(async () => {
         try {
+            console.log('[DETAIL] 📍 fetchRoomDetail called with id:', id, 'isNaN:', isNaN(parseInt(id || '')));
             if (!id || isNaN(parseInt(id))) {
                 toast.error('ID de chambre invalide');
                 setLoadingRoomDetail(false);

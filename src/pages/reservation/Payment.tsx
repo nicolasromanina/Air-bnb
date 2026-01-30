@@ -7,6 +7,7 @@ import PaymentForm from "@/components/payment/PaymentForm";
 import PromoSection from "@/components/payment/PromoSection";
 import Footer from "@/components/Footer";
 import AuthModal from "@/components/payment/AuthModal";
+import { api } from '@/services/api';
 
 const Payment = () => {
   const location = useLocation();
@@ -14,6 +15,7 @@ const Payment = () => {
   const [reservation, setReservation] = useState<any>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [promotionData, setPromotionData] = useState<any>(null);
 
   useEffect(() => {
     // Récupérer les données de réservation
@@ -41,6 +43,32 @@ const Payment = () => {
     const timer = setTimeout(checkAuth, 1000);
     return () => clearTimeout(timer);
   }, [location, navigate]);
+
+  // Load promotion data when reservation is available
+  useEffect(() => {
+    if (reservation?.roomId) {
+      const loadPromotion = async () => {
+        try {
+          console.log('[PAYMENT] 📥 Loading promotion for roomId:', reservation.roomId);
+          const response = await api.getPromotion(reservation.roomId);
+          console.log('[PAYMENT] API response:', { 
+            success: response.success, 
+            hasData: !!response.data,
+            dataKeys: response.data ? Object.keys(response.data) : []
+          });
+          
+          if (response.success && response.data) {
+            console.log('[PAYMENT] ✅ Setting promotion data');
+            setPromotionData(response.data);
+          }
+        } catch (error) {
+          console.error('[PAYMENT] ❌ Failed to load promotion:', error);
+        }
+      };
+      
+      loadPromotion();
+    }
+  }, [reservation?.roomId]);
 
   if (!reservation) {
     return (
@@ -370,7 +398,7 @@ const Payment = () => {
         </div>
       </main>
 
-      <PromoSection />
+      <PromoSection promo={promotionData} />
       <Footer />
     </div>
   );
