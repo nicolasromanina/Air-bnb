@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { X, ChevronLeft, ChevronRight, Maximize2, Loader2 } from "lucide-react";
 import { useFadeInOnScroll, useStaggerChildren, useChildFadeIn } from "@/hooks/useSrollAnimation";
-
+import { Link } from 'react-router-dom';
 // ... imports des images
 import gallery1 from "@/assets/gallery-1.jpg";
 import gallery2 from "@/assets/gallery-2.jpg";
@@ -316,6 +316,7 @@ const GallerySection: React.FC<GallerySectionProps> = ({
           className="flex flex-col items-center gap-6"
         >
           <div className="text-center max-w-2xl">
+          <Link to="/contact">
             <Button 
               variant="default" 
               size="lg"
@@ -323,7 +324,8 @@ const GallerySection: React.FC<GallerySectionProps> = ({
             >
               {buttonText}
             </Button>
-          </div>
+          </Link>
+        </div>
           
           {/* Navigation rapide pour mobile */}
           <div className="flex items-center gap-4 text-sm text-gray-500 md:hidden">

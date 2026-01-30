@@ -567,11 +567,21 @@ const AppartmentEditor: React.FC = () => {
     try {
       const response = await api.uploadPromotionImage(selectedRoomForDetail, file);
       if (response.success && response.data?.url) {
-        setPromotionData(prev => ({
-          ...prev,
+        const updatedData = {
+          ...promotionData,
           image: response.data.url
-        }));
-        toast.success('Image principale uploadée avec succès');
+        };
+        setPromotionData(updatedData);
+        
+        // Sauvegarder immédiatement après l'upload
+        const saveResponse = await api.updatePromotion(selectedRoomForDetail, updatedData);
+        if (saveResponse.success) {
+          toast.success('Image principale uploadée et sauvegardée');
+        } else {
+          toast.error('Upload réussi mais sauvegarde échouée');
+        }
+      } else {
+        toast.error('Erreur lors de l\'upload');
       }
     } catch (error) {
       console.error('[ADMIN] Error uploading promotion image:', error);
@@ -588,11 +598,21 @@ const AppartmentEditor: React.FC = () => {
     try {
       const response = await api.uploadPromotionCardImage(selectedRoomForDetail, file);
       if (response.success && response.data?.url) {
-        setPromotionData(prev => ({
-          ...prev,
+        const updatedData = {
+          ...promotionData,
           cardImage: response.data.url
-        }));
-        toast.success('Image carte uploadée avec succès');
+        };
+        setPromotionData(updatedData);
+        
+        // Sauvegarder immédiatement après l'upload
+        const saveResponse = await api.updatePromotion(selectedRoomForDetail, updatedData);
+        if (saveResponse.success) {
+          toast.success('Image carte uploadée et sauvegardée');
+        } else {
+          toast.error('Upload réussi mais sauvegarde échouée');
+        }
+      } else {
+        toast.error('Erreur lors de l\'upload');
       }
     } catch (error) {
       console.error('[ADMIN] Error uploading promotion card image:', error);

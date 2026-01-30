@@ -107,8 +107,24 @@ function AppartmentDetail() {
     const loadPromotion = useCallback(async (roomId: number) => {
         try {
             setIsLoadingPromotion(true);
-            const promotion = await api.getPromotion(roomId);
-            setPromotionData(promotion);
+            const response = await api.getPromotion(roomId);
+            // Extract the data from the API response
+            if (response.success && response.data) {
+                setPromotionData(response.data);
+            } else {
+                // Set empty promotion data if loading fails
+                setPromotionData({
+                    roomId: roomId,
+                    title: '',
+                    description: '',
+                    image: '',
+                    cardImage: '',
+                    badge: { label: '', color: '#FF6B35' },
+                    features: [],
+                    bottomMessage: '',
+                    isActive: false
+                });
+            }
         } catch (error) {
             console.error('Failed to load promotion:', error);
             // Set default empty promotion data if loading fails
@@ -117,6 +133,7 @@ function AppartmentDetail() {
                 title: '',
                 description: '',
                 image: '',
+                cardImage: '',
                 badge: { label: '', color: '#FF6B35' },
                 features: [],
                 bottomMessage: '',
