@@ -415,6 +415,7 @@ function AppartmentDetail() {
         const computedTotal = Number((basePrice * nights) + Number(optionsPrice || 0));
 
         const reservationData = {
+            roomId: Number(id),  // Add roomId from URL params for promotion loading
             apartmentId: aptIdNum,
             apartmentNumber: apartment.title || `Appartement ${aptIdNum}`,
             title: apartment.title || 'Réservation',
