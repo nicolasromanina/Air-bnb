@@ -37,10 +37,22 @@ const PromoSection = ({ promo }: PromSectionProps) => {
     isActive: true
   };
 
+  console.log('[PROMO SECTION] Rendering with data:', {
+    hasPromo: !!promo,
+    title: data.title,
+    hasImage: !!data.image,
+    hasCardImage: !!data.cardImage,
+    isActive: data.isActive,
+    features: data.features?.length || 0
+  });
+
   // Only hide if explicitly set to false. If undefined or null, show it (default to visible)
   if (data.isActive === false) {
+    console.log('[PROMO SECTION] ❌ Hidden because isActive === false');
     return null;
   }
+
+  console.log('[PROMO SECTION] ✅ Showing promotion section');
 
   return (
     <motion.section 

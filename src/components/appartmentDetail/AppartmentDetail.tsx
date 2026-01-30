@@ -107,11 +107,21 @@ function AppartmentDetail() {
     const loadPromotion = useCallback(async (roomId: number) => {
         try {
             setIsLoadingPromotion(true);
+            console.log('[DETAIL] 📥 Loading promotion for roomId:', roomId);
             const response = await api.getPromotion(roomId);
+            console.log('[DETAIL] API response:', { 
+              success: response.success, 
+              hasData: !!response.data,
+              dataKeys: response.data ? Object.keys(response.data) : [],
+              data: response.data 
+            });
+            
             // Extract the data from the API response
             if (response.success && response.data) {
+                console.log('[DETAIL] ✅ Setting promotion data:', response.data);
                 setPromotionData(response.data);
             } else {
+                console.log('[DETAIL] ⚠️ No promotion found, setting empty data');
                 // Set empty promotion data if loading fails
                 setPromotionData({
                     roomId: roomId,
@@ -126,7 +136,7 @@ function AppartmentDetail() {
                 });
             }
         } catch (error) {
-            console.error('Failed to load promotion:', error);
+            console.error('[DETAIL] ❌ Failed to load promotion:', error);
             // Set default empty promotion data if loading fails
             setPromotionData({
                 roomId: roomId,
