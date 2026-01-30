@@ -1628,6 +1628,81 @@ const HomeEditor: React.FC = () => {
             </div>
           )}
 
+          {activeSection === 'marqueeBlack' && (
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                <Tag size={24} />
+                Marquee Noir Section
+              </h3>
+              
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Texte du marquee</label>
+                  <input
+                    type="text"
+                    value={pageData.marqueeBlackSection.text}
+                    onChange={(e) => setPageData(prev => ({
+                      ...prev,
+                      marqueeBlackSection: { ...prev.marqueeBlackSection, text: e.target.value }
+                    }))}
+                    className="w-full border rounded-lg p-3"
+                    placeholder="Entrez le texte à afficher"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Couleur du texte</label>
+                    <div className="flex items-center gap-4">
+                      <input
+                        type="color"
+                        value={pageData.marqueeBlackSection.color}
+                        onChange={(e) => setPageData(prev => ({
+                          ...prev,
+                          marqueeBlackSection: { ...prev.marqueeBlackSection, color: e.target.value }
+                        }))}
+                        className="w-12 h-12 cursor-pointer"
+                      />
+                      <input
+                        type="text"
+                        value={pageData.marqueeBlackSection.color}
+                        onChange={(e) => setPageData(prev => ({
+                          ...prev,
+                          marqueeBlackSection: { ...prev.marqueeBlackSection, color: e.target.value }
+                        }))}
+                        className="flex-1 border rounded-lg p-2 font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Couleur de fond</label>
+                    <div className="flex items-center gap-4">
+                      <input
+                        type="color"
+                        value={pageData.marqueeBlackSection.backgroundColor}
+                        onChange={(e) => setPageData(prev => ({
+                          ...prev,
+                          marqueeBlackSection: { ...prev.marqueeBlackSection, backgroundColor: e.target.value }
+                        }))}
+                        className="w-12 h-12 cursor-pointer"
+                      />
+                      <input
+                        type="text"
+                        value={pageData.marqueeBlackSection.backgroundColor}
+                        onChange={(e) => setPageData(prev => ({
+                          ...prev,
+                          marqueeBlackSection: { ...prev.marqueeBlackSection, backgroundColor: e.target.value }
+                        }))}
+                        className="flex-1 border rounded-lg p-2 font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeSection === 'featureRoom' && (
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
