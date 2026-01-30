@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import ImprovedDatePicker from '../ImprovedDatePicker';
 import { motion, AnimatePresence } from 'framer-motion';
 import VideoPlayer from '../VideoPlayer';
+import PromoSection from '../payment/PromoSection';
 
 const PINK_ACCENT = "#FF385C";
 
@@ -35,6 +36,8 @@ function AppartmentDetail() {
     const [touchStart, setTouchStart] = useState<number | null>(null);
     const [touchStartFullScreen, setTouchStartFullScreen] = useState<number | null>(null);
     const [isScrolling, setIsScrolling] = useState(false);
+    const [promotionData, setPromotionData] = useState<any>(null);
+    const [isLoadingPromotion, setIsLoadingPromotion] = useState(false);
     const galleryRef = useRef<HTMLDivElement>(null);
     const imageContainerRef = useRef<HTMLDivElement>(null);
 
@@ -55,6 +58,8 @@ function AppartmentDetail() {
                 if (response.data.images) {
                     setImageLoading(new Array(response.data.images.length).fill(true));
                 }
+                // Charger la promotion
+                loadPromotion(parseInt(id));
             } else {
                 // Fallback data
                 setRoomDetail({
@@ -97,6 +102,30 @@ function AppartmentDetail() {
             setLoadingRoomDetail(false);
         }
     }, [id]);
+
+    // Load promotion data
+    const loadPromotion = useCallback(async (roomId: number) => {
+        try {
+            setIsLoadingPromotion(true);
+            const promotion = await api.getPromotion(roomId);
+            setPromotionData(promotion);
+        } catch (error) {
+            console.error('Failed to load promotion:', error);
+            // Set default empty promotion data if loading fails
+            setPromotionData({
+                apartmentId: roomId,
+                title: '',
+                description: '',
+                image: '',
+                badge: { label: '', color: '#FF6B35' },
+                features: [],
+                bottomMessage: '',
+                isActive: false
+            });
+        } finally {
+            setIsLoadingPromotion(false);
+        }
+    }, []);
 
     // Listen for updates
     useEffect(() => {
@@ -1065,6 +1094,15 @@ function AppartmentDetail() {
                         )}
                     </motion.div>
                 </section>
+
+                {/* --- SECTION PROMOTION --- */}
+                {isLoadingPromotion ? (
+                    <div className="flex justify-center items-center py-16">
+                        <div className="w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin" />
+                    </div>
+                ) : (
+                    promotionData && <PromoSection promo={promotionData} />
+                )}
             </div>
         </div>
     );

@@ -1,9 +1,39 @@
 import { useState } from "react";
-import bedroomPromo from "@/assets/bedroom-promo.jpg";
-import promoCard from "@/assets/promo-card.jpg";
 
-const PromoSection = () => {
+interface PromotionData {
+  title: string;
+  description: string;
+  image: string;
+  badge: {
+    label: string;
+    color: string;
+  };
+  features: Array<{
+    text: string;
+  }>;
+  bottomMessage: string;
+}
+
+const PromoSection = ({ data }: { data?: PromotionData }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Données par défaut
+  const defaultData: PromotionData = {
+    title: 'Nunc vulputate libero et velit interdum, ac aliquet odio mattis.',
+    description: 'Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.',
+    image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80',
+    badge: {
+      label: 'Option Premium',
+      color: '#10b981'
+    },
+    features: [
+      { text: 'Rorem ipsum dolor sit amet,' },
+      { text: 'consectetur adipiscing elit' }
+    ],
+    bottomMessage: 'Cette option premium est automatiquement incluse dans votre réservation. Aucun coût supplémentaire.'
+  };
+
+  const promo = data || defaultData;
 
   return (
     <section className="container mx-auto px-4 py-12 md:py-16">
@@ -16,7 +46,7 @@ const PromoSection = () => {
             }`}
           />
           <img
-            src={bedroomPromo}
+            src={promo.image}
             alt="Chambre de luxe"
             className={`w-full h-[350px] md:h-[450px] object-cover rounded-xl transition-all duration-700 ${
               imageLoaded ? "opacity-100" : "opacity-0"
@@ -37,11 +67,17 @@ const PromoSection = () => {
           {/* En-tête avec badge de confiance */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-sm font-medium border border-green-100">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-sm font-medium border border-green-100"
+                style={{
+                  backgroundColor: `${promo.badge.color}20`,
+                  color: promo.badge.color,
+                  borderColor: `${promo.badge.color}40`
+                }}
+              >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-                Option Premium
+                {promo.badge.label}
               </div>
               <div className="text-xs text-muted-foreground">
                 Incluse dans votre réservation
@@ -51,13 +87,10 @@ const PromoSection = () => {
             <div className="space-y-3">
               <p className="text-foreground leading-relaxed">
                 <span className="font-bold text-lg md:text-xl">
-                  Nunc vulputate libero et velit interdum, ac aliquet odio mattis.
+                  {promo.title}
                 </span>{" "}
                 <span className="text-muted-foreground">
-                  Class aptent taciti sociosqu ad
-                </span>{" "}
-                <span className="font-bold">
-                  litora torquent per conubia nostra, per inceptos himenaeos.
+                  {promo.description}
                 </span>
               </p>
             </div>
@@ -73,14 +106,18 @@ const PromoSection = () => {
               
               {/* Badge de valeur */}
               <div className="absolute top-4 right-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex flex-col items-center justify-center shadow-lg">
+                <div className="w-12 h-12 rounded-full flex flex-col items-center justify-center shadow-lg"
+                  style={{
+                    background: `linear-gradient(to bottom right, ${promo.badge.color}, ${promo.badge.color}dd)`
+                  }}
+                >
                   <span className="text-xs font-bold text-white leading-tight">+Valeur</span>
-                  <span className="text-[10px] text-amber-100">ajoutée</span>
+                  <span className="text-[10px] text-white opacity-80">ajoutée</span>
                 </div>
               </div>
 
               <img
-                src={promoCard}
+                src={promo.image}
                 alt="Service promotionnel inclus"
                 className="w-full h-40 object-cover"
                 loading="lazy"
@@ -89,18 +126,14 @@ const PromoSection = () => {
             
             <div className="p-5 bg-gray-50 space-y-3 border-t border-gray-100">
               <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                  <p className="text-sm text-gray-700 font-medium">
-                    Rorem ipsum dolor sit amet,
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                  <p className="text-sm text-gray-700">
-                    consectetur adipiscing elit
-                  </p>
-                </div>
+                {promo.features.map((feature, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                    <p className={`text-sm ${idx === 0 ? 'text-gray-700 font-medium' : 'text-gray-700'}`}>
+                      {feature.text}
+                    </p>
+                  </div>
+                ))}
               </div>
               
               {/* Indicateurs de qualité */}
@@ -134,7 +167,7 @@ const PromoSection = () => {
               </svg>
             </div>
             <p className="text-sm text-blue-700">
-              Cette option premium est automatiquement incluse dans votre réservation. Aucun coût supplémentaire.
+              {promo.bottomMessage}
             </p>
           </div>
         </div>

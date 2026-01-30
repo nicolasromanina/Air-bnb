@@ -32,7 +32,7 @@ interface ApartmentPageDataState extends Omit<ApartmentPageData, 'meta'> {
 const AppartmentEditor: React.FC = () => {
   const [activeSection, setActiveSection] = useState<
     'hero' | 'rooms' | 'roomDetail' | 'features' | 'showcase' | 'perfectshow' | 
-    'marquee' | 'video' | 'final' | 'stats' | 'newRoom'
+    'marquee' | 'video' | 'final' | 'stats' | 'newRoom' | 'promotion'
   >('hero');
   
   const [isPreview, setIsPreview] = useState(false);
@@ -59,6 +59,9 @@ const AppartmentEditor: React.FC = () => {
     pricingType: 'fixed' as 'fixed' | 'per_day' | 'per_guest'
   });
   const [uploadingOptionImages, setUploadingOptionImages] = useState<Record<string, boolean>>({});
+  const [promotionData, setPromotionData] = useState<any>(null);
+  const [isLoadingPromotion, setIsLoadingPromotion] = useState(false);
+  const [uploadingPromoImage, setUploadingPromoImage] = useState(false);
   const [newRoom, setNewRoom] = useState<any>({
     title: '',
     description: '',
@@ -462,6 +465,9 @@ const AppartmentEditor: React.FC = () => {
         setSelectedRoomForDetail(roomId);
         setActiveSection('roomDetail');
         
+        // Charger la promotion pour cette chambre
+        loadPromotion(roomId);
+        
         // Charger les options disponibles
         loadAvailableOptions();
       } else {
@@ -489,6 +495,89 @@ const AppartmentEditor: React.FC = () => {
       console.error('[ADMIN] Error loading available options:', error);
     } finally {
       setIsLoadingOptions(false);
+    }
+  };
+
+  // Charger la promotion pour une chambre
+  const loadPromotion = async (roomId: number) => {
+    setIsLoadingPromotion(true);
+    try {
+      const response = await api.getPromotion(roomId);
+      if (response.success && response.data) {
+        setPromotionData(response.data);
+      } else {
+        // Si pas de promotion, initialiser avec les données par défaut
+        setPromotionData({
+          apartmentId: roomId,
+          title: 'Nunc vulputate libero et velit interdum, ac aliquet odio mattis.',
+          description: 'Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.',
+          image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80',
+          badge: {
+            label: 'Option Premium',
+            color: '#10b981'
+          },
+          features: [
+            { text: 'Rorem ipsum dolor sit amet,' },
+            { text: 'consectetur adipiscing elit' }
+          ],
+          bottomMessage: 'Cette option premium est automatiquement incluse dans votre réservation. Aucun coût supplémentaire.',
+          isActive: true
+        });
+      }
+    } catch (error) {
+      console.error('[ADMIN] Error loading promotion:', error);
+      setSaveMessage({ type: 'error', text: '❌ Erreur lors du chargement de la promotion' });
+    } finally {
+      setIsLoadingPromotion(false);
+    }
+  };
+
+  // Sauvegarder la promotion
+  const savePromotion = async () => {
+    if (!selectedRoomForDetail || !promotionData) {
+      toast.error('Erreur: données manquantes');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const response = await api.updatePromotion(selectedRoomForDetail, promotionData);
+      if (response.success) {
+        setSaveMessage({ type: 'success', text: '✅ Promotion sauvegardée!' });
+        toast.success('Promotion sauvegardée');
+      } else {
+        setSaveMessage({ type: 'error', text: '❌ Erreur lors de la sauvegarde' });
+        toast.error('Erreur lors de la sauvegarde');
+      }
+    } catch (error) {
+      console.error('[ADMIN] Error saving promotion:', error);
+      setSaveMessage({ type: 'error', text: '❌ Erreur lors de la sauvegarde' });
+      toast.error('Erreur lors de la sauvegarde');
+    } finally {
+      setIsSaving(false);
+      setTimeout(() => setSaveMessage(null), 3000);
+    }
+  };
+
+  // Upload image promotion
+  const uploadPromotionImage = async (file: File) => {
+    if (!selectedRoomForDetail) return;
+
+    setUploadingPromoImage(true);
+    try {
+      const response = await api.uploadPromotionImage(selectedRoomForDetail, file);
+      if (response.success && response.data?.url) {
+        setPromotionData(prev => ({
+          ...prev,
+          image: response.data.url
+        }));
+        toast.success('Image uploadée avec succès');
+      }
+    } catch (error) {
+      console.error('[ADMIN] Error uploading promotion image:', error);
+      toast.error('Erreur lors de l\'upload');
+    } finally {
+      setUploadingPromoImage(false);
     }
   };
 
@@ -889,6 +978,7 @@ const AppartmentEditor: React.FC = () => {
             { id: 'video', label: 'Vidéo', icon: Play },
             { id: 'final', label: 'Final Section', icon: CheckCircle },
             { id: 'stats', label: 'Statistiques', icon: BarChart3 },
+            ...(selectedRoomForDetail ? [{ id: 'promotion', label: 'Promotion', icon: Tag }] : []),
             { id: 'newRoom', label: '+ Chambre', icon: Plus }
           ].map(({ id, label, icon: Icon }) => (
             <button
@@ -2511,6 +2601,193 @@ const AppartmentEditor: React.FC = () => {
                   />
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeSection === 'promotion' && selectedRoomForDetail && (
+            <div className="bg-white rounded-xl shadow-lg p-6 border">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                  <Tag size={24} />
+                  Section Promotion - Chambre #{selectedRoomForDetail}
+                </h3>
+                <button
+                  onClick={savePromotion}
+                  disabled={isSaving}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                >
+                  <Save size={18} />
+                  {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
+                </button>
+              </div>
+
+              {isLoadingPromotion ? (
+                <div className="flex justify-center py-8">
+                  <Loader className="animate-spin h-8 w-8 text-blue-500" />
+                </div>
+              ) : promotionData && (
+                <div className="space-y-6">
+                  {/* Image principale */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Image Promotion</label>
+                    <div className="border-2 border-dashed rounded-lg p-4">
+                      {promotionData.image && (
+                        <div className="relative mb-4">
+                          <img src={promotionData.image} alt="Promo" className="w-full h-48 object-cover rounded-lg" />
+                          <button
+                            onClick={() => setPromotionData(prev => ({ ...prev, image: '' }))}
+                            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-lg"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      )}
+                      <label className="flex flex-col items-center justify-center cursor-pointer">
+                        <UploadIcon size={32} className="text-gray-400 mb-2" />
+                        <span className="text-sm text-gray-600">Cliquez pour uploader une image</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) uploadPromotionImage(file);
+                          }}
+                          disabled={uploadingPromoImage}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Titre */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Titre</label>
+                    <textarea
+                      value={promotionData.title}
+                      onChange={(e) => setPromotionData(prev => ({ ...prev, title: e.target.value }))}
+                      className="w-full border rounded-lg p-3 h-20"
+                      placeholder="Titre principal de la promotion"
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Description</label>
+                    <textarea
+                      value={promotionData.description}
+                      onChange={(e) => setPromotionData(prev => ({ ...prev, description: e.target.value }))}
+                      className="w-full border rounded-lg p-3 h-20"
+                      placeholder="Description détaillée"
+                    />
+                  </div>
+
+                  {/* Badge */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Label du Badge</label>
+                      <input
+                        type="text"
+                        value={promotionData.badge?.label || ''}
+                        onChange={(e) => setPromotionData(prev => ({
+                          ...prev,
+                          badge: { ...prev.badge, label: e.target.value }
+                        }))}
+                        className="w-full border rounded-lg p-2"
+                        placeholder="Ex: Option Premium"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Couleur du Badge</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={promotionData.badge?.color || '#10b981'}
+                          onChange={(e) => setPromotionData(prev => ({
+                            ...prev,
+                            badge: { ...prev.badge, color: e.target.value }
+                          }))}
+                          className="w-12 h-10 cursor-pointer rounded-lg"
+                        />
+                        <input
+                          type="text"
+                          value={promotionData.badge?.color || ''}
+                          onChange={(e) => setPromotionData(prev => ({
+                            ...prev,
+                            badge: { ...prev.badge, color: e.target.value }
+                          }))}
+                          className="flex-1 border rounded-lg p-2 font-mono"
+                          placeholder="#10b981"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Features */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Caractéristiques</label>
+                    <div className="space-y-2">
+                      {promotionData.features?.map((feature: any, idx: number) => (
+                        <div key={idx} className="flex gap-2">
+                          <input
+                            type="text"
+                            value={feature.text}
+                            onChange={(e) => {
+                              const newFeatures = [...promotionData.features];
+                              newFeatures[idx].text = e.target.value;
+                              setPromotionData(prev => ({ ...prev, features: newFeatures }));
+                            }}
+                            className="flex-1 border rounded-lg p-2"
+                            placeholder="Caractéristique"
+                          />
+                          <button
+                            onClick={() => {
+                              const newFeatures = promotionData.features.filter((_, i) => i !== idx);
+                              setPromotionData(prev => ({ ...prev, features: newFeatures }));
+                            }}
+                            className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => {
+                        setPromotionData(prev => ({
+                          ...prev,
+                          features: [...(prev.features || []), { text: '' }]
+                        }));
+                      }}
+                      className="mt-2 px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 flex items-center gap-2"
+                    >
+                      <Plus size={16} />
+                      Ajouter une caractéristique
+                    </button>
+                  </div>
+
+                  {/* Message bas de page */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Message en bas</label>
+                    <textarea
+                      value={promotionData.bottomMessage}
+                      onChange={(e) => setPromotionData(prev => ({ ...prev, bottomMessage: e.target.value }))}
+                      className="w-full border rounded-lg p-3 h-20"
+                      placeholder="Message rassurant pour le client"
+                    />
+                  </div>
+
+                  {/* Toggle Actif */}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={promotionData.isActive}
+                      onChange={(e) => setPromotionData(prev => ({ ...prev, isActive: e.target.checked }))}
+                      className="w-5 h-5 rounded"
+                    />
+                    <label className="text-sm font-medium">Promotion active</label>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
