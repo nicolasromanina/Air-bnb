@@ -475,7 +475,7 @@ const Contact: React.FC = () => {
                   {/* Enhanced Quote Mark */}
                   <div className="relative mb-6 testimonial-quote-mark">
                     <svg 
-                      className="w-16 h-16 text-primary/20 absolute -top-2 -left-2"
+                      className="w-10 h-10 text-[#FF2D75]/70 absolute -top-1 -left-1"
                       viewBox="0 0 24 24" 
                       fill="currentColor"
                     >
