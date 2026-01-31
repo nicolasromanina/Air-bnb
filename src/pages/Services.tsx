@@ -702,6 +702,7 @@ const Service1: React.FC<Service1Props> = ({
                     <button 
                       className="bg-[#1A1A1A] hover:bg-black text-white font-bold py-4 px-10 rounded-md w-fit transition-all duration-500 hover:scale-105 active:scale-95 text-sm uppercase tracking-wider animate-fadeInUp"
                       aria-label={data.ctaSection?.buttonText}
+                      onClick={() => window.location.href = '/appartement'}
                       style={{ animationDelay: '0.2s', fontFamily: "'Montserrat', sans-serif" }}
                     >
                       {data.ctaSection?.buttonText}
@@ -979,6 +980,7 @@ const Service1: React.FC<Service1Props> = ({
                         {data.darkSection?.description}
                       </p>
                       <button className="bg-[#FF2E63] hover:bg-[#e02655] text-white font-bold py-3 px-8 rounded-[4px] w-fit text-sm uppercase tracking-wide transition-all duration-500 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+                              onClick={() => window.location.href = '/appartement'}
                               style={{ fontFamily: "'Montserrat', sans-serif" }}>
                         {data.darkSection?.buttonText}
                       </button>
