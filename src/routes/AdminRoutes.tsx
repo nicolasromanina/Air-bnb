@@ -7,6 +7,7 @@ import BookingsPage from '@/pages/Admin/BookingsPage';
 import PaymentsPage from '@/pages/Admin/PaymentsPage';
 import HomeEditor from '@/pages/Admin/HomeEditor';
 import SettingsPage from '@/pages/Admin/SettingsPage';
+import ApartmentConfigPage from '@/pages/Admin/ApartmentConfigPage';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import ServicesEditor from '@/pages/Admin/ServicesEditor';
 import ContactEditor from '@/pages/Admin/ContactEditor';
@@ -30,6 +31,7 @@ const AdminRoutes = () => {
         <Route path="payments" element={<PaymentsPage />} />
         <Route path="home" element={<HomeEditor/>} />
         <Route path="services" element={<ServicesEditor />} />
+        <Route path="apartment-config" element={<ApartmentConfigPage />} />
         <Route path="apartments/:id" element={<AppartmentDetailEditor />} />
         <Route path="apartment-details" element={<AppartmentDetailEditor />} />
         <Route path="apartments" element={<AppartmentEditor />} />

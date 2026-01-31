@@ -73,18 +73,6 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ title, subtitle }) => 
             <span className="hidden sm:inline">Prévisualiser</span>
           </Button>
 
-          {/* Reset button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleReset}
-            className="gap-2"
-            disabled={isSaving || isLoading}
-          >
-            <RotateCcw className="w-4 h-4" />
-            <span className="hidden sm:inline">Réinitialiser</span>
-          </Button>
-
           {/* Save button */}
           <Button
             onClick={handleSave}

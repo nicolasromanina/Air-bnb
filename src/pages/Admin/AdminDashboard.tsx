@@ -12,13 +12,16 @@ import {
   TrendingUp,
   Edit3,
   Image,
-  Type
+  Type,
+  Settings,
+  Sliders
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const pages = [
   { label: "Accueil", href: "/admin/home", icon: Home, description: "Gérer le contenu de la page d'accueil" },
   { label: "Services", href: "/admin/services", icon: Briefcase, description: "Modifier les services proposés" },
+  { label: "Configuration Appartements", href: "/admin/apartment-config", icon: Sliders, description: "Paramètres de recherche et filtres" },
   { label: "Appartements", href: "/admin/apartments", icon: Building2, description: "Liste des appartements" },
   { label: "Détails Appartement", href: "/admin/apartment-detail", icon: FileText, description: "Page de détail d'un appartement" },
   { label: "Paiement", href: "/admin/payment", icon: CreditCard, description: "Page de paiement" },
