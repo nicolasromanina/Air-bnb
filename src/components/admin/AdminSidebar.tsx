@@ -5,19 +5,14 @@ import {
   Briefcase,
   Building2,
   FileText,
-  CreditCard,
-  CheckCircle,
-  Tag,
   Mail,
   Settings,
   LayoutDashboard,
   ChevronLeft,
   ChevronRight,
-  Menu,
   PanelBottom,
   Users,
   CalendarCheck,
-  Wallet,
   Scale,
   LogOut,
 } from "lucide-react";
@@ -123,9 +118,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, onToggle 
       filter: "drop-shadow(0 2px 4px rgba(236, 72, 153, 0.4))",
     },
     footer: {
-      background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(26,26,26,0.9) 100%)",
+      background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(26,26,26,0.95) 100%)",
       borderTop: "1px solid rgba(236, 72, 153, 0.15)",
       backdropFilter: "blur(10px)",
+      padding: "16px",
     },
     tooltip: {
       background: "#ec4899",
@@ -152,14 +148,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, onToggle 
       )}
 
       <aside
-        className={`fixed left-0 top-0 h-full transition-all duration-300 z-50 ${
+        className={`fixed left-0 top-0 h-full flex flex-col transition-all duration-300 z-50 ${
           collapsed ? "w-[80px]" : "w-[280px]"
         }`}
         style={styles.sidebar}
       >
         {/* Header */}
         <div 
-          className="h-16 flex items-center justify-between px-5 relative"
+          className="h-16 flex-shrink-0 flex items-center justify-between px-5 relative"
           style={styles.header}
         >
           {!collapsed ? (
@@ -199,126 +195,145 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, onToggle 
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="p-4 space-y-2 overflow-y-auto max-h-[calc(100vh-128px)]">
-          {navItems.map((item, index) => {
-            const isActive =
-              location.pathname === item.href ||
-              (item.href !== "/admin" && location.pathname.startsWith(item.href));
-            const Icon = item.icon;
-            const showSection = item.section && !collapsed;
-            const prevItem = navItems[index - 1];
-            const showSectionHeader = showSection && (!prevItem || prevItem.section !== item.section);
-            const isHovered = hoveredItem === item.href;
+        {/* Navigation - Scrollable area */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden py-4">
+          <nav className="space-y-1 px-2">
+            {navItems.map((item, index) => {
+              const isActive =
+                location.pathname === item.href ||
+                (item.href !== "/admin" && location.pathname.startsWith(item.href));
+              const Icon = item.icon;
+              const showSection = item.section && !collapsed;
+              const prevItem = navItems[index - 1];
+              const showSectionHeader = showSection && (!prevItem || prevItem.section !== item.section);
+              const isHovered = hoveredItem === item.href;
 
-            return (
-              <React.Fragment key={item.href}>
-                {showSectionHeader && (
-                  <p 
-                    className="text-xs px-4 py-2 my-2 first:mt-0"
-                    style={styles.sectionHeader}
-                  >
-                    {item.section}
-                  </p>
-                )}
-                
-                {/* Tooltip pour état réduit */}
-                {collapsed && (
-                  <div className="relative group">
-                    <NavLink
-                      to={item.href}
-                      className="flex items-center justify-center"
-                      onMouseEnter={() => setHoveredItem(item.href)}
-                      onMouseLeave={() => setHoveredItem(null)}
-                    >
-                      <div
-                        className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all ${
-                          isActive
-                            ? "bg-gradient-to-r from-pink-500/20 to-rose-500/10 border border-pink-500/30"
-                            : "hover:bg-pink-500/10 hover:border-pink-500/20 border border-transparent"
-                        }`}
+              return (
+                <React.Fragment key={item.href}>
+                  {showSectionHeader && (
+                    <div className="px-3 mb-2 mt-5 first:mt-2">
+                      <p 
+                        className="text-xs"
+                        style={styles.sectionHeader}
+                      >
+                        {item.section}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* État réduit */}
+                  {collapsed ? (
+                    <div className="relative group mb-1" key={`collapsed-${item.href}`}>
+                      <div className="px-2">
+                        <NavLink
+                          to={item.href}
+                          className="flex items-center justify-center"
+                          onMouseEnter={() => setHoveredItem(item.href)}
+                          onMouseLeave={() => setHoveredItem(null)}
+                        >
+                          <div
+                            className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all ${
+                              isActive
+                                ? "bg-gradient-to-r from-pink-500/20 to-rose-500/10 border border-pink-500/30"
+                                : "hover:bg-pink-500/10 hover:border-pink-500/20 border border-transparent"
+                            }`}
+                            style={{
+                              ...styles.navItem,
+                              ...(isActive ? styles.navItemActive : {}),
+                              ...(isHovered ? styles.navItemHover : {}),
+                            }}
+                          >
+                            <Icon 
+                              className="w-5 h-5 flex-shrink-0" 
+                              style={isActive ? styles.iconActive : { color: "#f3f4f6" }}
+                            />
+                            {isActive && (
+                              <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-pink-500 animate-pulse" />
+                            )}
+                          </div>
+                        </NavLink>
+                        
+                        {/* Tooltip */}
+                        <div
+                          className="fixed left-[80px] top-1/2 transform -translate-y-1/2 ml-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none"
+                          style={styles.tooltip}
+                        >
+                          {item.label}
+                          {item.section && (
+                            <div className="text-[10px] text-pink-100 opacity-80 mt-0.5">
+                              {item.section}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* État étendu */
+                    <div className="px-2 mb-1" key={`expanded-${item.href}`}>
+                      <NavLink
+                        to={item.href}
+                        className="flex items-center gap-4 px-3 py-3 rounded-xl transition-all group"
                         style={{
                           ...styles.navItem,
                           ...(isActive ? styles.navItemActive : {}),
-                          ...(isHovered ? styles.navItemHover : {}),
                         }}
+                        onMouseEnter={() => setHoveredItem(item.href)}
+                        onMouseLeave={() => setHoveredItem(null)}
                       >
-                        <Icon 
-                          className="w-6 h-6 flex-shrink-0" 
-                          style={isActive ? styles.iconActive : { color: "#f3f4f6" }}
-                        />
-                      </div>
-                    </NavLink>
-                    
-                    {/* Tooltip */}
-                    <div
-                      className="absolute left-full top-1/2 transform -translate-y-1/2 ml-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200"
-                      style={styles.tooltip}
-                    >
-                      {item.label}
+                        <div className="relative">
+                          <Icon 
+                            className="w-5 h-5 flex-shrink-0 transition-all group-hover:scale-110" 
+                            style={isActive ? styles.iconActive : { color: "#f3f4f6" }}
+                          />
+                          {isActive && (
+                            <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-pink-500 animate-pulse" />
+                          )}
+                        </div>
+                        <span 
+                          className={`text-sm font-medium transition-all flex-1 ${
+                            isActive 
+                              ? "text-white font-semibold" 
+                              : "text-gray-300 group-hover:text-white"
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+                        {isActive && (
+                          <div className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse flex-shrink-0" />
+                        )}
+                      </NavLink>
                     </div>
-                  </div>
-                )}
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </nav>
+        </div>
 
-                {/* État étendu */}
-                {!collapsed && (
-                  <NavLink
-                    to={item.href}
-                    className="flex items-center gap-4 px-4 py-3 rounded-xl transition-all group"
-                    style={{
-                      ...styles.navItem,
-                      ...(isActive ? styles.navItemActive : {}),
-                    }}
-                    onMouseEnter={() => setHoveredItem(item.href)}
-                    onMouseLeave={() => setHoveredItem(null)}
-                  >
-                    <div className="relative">
-                      <Icon 
-                        className="w-6 h-6 flex-shrink-0 transition-all group-hover:scale-110" 
-                        style={isActive ? styles.iconActive : { color: "#f3f4f6" }}
-                      />
-                      {isActive && (
-                        <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-pink-500 animate-pulse" />
-                      )}
-                    </div>
-                    <span 
-                      className={`text-sm font-medium transition-all ${
-                        isActive 
-                          ? "text-white font-semibold" 
-                          : "text-gray-300 group-hover:text-white"
-                      }`}
-                    >
-                      {item.label}
-                    </span>
-                    {isActive && (
-                      <div className="ml-auto w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />
-                    )}
-                  </NavLink>
-                )}
-              </React.Fragment>
-            );
-          })}
-        </nav>
-
-        {/* Footer */}
+        {/* Footer - Fixed at bottom */}
         <div 
-          className="absolute bottom-0 left-0 right-0 p-4"
+          className="flex-shrink-0"
           style={styles.footer}
         >
-          <div className="space-y-3">
+          <div className="space-y-2">
             <NavLink
               to="/admin/settings"
               className={`flex items-center ${
-                collapsed ? "justify-center" : "gap-3 px-4 py-3 rounded-xl"
+                collapsed ? "justify-center px-2" : "gap-3 px-3 py-3 rounded-xl"
               } transition-all group`}
               style={styles.navItem}
             >
-              <Settings 
-                className="w-6 h-6" 
-                style={{ 
-                  color: location.pathname === "/admin/settings" ? "#ec4899" : "#f3f4f6" 
-                }} 
-              />
+              <div className="relative">
+                <Settings 
+                  className="w-5 h-5" 
+                  style={{ 
+                    color: location.pathname === "/admin/settings" ? "#ec4899" : "#f3f4f6" 
+                  }} 
+                />
+                {location.pathname === "/admin/settings" && (
+                  <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-pink-500 animate-pulse" />
+                )}
+              </div>
               {!collapsed && (
                 <span 
                   className={`text-sm font-medium ${
@@ -330,11 +345,16 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, onToggle 
                   Paramètres
                 </span>
               )}
+              {collapsed && (
+                <div className="fixed left-[80px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+                  <div style={styles.tooltip}>Paramètres</div>
+                </div>
+              )}
             </NavLink>
             
             <button
               className={`flex items-center ${
-                collapsed ? "justify-center" : "gap-3 px-4 py-3 rounded-xl"
+                collapsed ? "justify-center px-2" : "gap-3 px-3 py-3 rounded-xl"
               } transition-all w-full text-gray-300 hover:text-white hover:bg-pink-500/10 group`}
               style={styles.navItem}
               onClick={() => {
@@ -342,18 +362,23 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, onToggle 
                 console.log("Déconnexion");
               }}
             >
-              <LogOut className="w-6 h-6" />
+              <LogOut className="w-5 h-5" />
               {!collapsed && (
                 <span className="text-sm font-medium">
                   Déconnexion
                 </span>
+              )}
+              {collapsed && (
+                <div className="fixed left-[80px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+                  <div style={styles.tooltip}>Déconnexion</div>
+                </div>
               )}
             </button>
           </div>
           
           {/* Version info */}
           {!collapsed && (
-            <div className="mt-4 pt-4 border-t border-pink-500/10">
+            <div className="mt-4 pt-3 border-t border-pink-500/10">
               <p className="text-xs text-gray-500 text-center">
                 v1.0.0 • SweetHome Admin
               </p>
