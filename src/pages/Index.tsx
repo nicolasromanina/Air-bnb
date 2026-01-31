@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef,useCallback  } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Play, Search, CalendarDays, Users, Map, Home, Sofa, ChevronLeft, ChevronRight, Wifi, Bed, TreePine, Car, Waves, Diamond } from 'lucide-react';
 import Navbar from "@/components/Navbar";
