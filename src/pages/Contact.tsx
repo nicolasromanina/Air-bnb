@@ -160,6 +160,20 @@ const Contact: React.FC = () => {
     );
   };
 
+  // Auto-slide testimonials every 5 seconds
+  useEffect(() => {
+    const testimonialCount = data?.testimonialSection?.testimonials?.length ?? 0;
+    if (testimonialCount <= 1) return;
+
+    const autoSlideTimer = setInterval(() => {
+      setActiveTestimonialIndex(prev => 
+        prev === testimonialCount - 1 ? 0 : prev + 1
+      );
+    }, 5000);
+
+    return () => clearInterval(autoSlideTimer);
+  }, [data?.testimonialSection?.testimonials?.length]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     
@@ -457,22 +471,32 @@ const Contact: React.FC = () => {
                 </div>
 
                 {/* Testimonial Card */}
-                <div className="bg-background text-foreground p-6 lg:p-8">
-                  <div className="testimonial-quote mb-4">"</div>
-                  <p className="text-sm leading-relaxed mb-6">
-                    {activeTestimonial.quote.split(/\r?\n/).map((line, i, arr) => (
-                      <React.Fragment key={i}>
-                        {line}
-                        {i < arr.length - 1 && <br />}
-                      </React.Fragment>
-                    ))}
-                  </p>
+                <div className="bg-background text-foreground p-6 lg:p-8 border border-border/50 rounded-lg">
+                  {/* Enhanced Quote Mark */}
+                  <div className="relative mb-6 testimonial-quote-mark">
+                    <svg 
+                      className="w-16 h-16 text-primary/20 absolute -top-2 -left-2"
+                      viewBox="0 0 24 24" 
+                      fill="currentColor"
+                    >
+                      <path d="M3 21c3 0 7-1 7-8V5c0-1.25-4.716-5-7-5H2c0 5 0 8.25.006 11.985C2.122 20.236 3.829 21 3 21z" />
+                      <path d="M15 21c3 0 7-1 7-8V5c0-1.25-4.716-5-7-5h-1c0 5 0 8.25.006 11.985C15.122 20.236 16.829 21 15 21z" />
+                    </svg>
+                    <p className="text-sm leading-relaxed mb-4 pl-8 testimonial-card-content">
+                      {activeTestimonial.quote.split(/\r?\n/).map((line, i, arr) => (
+                        <React.Fragment key={i}>
+                          {line}
+                          {i < arr.length - 1 && <br />}
+                        </React.Fragment>
+                      ))}
+                    </p>
+                  </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <img
                         src={activeTestimonial.avatar}
                         alt={activeTestimonial.name}
-                        className="w-12 h-12 rounded-full object-cover"
+                        className="w-12 h-12 rounded-full object-cover border-2 border-primary/30"
                         onError={(e) => {
                           e.currentTarget.src = avatar;
                         }}
@@ -485,7 +509,22 @@ const Contact: React.FC = () => {
                         />
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
+                      {/* Slide indicator dots */}
+                      <div className="flex gap-1.5 mr-2">
+                        {data.testimonialSection.testimonials.map((_, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setActiveTestimonialIndex(index)}
+                            className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                              index === activeTestimonialIndex 
+                                ? 'bg-foreground w-6' 
+                                : 'bg-muted-foreground/40'
+                            }`}
+                            aria-label={`Go to testimonial ${index + 1}`}
+                          />
+                        ))}
+                      </div>
                       <button 
                         onClick={handlePrevTestimonial}
                         className="w-8 h-8 border border-foreground rounded-full flex items-center justify-center hover:bg-foreground hover:text-background transition-colors"
@@ -588,6 +627,36 @@ const Contact: React.FC = () => {
       </main>
 
       <Footer />
+
+      <style>{`
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        .testimonial-card-content {
+          animation: slideIn 0.5s ease-out;
+        }
+
+        .testimonial-quote-mark {
+          animation: fadeIn 0.6s ease-out;
+        }
+      `}</style>
     </div>
   );
 };
