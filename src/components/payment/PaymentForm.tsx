@@ -749,7 +749,7 @@ const PaymentForm = ({ totalAmount = 800, basePrice, optionsPrice, selectedOptio
         </button>
         
         <p className="text-center text-xs text-gray-500 mt-3 animate-pulse-slow">
-          ✅ Paiement sécurisé • 128-bit SSL • Sans frais cachés
+          ✅ Paiement sécurisé • Sans frais cachés
         </p>
       </div>
     </form>
