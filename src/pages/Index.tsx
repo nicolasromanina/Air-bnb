@@ -3,14 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Play, Search, CalendarDays, Users, Map, Home, Sofa, ChevronLeft, ChevronRight, Wifi, Bed, TreePine, Car, Waves, Diamond } from 'lucide-react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import PinkPowderEffect from "@/components/PinkPowderEffect";
 import VideoPlayer from "@/components/VideoPlayer";
 import ImprovedDatePicker from "@/components/ImprovedDatePicker";
 
 import { homeApi } from '@/services/homeApi';
 import type { HomePageData, IHeroSection, IWelcomeSection } from '@/types/home.types';
-
-// Importation des images locales
+//import images
 import imagePrincipale from "@/assets/image-principale-hero.png";
 import imageGrise from "@/assets/Image-Grise-hero.png";
 import imageLit from "@/assets/Image-Lit-hero.png";
@@ -2185,8 +2183,6 @@ const Index = () => {
 
   return (
     <main className="relative bg-white min-h-screen overflow-x-hidden">
-      
-      <PinkPowderEffect />
       {/* ----- PLAQUE GRISE DÉCORATIVE ----- */}
       <div className="absolute 
         top-0             /* Commence tout en haut (derrière Navbar) */
