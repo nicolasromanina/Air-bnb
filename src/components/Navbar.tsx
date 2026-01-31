@@ -315,9 +315,6 @@ const Navbar = () => {
               <p className="font-semibold" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 Disponible 7j/7
               </p>
-              <p className="mt-1" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                contact@example.com
-              </p>
             </div>
           </div>
         </div>
