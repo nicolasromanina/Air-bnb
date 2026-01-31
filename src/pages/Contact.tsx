@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { toast } from 'sonner';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -502,6 +502,19 @@ const Contact: React.FC = () => {
                           className="text-xs text-muted-foreground"
                           dangerouslySetInnerHTML={{ __html: activeTestimonial.role }}
                         />
+                        {/* Rating Stars */}
+                        <div className="flex gap-0.5 mt-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3.5 h-3.5 ${
+                                i < Math.round(activeTestimonial.rating)
+                                  ? 'fill-[#FF2D75] text-[#FF2D75]'
+                                  : 'text-muted-foreground/30'
+                              }`}
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
