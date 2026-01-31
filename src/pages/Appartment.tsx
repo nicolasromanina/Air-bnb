@@ -1,11 +1,10 @@
 import React, { memo, useState, useEffect, useCallback } from 'react';
-import { Play, Newspaper, Check, Users, Bed, Edit3, Upload, Loader2, MapPin, Calendar, Search, AlertCircle } from "lucide-react";
+import { Play, Newspaper, Check, Users, Bed, Edit3, Upload, Loader2, MapPin, Calendar, AlertCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import VideoPlayer from "@/components/VideoPlayer";
-import SearchBar from "@/components/SearchBar";
 import { formatGuests, formatBedrooms, extractNumber } from "@/utils/numberExtractor";
 import heroRoom from "@/assets/hero-room.jpg";
 import room1 from "@/assets/room-1.jpg";
@@ -610,8 +609,11 @@ const RoomsSection: React.FC<RoomsSectionProps & { searchParams?: any; filteredR
     setVisibleRoomsCount(INITIAL_ROOMS_COUNT);
   };
   
-  // Utiliser les appartements filtrés si des critères de recherche existent, sinon tous les appartements
-  const allRooms = filteredRooms.length > 0 ? filteredRooms : (data?.rooms || []);
+  // Déterminer si une recherche est en cours
+  const hasSearchParams = searchParams.destination || searchParams.checkIn || searchParams.availableFrom || searchParams.travelers;
+  
+  // Utiliser les appartements filtrés si une recherche est en cours, sinon tous les appartements
+  const allRooms = hasSearchParams ? filteredRooms : (data?.rooms || []);
   const visibleRooms = allRooms.slice(0, visibleRoomsCount) || [];
   const allRoomsVisible = visibleRoomsCount >= (allRooms.length || 0);
 
@@ -633,72 +635,6 @@ const RoomsSection: React.FC<RoomsSectionProps & { searchParams?: any; filteredR
   return (
     <section className="py-16 lg:py-24 bg-white font-sans">
       <div className={GRID_CONTAINER}>
-        
-        {/* --- BARRE DE RECHERCHE HEROE (Si aucun critère) --- */}
-        {!searchParams.destination && !searchParams.checkIn && !searchParams.availableFrom && !searchParams.travelers && (
-          <div className="mb-16 lg:mb-24">
-            <SearchBar variant="hero" />
-          </div>
-        )}
-        
-        {/* --- MESSAGE DES CRITÈRES DE RECHERCHE ACTUELS --- */}
-        {(searchParams.destination || searchParams.checkIn || searchParams.availableFrom || searchParams.travelers) && (
-          <div className="mb-12 p-6 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
-              <div className="flex-1">
-                <h3 className="text-sm font-bold text-blue-900 uppercase tracking-wide mb-3 flex items-center gap-2">
-                  <Search size={16} className="text-blue-600" />
-                  Résultats de votre recherche
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                  {searchParams.destination && (
-                    <div className="flex items-center gap-3 px-3 py-2 bg-white rounded-lg border border-blue-100">
-                      <MapPin size={16} className="text-blue-600 flex-shrink-0" />
-                      <div>
-                        <p className="text-xs text-gray-500 font-semibold">Destination</p>
-                        <p className="text-sm font-medium text-gray-900">{searchParams.destination}</p>
-                      </div>
-                    </div>
-                  )}
-                  {searchParams.checkIn && (
-                    <div className="flex items-center gap-3 px-3 py-2 bg-white rounded-lg border border-blue-100">
-                      <Calendar size={16} className="text-blue-600 flex-shrink-0" />
-                      <div>
-                        <p className="text-xs text-gray-500 font-semibold">Arrivée</p>
-                        <p className="text-sm font-medium text-gray-900">{new Date(searchParams.checkIn).toLocaleDateString('fr-FR')}</p>
-                      </div>
-                    </div>
-                  )}
-                  {searchParams.availableFrom && (
-                    <div className="flex items-center gap-3 px-3 py-2 bg-white rounded-lg border border-blue-100">
-                      <Calendar size={16} className="text-blue-600 flex-shrink-0" />
-                      <div>
-                        <p className="text-xs text-gray-500 font-semibold">Disponible dès</p>
-                        <p className="text-sm font-medium text-gray-900">{new Date(searchParams.availableFrom).toLocaleDateString('fr-FR')}</p>
-                      </div>
-                    </div>
-                  )}
-                  {searchParams.travelers && (
-                    <div className="flex items-center gap-3 px-3 py-2 bg-white rounded-lg border border-blue-100">
-                      <Users size={16} className="text-blue-600 flex-shrink-0" />
-                      <div>
-                        <p className="text-xs text-gray-500 font-semibold">Voyageurs</p>
-                        <p className="text-sm font-medium text-gray-900">{searchParams.travelers} personne(s)</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <button
-                onClick={() => navigate('/appartement')}
-                className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 font-semibold rounded-lg border border-blue-200 transition-colors text-sm whitespace-nowrap"
-              >
-                ✕ Réinitialiser
-              </button>
-            </div>
-          </div>
-        )}
-        
         {/* --- EN-TÊTE : Titre et Description --- */}
         <div className="flex flex-col items-center text-center mb-12 lg:mb-20">
           <EditableText
@@ -718,7 +654,7 @@ const RoomsSection: React.FC<RoomsSectionProps & { searchParams?: any; filteredR
           
           {/* Compteur de chambres visibles */}
           <div className="mt-4 text-gray-500 text-sm font-medium">
-            Affichage de {visibleRooms.length} sur {allRooms.length} appartement(s) {filteredRooms.length > 0 ? 'correspondant(s)' : 'disponible(s)'}
+            Affichage de {visibleRooms.length} sur {allRooms.length} appartement(s) {hasSearchParams ? 'correspondant(s)' : 'disponible(s)'}
           </div>
         </div>
 
