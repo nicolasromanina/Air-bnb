@@ -40,6 +40,7 @@ import logo5 from "@/assets/p-logo5.png";
 import logo6 from "@/assets/p-logo6.png";
 import logo7 from "@/assets/p-logo7.png";
 import logo8 from "@/assets/p-logo8.png";
+import { useScroll } from '@/context/ScrollContext';
 
 /* ================= HERO SECTION ================= */
 function HeroSection({ data }: { data?: IHeroSection | null }) {
@@ -680,6 +681,9 @@ const InputField = ({ label, placeholder, icon: Icon, type = 'text', value, onCh
 /* ================= DESTINATION SEARCH ================= */
 const DestinationSearch = ({ data }: { data?: any | null }) => {
   const navigate = useNavigate();
+  const { setDestinationRef, isScrollingToDestination } = useScroll();
+  const sectionRef = useRef<HTMLElement>(null);
+  
   const [searchHover, setSearchHover] = useState(false);
   const [destination, setDestination] = useState('');
   const [checkInDate, setCheckInDate] = useState('');
@@ -690,6 +694,27 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   
   const gridContainer = "max-w-[1440px] w-full mx-auto px-4 xs:px-5 sm:px-6 md:px-10 lg:px-16 xl:px-20";
+
+  // Enregistrer la référence dans le contexte
+  useEffect(() => {
+    if (sectionRef.current) {
+      setDestinationRef(sectionRef.current);
+      
+      // Si le contexte indique qu'on doit scroller (venant de la navbar)
+      if (isScrollingToDestination) {
+        // Ajouter un effet visuel
+        sectionRef.current.classList.add('highlight-section');
+        
+        // Focus sur le premier input
+        setTimeout(() => {
+          const input = sectionRef.current?.querySelector('input');
+          if (input) {
+            input.focus({ preventScroll: true });
+          }
+        }, 1000);
+      }
+    }
+  }, [setDestinationRef, isScrollingToDestination]);
 
   // Validation en temps réel pour destination
   const validateDestination = (value: string) => {
@@ -747,14 +772,14 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
     }
   };
 
-  const handleCheckInDateChange = (value: string) => {
+  const handleCheckInDateChange = useCallback((value: string) => {
     setCheckInDate(value);
     setErrors(prev => ({ ...prev, checkInDate: validateCheckInDate(value) }));
-  };
+  }, []);
 
-  const handleAvailableFromDateChange = (value: string) => {
+  const handleAvailableFromDateChange = useCallback((value: string) => {
     setAvailableFromDate(value);
-  };
+  }, []);
 
   const handleTravelersChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const value = e.target.value;
@@ -808,8 +833,11 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
 
   return (
     <section 
+      ref={sectionRef}
       id="destinationsearch"
-      className="bg-white py-8 xs:py-10 sm:py-12 md:py-16 lg:py-20 overflow-hidden"
+      className={`bg-white py-8 xs:py-10 sm:py-12 md:py-16 lg:py-20 overflow-hidden transition-all duration-300 ${
+        isScrollingToDestination ? 'ring-2 ring-[#FF1B7C] ring-opacity-30' : ''
+      }`}
       style={{ fontFamily: "'Montserrat', sans-serif" }}
     >
       <div className={gridContainer}>
@@ -833,7 +861,7 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
               <div className="col-span-5 pt-16 xs:pt-20 sm:pt-24 md:pt-28 lg:pt-32 xl:pt-28">
                 <div className="overflow-hidden rounded-sm shadow-lg sm:shadow-xl bg-white/20">
                   <img
-                    src={data?.images?.small ?? heroSecondary}
+                    src={data?.images?.small ?? '/placeholder.jpg'}
                     alt="Interior"
                     className="w-full aspect-[3/4] object-cover grayscale
                                hover:grayscale-0 transition-all duration-1000"
@@ -858,7 +886,7 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
 
                 <div className="overflow-hidden rounded-sm shadow-lg sm:shadow-xl bg-white/20">
                   <img
-                    src={data?.images?.main ?? heroMain}
+                    src={data?.images?.main ?? '/placeholder.jpg'}
                     alt="Main Lounge"
                     className="w-full aspect-[4/5] object-cover grayscale
                                hover:grayscale-0 transition-all duration-1000"
@@ -899,6 +927,7 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
                         onChange={handleDestinationChange}
                         onFocus={() => destination.length > 0 && setShowSuggestions(true)}
                         className="flex-1 bg-transparent outline-none text-sm font-medium"
+                        autoFocus={isScrollingToDestination}
                       />
                     </div>
                     
@@ -1005,6 +1034,7 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
     </section>
   );
 };
+
 
 /* ================= FEATURE ROOM ================= */
 const FeatureRoom = ({ data }: { data?: any | null }) => {

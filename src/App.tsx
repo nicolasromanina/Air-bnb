@@ -9,6 +9,8 @@ import ScrollToTopButton from "./components/ScrollToTopButton";
 import { ContentProvider } from "@/context/ContentContext";
 import { AuthProvider } from "@/context/AuthContext";
 
+import { ScrollProvider } from "@/context/ScrollContext"; 
+
 // Pages
 import Index from "./pages/Index";
 import Services from "./pages/Services";
@@ -38,53 +40,55 @@ const App = () => (
     <AuthProvider>
     {/* 1. On enveloppe TOUTE l'application avec ContentProvider */}
     <ContentProvider>
-      <TooltipProvider>
-        <ToasterProvider>
-          <Toaster />
-        </ToasterProvider>
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Routes Publiques */}
-            <Route path="/" element={<Index />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/appartement" element={<Appartment />} />
-            <Route path="/apartment/:id" element={<AppartmentDetailPage />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/login" element={<Navigate to="/auth" replace />} />
-            <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/legal" element={<Legal />} />
-            <Route path="/policy" element={<Policy />} />
-            <Route path="/general-conditions" element={<GeneralCondition />} />
-            
-            <Route path="/payment" 
-              element={
-              <AuthGuard requireAuth={true}>
-                <Payment />
-              </AuthGuard>
-            } 
-            />
-            <Route path="/payment-success" element={<PaymentSuccess />} />
-            <Route path="/payment-canceled" element={<PaymentCanceled />} />
-            <Route path="/reservations" element={<Reservations />} />
-            <Route path="/profile" 
-              element={
+      <ScrollProvider>
+        <TooltipProvider>
+          <ToasterProvider>
+            <Toaster />
+          </ToasterProvider>
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Routes Publiques */}
+              <Route path="/" element={<Index />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/appartement" element={<Appartment />} />
+              <Route path="/apartment/:id" element={<AppartmentDetailPage />} />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/login" element={<Navigate to="/auth" replace />} />
+              <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/legal" element={<Legal />} />
+              <Route path="/policy" element={<Policy />} />
+              <Route path="/general-conditions" element={<GeneralCondition />} />
+              
+              <Route path="/payment" 
+                element={
                 <AuthGuard requireAuth={true}>
-                  <Profile />
+                  <Payment />
                 </AuthGuard>
-              }
-            />
-            <Route path="/price" element={<PriceSection />} />
-            {/* Admin routes consolidated */}
-            <Route path="/admin/*" element={<AdminRoutes />} />
+              } 
+              />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
+              <Route path="/payment-canceled" element={<PaymentCanceled />} />
+              <Route path="/reservations" element={<Reservations />} />
+              <Route path="/profile" 
+                element={
+                  <AuthGuard requireAuth={true}>
+                    <Profile />
+                  </AuthGuard>
+                }
+              />
+              <Route path="/price" element={<PriceSection />} />
+              {/* Admin routes consolidated */}
+              <Route path="/admin/*" element={<AdminRoutes />} />
 
-            {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <ScrollToTopButton />
-        </BrowserRouter>
-      </TooltipProvider>
+              {/* Catch-all route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <ScrollToTopButton />
+          </BrowserRouter>
+        </TooltipProvider>
+      </ScrollProvider>
     </ContentProvider>
     </AuthProvider>
   </QueryClientProvider>

@@ -2,16 +2,18 @@ import React, { useState, useEffect, useRef } from "react";
 import { Menu, X, Search } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useScroll } from "@/context/ScrollContext";
 import UserMenu from "./UserMenu";
 
 const Navbar = () => {
   const { isAuthenticated } = useAuth();
+  const { scrollToDestination } = useScroll();
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [hoveredLink, setHoveredLink] = useState(null);
+  const [hoveredLink, setHoveredLink] = useState<number | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  const navRef = useRef(null);
+  const navRef = useRef<HTMLElement>(null);
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -59,7 +61,7 @@ const Navbar = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, [isOpen]);
 
-  const handleNavClick = (href, sectionId = null) => {
+  const handleNavClick = (href: string, sectionId: string | null = null) => {
     if (href === "/" && sectionId) {
       navigate("/");
       setTimeout(() => {
@@ -78,11 +80,26 @@ const Navbar = () => {
     setIsOpen(false);
   };
 
-  const isLinkActive = (href, sectionId = null) => {
+  const isLinkActive = (href: string, sectionId: string | null = null) => {
     if (sectionId && location.pathname === "/" && location.hash === `#${sectionId}`) {
       return true;
     }
     return location.pathname === href;
+  };
+
+  const handleSearchClick = () => {
+    if (location.pathname === "/") {
+      // Si nous sommes déjà sur la page d'accueil
+      scrollToDestination();
+    } else {
+      // Si nous sommes sur une autre page, naviguer vers l'accueil
+      navigate("/");
+      // Attendre que la page se charge puis scroller
+      setTimeout(() => {
+        scrollToDestination();
+      }, 100);
+    }
+    setIsOpen(false);
   };
 
   return (
@@ -153,20 +170,10 @@ const Navbar = () => {
             <div className="hidden md:flex items-center gap-4 z-50">
               {/* Icône de recherche */}
               <button 
-                onClick={() => {
-                  navigate("/");
-                  setTimeout(() => {
-                    const element = document.getElementById("destinationsearch");
-                    if (element) {
-                      window.scrollTo({ 
-                        top: element.offsetTop - 100, 
-                        behavior: 'smooth' 
-                      });
-                    }
-                  }, 100);
-                }}
-                className="text-gray-800 hover:text-[#FF1B7C] p-2 rounded-sm transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#FF1B7C]"
+                onClick={handleSearchClick}
+                className="text-gray-800 hover:text-[#FF1B7C] p-2 rounded-sm transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#FF1B7C] hover:bg-gray-100"
                 aria-label="Rechercher une destination"
+                title="Rechercher un appartement"
               >
                 <Search size={20} />
               </button>
@@ -256,6 +263,16 @@ const Navbar = () => {
                 </button>
               );
             })}
+            
+            {/* Bouton Recherche dans le menu mobile */}
+            <button
+              onClick={handleSearchClick}
+              className="text-left py-4 px-4 text-lg font-bold tracking-tight rounded-lg transition-all duration-300 text-gray-800 hover:bg-gray-100 active:bg-gray-200 flex items-center gap-3"
+              style={{ fontFamily: "'Montserrat', sans-serif" }}
+            >
+              <Search size={18} />
+              Rechercher un appartement
+            </button>
           </div>
 
           {/* Bouton CTA Mobile */}
@@ -285,10 +302,10 @@ const Navbar = () => {
               </>
             ) : (
               <button 
-                onClick={() => handleNavClick("/contact")}
+                onClick={() => handleNavClick("/appartement")}
                 className="w-full bg-[#FF1B7C] text-white py-4 rounded-sm font-bold tracking-wider text-lg hover:bg-[#e0176d] active:scale-[0.98] transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF1B7C] focus:ring-offset-2"
                 style={{ fontFamily: "'Montserrat', sans-serif" }}
-              >
+                >
                 Réserver maintenant
               </button>
             )}
