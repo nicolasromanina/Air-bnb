@@ -472,17 +472,12 @@ const Contact: React.FC = () => {
 
                 {/* Testimonial Card */}
                 <div className="bg-background text-foreground p-6 lg:p-8 border border-border/50 rounded-lg">
-                  {/* Enhanced Quote Mark */}
-                  <div className="relative mb-6 testimonial-quote-mark">
-                    <svg 
-                      className="w-10 h-10 text-[#FF2D75]/70 absolute -top-1 -left-1"
-                      viewBox="0 0 24 24" 
-                      fill="currentColor"
-                    >
-                      <path d="M3 21c3 0 7-1 7-8V5c0-1.25-4.716-5-7-5H2c0 5 0 8.25.006 11.985C2.122 20.236 3.829 21 3 21z" />
-                      <path d="M15 21c3 0 7-1 7-8V5c0-1.25-4.716-5-7-5h-1c0 5 0 8.25.006 11.985C15.122 20.236 16.829 21 15 21z" />
-                    </svg>
-                    <p className="text-sm leading-relaxed mb-4 pl-8 testimonial-card-content">
+                  {/* Modern Quote Accent */}
+                  <div className="flex gap-4 items-start mb-6">
+                    <div className="flex-shrink-0 pt-1">
+                      <div className="w-1 h-12 bg-gradient-to-b from-[#FF2D75] to-[#FF2D75]/30 rounded-full"></div>
+                    </div>
+                    <p className="text-sm leading-relaxed testimonial-card-content">
                       {activeTestimonial.quote.split(/\r?\n/).map((line, i, arr) => (
                         <React.Fragment key={i}>
                           {line}
