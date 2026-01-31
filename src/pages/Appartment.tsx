@@ -1,5 +1,5 @@
 import React, { memo, useState, useEffect, useCallback } from 'react';
-import { Play, Newspaper, Check, Users, Bed, Edit3, Upload, Loader2, MapPin, Calendar, Search } from "lucide-react";
+import { Play, Newspaper, Check, Users, Bed, Edit3, Upload, Loader2, MapPin, Calendar, Search, AlertCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
@@ -628,10 +628,7 @@ const RoomsSection: React.FC<RoomsSectionProps & { searchParams?: any; filteredR
 
   if (!data) return null;
 
-  // Fonction pour réinitialiser la recherche
-  const handleClearSearch = () => {
-    navigate('/appartement');
-  };
+
 
   return (
     <section className="py-16 lg:py-24 bg-white font-sans">
@@ -644,45 +641,48 @@ const RoomsSection: React.FC<RoomsSectionProps & { searchParams?: any; filteredR
           </div>
         )}
         
-        {/* --- BARRE DE RECHERCHE ACTIVE --- */}
+        {/* --- MESSAGE DES CRITÈRES DE RECHERCHE ACTUELS --- */}
         {(searchParams.destination || searchParams.checkIn || searchParams.availableFrom || searchParams.travelers) && (
-          <div className="mb-12 p-6 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="mb-12 p-6 bg-blue-50 rounded-lg border border-blue-200">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
               <div className="flex-1">
-                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">Critères de recherche actuels</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <h3 className="text-sm font-bold text-blue-900 uppercase tracking-wide mb-3 flex items-center gap-2">
+                  <Search size={16} className="text-blue-600" />
+                  Résultats de votre recherche
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                   {searchParams.destination && (
-                    <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200">
-                      <MapPin size={16} className="text-pink-500 flex-shrink-0" />
+                    <div className="flex items-center gap-3 px-3 py-2 bg-white rounded-lg border border-blue-100">
+                      <MapPin size={16} className="text-blue-600 flex-shrink-0" />
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-semibold">Destination</p>
+                        <p className="text-xs text-gray-500 font-semibold">Destination</p>
                         <p className="text-sm font-medium text-gray-900">{searchParams.destination}</p>
                       </div>
                     </div>
                   )}
                   {searchParams.checkIn && (
-                    <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200">
-                      <Calendar size={16} className="text-blue-500 flex-shrink-0" />
+                    <div className="flex items-center gap-3 px-3 py-2 bg-white rounded-lg border border-blue-100">
+                      <Calendar size={16} className="text-blue-600 flex-shrink-0" />
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-semibold">Arrivée</p>
+                        <p className="text-xs text-gray-500 font-semibold">Arrivée</p>
                         <p className="text-sm font-medium text-gray-900">{new Date(searchParams.checkIn).toLocaleDateString('fr-FR')}</p>
                       </div>
                     </div>
                   )}
                   {searchParams.availableFrom && (
-                    <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200">
-                      <Calendar size={16} className="text-purple-500 flex-shrink-0" />
+                    <div className="flex items-center gap-3 px-3 py-2 bg-white rounded-lg border border-blue-100">
+                      <Calendar size={16} className="text-blue-600 flex-shrink-0" />
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-semibold">Disponible dès</p>
+                        <p className="text-xs text-gray-500 font-semibold">Disponible dès</p>
                         <p className="text-sm font-medium text-gray-900">{new Date(searchParams.availableFrom).toLocaleDateString('fr-FR')}</p>
                       </div>
                     </div>
                   )}
                   {searchParams.travelers && (
-                    <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200">
-                      <Users size={16} className="text-green-500 flex-shrink-0" />
+                    <div className="flex items-center gap-3 px-3 py-2 bg-white rounded-lg border border-blue-100">
+                      <Users size={16} className="text-blue-600 flex-shrink-0" />
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-semibold">Voyageurs</p>
+                        <p className="text-xs text-gray-500 font-semibold">Voyageurs</p>
                         <p className="text-sm font-medium text-gray-900">{searchParams.travelers} personne(s)</p>
                       </div>
                     </div>
@@ -690,15 +690,12 @@ const RoomsSection: React.FC<RoomsSectionProps & { searchParams?: any; filteredR
                 </div>
               </div>
               <button
-                onClick={handleClearSearch}
-                className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold rounded-lg transition-colors text-sm whitespace-nowrap"
+                onClick={() => navigate('/appartement')}
+                className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 font-semibold rounded-lg border border-blue-200 transition-colors text-sm whitespace-nowrap"
               >
                 ✕ Réinitialiser
               </button>
             </div>
-            {filteredRooms.length === 0 && (
-              <p className="text-sm text-red-600 font-medium">⚠️ Aucun appartement ne correspond à votre recherche.</p>
-            )}
           </div>
         )}
         
@@ -741,15 +738,27 @@ const RoomsSection: React.FC<RoomsSectionProps & { searchParams?: any; filteredR
           ))}
         </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Search size={48} className="text-gray-300 mb-4" />
-            <h3 className="text-xl font-bold text-gray-700 mb-2">Aucun appartement trouvé</h3>
-            <p className="text-gray-600 mb-6">Aucun appartement ne correspond à votre recherche. Essayez de modifier vos critères.</p>
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-gradient-to-br from-orange-50 to-red-50 rounded-xl border-2 border-dashed border-orange-200 p-8">
+            <AlertCircle size={56} className="text-orange-500 mb-4" />
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">Aucun logement trouvé</h3>
+            <p className="text-gray-600 max-w-md mb-6">
+              Désolé, aucun appartement ne correspond exactement à vos critères de recherche. 
+              Essayez de modifier vos paramètres pour trouver ce que vous cherchez.
+            </p>
+            <div className="bg-white rounded-lg p-4 mb-6 w-full max-w-md border border-gray-200">
+              <p className="text-xs font-semibold text-gray-600 mb-2">💡 Suggestions :</p>
+              <ul className="text-sm text-left text-gray-700 space-y-1">
+                <li>• Élargissez vos dates de disponibilité</li>
+                <li>• Essayez une destination différente</li>
+                <li>• Réduisez le nombre de voyageurs</li>
+                <li>• Vérifiez l'orthographe de la destination</li>
+              </ul>
+            </div>
             <button
-              onClick={handleClearSearch}
-              className="px-6 py-3 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors"
+              onClick={() => navigate('/appartement')}
+              className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold rounded-lg hover:shadow-lg transition-all hover:-translate-y-1"
             >
-              Voir tous les appartements
+              ← Voir tous les appartements
             </button>
           </div>
         )}
