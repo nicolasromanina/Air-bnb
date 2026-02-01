@@ -35,9 +35,7 @@ export class SearchController {
         destinationFilters.push(
           { city: destRegex },
           { country: destRegex },
-          { location: destRegex },
-          { title: destRegex },
-          { description: destRegex }
+          { location: destRegex }
         );
       }
       
