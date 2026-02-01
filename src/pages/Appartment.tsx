@@ -1655,7 +1655,139 @@ const Appartment: React.FC<AppartmentProps> = ({
         console.log(`📊 RÉSULTAT API: ${response.apartments.length} appartement(s) trouvé(s)`);
         console.log('🏠 Détails des résultats:', response.apartments);
         console.log('📌 Response complète:', response);
-        
+
+        // If API returned zero results, attempt a few non-destructive fallback searches
+        if (Array.isArray(response.apartments) && response.apartments.length === 0) {
+          console.warn('⚠️ Aucun résultat — tentative de recherche alternative en cours');
+
+          const trySearch = async (overrides: any) => {
+            try {
+              const fallbackReq = {
+                destination: searchParams.destination,
+                checkIn: searchParams.checkIn,
+                availableFrom: searchParams.availableFrom,
+                travelers: searchParams.travelers ? parseInt(searchParams.travelers, 10) : undefined,
+                page: 1,
+                limit: 100,
+                ...overrides
+              };
+              console.log('🔁 Tentative fallback avec:', fallbackReq);
+              const r = await searchApi.searchApartments(fallbackReq);
+              console.log('🔁 Résultat fallback:', r.apartments?.length || 0);
+              return r;
+            } catch (err) {
+              console.error('❌ Erreur lors du fallback search:', err);
+              return null;
+            }
+          };
+
+          // 1) Try searching by `city` if we have a destination
+          if (searchParams.destination) {
+            const r1 = await trySearch({ city: searchParams.destination, destination: undefined });
+            if (r1 && r1.apartments && r1.apartments.length > 0) {
+              const transformed = r1.apartments.map((apt: any) => ({
+                id: apt.roomId || apt.id,
+                title: apt.title,
+                description: apt.description,
+                image: apt.images?.[0] || apt.image,
+                price: apt.price,
+                guests: apt.guests,
+                bedrooms: apt.bedrooms,
+                city: apt.city,
+                location: apt.location,
+                country: apt.country,
+                capacity: apt.capacity,
+                amenities: apt.amenities,
+                availability: apt.availability,
+                availableFrom: apt.availableFrom,
+                averageRating: apt.averageRating,
+                reviewCount: apt.reviewCount,
+                ...apt
+              }));
+              console.log('✅ Fallback par `city` renvoyé des résultats:', transformed.length);
+              setFilteredRooms(transformed);
+              return;
+            }
+          }
+
+          // 2) Try dropping date filters to broaden the search
+          if (searchParams.checkIn || searchParams.availableFrom) {
+            const r2 = await trySearch({ checkIn: undefined, availableFrom: undefined });
+            if (r2 && r2.apartments && r2.apartments.length > 0) {
+              const transformed = r2.apartments.map((apt: any) => ({
+                id: apt.roomId || apt.id,
+                title: apt.title,
+                description: apt.description,
+                image: apt.images?.[0] || apt.image,
+                price: apt.price,
+                guests: apt.guests,
+                bedrooms: apt.bedrooms,
+                city: apt.city,
+                location: apt.location,
+                country: apt.country,
+                capacity: apt.capacity,
+                amenities: apt.amenities,
+                availability: apt.availability,
+                availableFrom: apt.availableFrom,
+                averageRating: apt.averageRating,
+                reviewCount: apt.reviewCount,
+                ...apt
+              }));
+              console.log('✅ Fallback sans dates renvoyé des résultats:', transformed.length);
+              setFilteredRooms(transformed);
+              return;
+            }
+          }
+
+          // 3) Final broad search (no filters) — use server results but keep local filtering UI if needed
+          try {
+            const r3 = await trySearch({ destination: undefined, checkIn: undefined, availableFrom: undefined, travelers: undefined });
+            if (r3 && r3.apartments && r3.apartments.length > 0) {
+              const transformed = r3.apartments.map((apt: any) => ({
+                id: apt.roomId || apt.id,
+                title: apt.title,
+                description: apt.description,
+                image: apt.images?.[0] || apt.image,
+                price: apt.price,
+                guests: apt.guests,
+                bedrooms: apt.bedrooms,
+                city: apt.city,
+                location: apt.location,
+                country: apt.country,
+                capacity: apt.capacity,
+                amenities: apt.amenities,
+                availability: apt.availability,
+                availableFrom: apt.availableFrom,
+                averageRating: apt.averageRating,
+                reviewCount: apt.reviewCount,
+                ...apt
+              }));
+              console.log('✅ Fallback large renvoyé des résultats:', transformed.length);
+              // If we still have a destination, do a local filter so UX remains relevant
+              if (searchParams.destination) {
+                const dest = searchParams.destination.toLowerCase().trim();
+                const filtered = transformed.filter((room: any) => {
+                  const title = (room.title || '').toLowerCase();
+                  const city = (room.city || '').toLowerCase();
+                  const country = (room.country || '').toLowerCase();
+                  const location = (room.location || '').toLowerCase();
+                  return title.includes(dest) || city.includes(dest) || country.includes(dest) || location.includes(dest);
+                });
+                console.log('🔎 Résultats après filtrage local du fallback large:', filtered.length);
+                setFilteredRooms(filtered);
+              } else {
+                setFilteredRooms(transformed);
+              }
+              return;
+            }
+          } catch (err) {
+            console.error('❌ Erreur sur fallback large:', err);
+          }
+
+          // If none of the fallbacks produced results, continue to use the empty server response (and existing local fallback on error)
+          console.log('ℹ️ Aucun fallback n’a retourné de résultats');
+        }
+
         // Transformer les résultats API en format compatible avec RoomsSection
         const transformedRooms = response.apartments.map((apt: any) => ({
           id: apt.roomId || apt.id,

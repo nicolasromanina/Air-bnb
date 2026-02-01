@@ -115,6 +115,10 @@ export const searchApi = {
     const params = new URLSearchParams();
     
     if (filters.destination) params.append('destination', filters.destination);
+    // Some backends expect a `city` query parameter instead of `destination`.
+    // If the caller provided `destination` but not `city`, include it as `city`
+    // to maximize compatibility with different search implementations.
+    if (filters.destination && !filters.city) params.append('city', filters.destination);
     if (filters.city) params.append('city', filters.city);
     if (filters.country) params.append('country', filters.country);
     if (filters.location) params.append('location', filters.location);
@@ -124,6 +128,9 @@ export const searchApi = {
     if (filters.amenities && filters.amenities.length > 0) params.append('amenities', filters.amenities.join(','));
     if (filters.checkIn) params.append('checkIn', filters.checkIn);
     if (filters.availableFrom) params.append('availableFrom', filters.availableFrom);
+    // Some backends may expect 'availableFrom' instead of 'checkIn'.
+    // If only checkIn is provided, also include it as availableFrom to improve compatibility.
+    if (filters.checkIn && !filters.availableFrom) params.append('availableFrom', filters.checkIn);
     if (filters.travelers !== undefined) params.append('travelers', filters.travelers.toString());
     if (filters.sortBy) params.append('sortBy', filters.sortBy);
     if (filters.page) params.append('page', filters.page.toString());
