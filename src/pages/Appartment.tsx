@@ -26,6 +26,7 @@ import videoCover from "@/assets/video-cover.jpg";
 import finalRoom1 from "@/assets/final-room-1.jpg";
 import finalRoom2 from "@/assets/final-room-2.jpg";
 import { apartmentApi, ApartmentPageData } from '@/services/apartmentApi';
+import { searchApi, SearchResponse } from '@/services/searchApi';
 import DESTINATIONS from '@/data/destinations';
 
 // --- CONFIGURATION DE LA GRILLE UNIFIÉE ---
@@ -1627,91 +1628,85 @@ const Appartment: React.FC<AppartmentProps> = ({
   useEffect(() => {
     if (!pageData) return;
 
-    let rooms = pageData.roomsSection?.rooms || [];
-    
-    console.log('🔥 FILTRAGE - Rooms source:', rooms.length, 'Params:', searchParams);
-    
-    // Si aucun critère de recherche, afficher tous les appartements
-    if (!searchParams.destination && !searchParams.checkIn && !searchParams.availableFrom && !searchParams.travelers) {
-      console.log('✅ Pas de critères - Afficher tous les appartements');
-      setFilteredRooms(rooms);
-      return;
-    }
-
-    // Filtrer par destination - recherche par ville ou titre exacte (insensible à la casse)
-    if (searchParams.destination) {
-      const beforeCount = rooms.length;
-      const destination = searchParams.destination.toLowerCase().trim();
-      rooms = rooms.filter((room: any) => {
-        const title = (room.title || '').toLowerCase();
-        const description = (room.description || '').toLowerCase();
-        const city = (room.city || '').toLowerCase();
-        const country = (room.country || '').toLowerCase();
-        const location = (room.location || '').toLowerCase();
-        
-        // Recherche exacte ou incluse
-        return title.includes(destination) || 
-               description.includes(destination) || 
-               city.includes(destination) || 
-               country.includes(destination) ||
-               location.includes(destination);
-      });
-      console.log(`🏘️ Filtrage destination "${searchParams.destination}": ${beforeCount} → ${rooms.length}`);
-    }
-
-    // Filtrer par date de check-in
-    if (searchParams.checkIn) {
-      const beforeCount = rooms.length;
-      const checkInDate = new Date(searchParams.checkIn);
-      
-      rooms = rooms.filter((room: any) => {
-        // Vérifier si la disponibilité est active
-        if (room.availability === false) {
-          return false;
+    const filterRooms = async () => {
+      try {
+        // Si aucun critère de recherche, afficher tous les appartements
+        if (!searchParams.destination && !searchParams.checkIn && !searchParams.availableFrom && !searchParams.travelers) {
+          console.log('✅ Pas de critères - Afficher tous les appartements');
+          setFilteredRooms(pageData.roomsSection?.rooms || []);
+          return;
         }
+
+        // Utiliser l'API de recherche du backend
+        console.log('🔍 RECHERCHE API - Paramètres:', searchParams);
         
-        // Si une date de disponibilité est définie, vérifier qu'elle est antérieure ou égale à la date de check-in
-        if (room.availableFrom) {
-          const availableFromDate = new Date(room.availableFrom);
-          return availableFromDate <= checkInDate;
+        const response = await searchApi.searchApartments({
+          destination: searchParams.destination,
+          checkIn: searchParams.checkIn,
+          availableFrom: searchParams.availableFrom,
+          travelers: searchParams.travelers ? parseInt(searchParams.travelers, 10) : undefined,
+          page: 1,
+          limit: 100
+        });
+
+        console.log(`📊 RÉSULTAT API: ${response.apartments.length} appartement(s) trouvé(s)`);
+        
+        // Transformer les résultats API en format compatible avec RoomsSection
+        const transformedRooms = response.apartments.map((apt: any) => ({
+          id: apt.roomId || apt.id,
+          title: apt.title,
+          description: apt.description,
+          image: apt.images?.[0] || apt.image,
+          price: apt.price,
+          guests: apt.guests,
+          bedrooms: apt.bedrooms,
+          city: apt.city,
+          location: apt.location,
+          country: apt.country,
+          capacity: apt.capacity,
+          amenities: apt.amenities,
+          availability: apt.availability,
+          availableFrom: apt.availableFrom,
+          averageRating: apt.averageRating,
+          reviewCount: apt.reviewCount,
+          ...apt // Inclure tous les autres champs
+        }));
+
+        setFilteredRooms(transformedRooms);
+      } catch (error) {
+        console.error('Erreur lors de la recherche:', error);
+        // En cas d'erreur API, utiliser le filtrage local comme fallback
+        console.log('⚠️ Fallback au filtrage local');
+        let rooms = pageData.roomsSection?.rooms || [];
+        
+        if (searchParams.destination) {
+          const destination = searchParams.destination.toLowerCase().trim();
+          rooms = rooms.filter((room: any) => {
+            const title = (room.title || '').toLowerCase();
+            const city = (room.city || '').toLowerCase();
+            const country = (room.country || '').toLowerCase();
+            const location = (room.location || '').toLowerCase();
+            
+            return title.includes(destination) || 
+                   city.includes(destination) || 
+                   country.includes(destination) ||
+                   location.includes(destination);
+          });
         }
-        
-        return true;
-      });
-      console.log(`📅 Filtrage check-in depuis ${searchParams.checkIn}: ${beforeCount} → ${rooms.length}`);
-    }
 
-    // Filtrer par date de disponibilité minimum
-    if (searchParams.availableFrom) {
-      const beforeCount = rooms.length;
-      const requiredAvailableDate = new Date(searchParams.availableFrom);
-      
-      rooms = rooms.filter((room: any) => {
-        // Si aucune date de disponibilité n'est définie, considérer la chambre comme disponible immédiatement
-        if (!room.availableFrom) {
-          return true;
+        if (searchParams.travelers) {
+          const requiredTravelers = parseInt(searchParams.travelers, 10);
+          rooms = rooms.filter((room: any) => {
+            const guestCount = room.capacity !== undefined ? room.capacity : extractNumber(room.guests);
+            return guestCount >= requiredTravelers;
+          });
         }
-        
-        const availableFromDate = new Date(room.availableFrom);
-        // Le logement doit être disponible à la date demandée ou avant
-        return availableFromDate <= requiredAvailableDate;
-      });
-      console.log(`🏠 Filtrage disponibilité depuis ${searchParams.availableFrom}: ${beforeCount} → ${rooms.length}`);
-    }
 
-    // Filtrer par nombre de voyageurs (capacité)
-    if (searchParams.travelers) {
-      const beforeCount = rooms.length;
-      const requiredTravelers = parseInt(searchParams.travelers, 10);
-      rooms = rooms.filter((room: any) => {
-        const guestCount = room.capacity !== undefined ? room.capacity : extractNumber(room.guests);
-        return guestCount >= requiredTravelers;
-      });
-      console.log(`👥 Filtrage voyageurs (${requiredTravelers}+): ${beforeCount} → ${rooms.length}`);
-    }
+        setFilteredRooms(rooms);
+      }
+    };
 
-    setFilteredRooms(rooms);
-    console.log(`📊 RÉSULTAT FINAL: ${rooms.length} appartement(s) trouvé(s)`);
+    filterRooms();
   }, [pageData, searchParams]);
 
   const handleUpdate = useCallback(async (section: string, fieldPath: string, value: any) => {
