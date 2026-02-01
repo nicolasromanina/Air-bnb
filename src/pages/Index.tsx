@@ -7,6 +7,7 @@ import VideoPlayer from "@/components/VideoPlayer";
 import ImprovedDatePicker from "@/components/ImprovedDatePicker";
 
 import { homeApi } from '@/services/homeApi';
+import { destinationApi } from '@/services/destinationApi';
 import type { HomePageData, IHeroSection, IWelcomeSection } from '@/types/home.types';
 //import images
 import imagePrincipale from "@/assets/image-principale-hero.png";
@@ -687,13 +688,29 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
   const [searchHover, setSearchHover] = useState(false);
   const [destination, setDestination] = useState('');
   const [checkInDate, setCheckInDate] = useState('');
-  const [availableFromDate, setAvailableFromDate] = useState('');
   const [travelers, setTravelers] = useState('');
   const [errors, setErrors] = useState({ destination: '', checkInDate: '', travelers: '' });
   const [destinationSuggestions, setDestinationSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   
   const gridContainer = "max-w-[1440px] w-full mx-auto px-4 xs:px-5 sm:px-6 md:px-10 lg:px-16 xl:px-20";
+
+  // Charger les suggestions de destinations depuis l'API
+  useEffect(() => {
+    const loadDestinationSuggestions = async () => {
+      try {
+        const suggestions = await destinationApi.getAllDestinationOptions();
+        setDestinationSuggestions(suggestions);
+        console.log('✓ Suggestions de destinations chargées:', suggestions.length);
+      } catch (error) {
+        console.error('Erreur lors du chargement des suggestions:', error);
+        // Fallback en cas d'erreur
+        setDestinationSuggestions([]);
+      }
+    };
+
+    loadDestinationSuggestions();
+  }, []);
 
   // Enregistrer la référence dans le contexte
   useEffect(() => {
@@ -762,23 +779,21 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
     const value = e.target.value;
     setDestination(value);
     setErrors(prev => ({ ...prev, destination: validateDestination(value) }));
-    setShowSuggestions(value.length > 0);
     
-    // Générer des suggestions (villes courantes)
+    // Filtrer les suggestions basées sur l'input de l'utilisateur
     if (value.length > 0) {
-      const suggestions = ['Paris', 'Lyon', 'Marseille', 'Toulouse', 'Nice', 'Bordeaux', 'Lille', 'Strasbourg']
-        .filter(city => city.toLowerCase().startsWith(value.toLowerCase()));
-      setDestinationSuggestions(suggestions);
+      const filtered = destinationSuggestions.filter(suggestion =>
+        suggestion.toLowerCase().includes(value.toLowerCase())
+      );
+      setShowSuggestions(filtered.length > 0);
+    } else {
+      setShowSuggestions(false);
     }
   };
 
   const handleCheckInDateChange = useCallback((value: string) => {
     setCheckInDate(value);
     setErrors(prev => ({ ...prev, checkInDate: validateCheckInDate(value) }));
-  }, []);
-
-  const handleAvailableFromDateChange = useCallback((value: string) => {
-    setAvailableFromDate(value);
   }, []);
 
   const handleTravelersChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -822,11 +837,10 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
     const searchParams = new URLSearchParams({
       destination: destination.trim(),
       checkIn: checkInDate,
-      travelers: travelers,
-      ...(availableFromDate && { availableFrom: availableFromDate })
+      travelers: travelers
     });
     
-    console.log('🔍 Recherche initiée:', { destination, checkInDate, availableFromDate, travelers });
+    console.log('🔍 Recherche initiée:', { destination, checkInDate, travelers });
     
     navigate(`/appartement?${searchParams.toString()}`);
   };
@@ -932,17 +946,21 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
                     </div>
                     
                     {/* Suggestions de destinations */}
-                    {showSuggestions && destinationSuggestions.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
-                        {destinationSuggestions.map((city, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => selectSuggestion(city)}
-                            className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm font-medium text-gray-900 border-b last:border-0 transition-colors"
-                          >
-                            📍 {city}
-                          </button>
-                        ))}
+                    {showSuggestions && destination.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                        {destinationSuggestions
+                          .filter(suggestion => 
+                            suggestion.toLowerCase().includes(destination.toLowerCase())
+                          )
+                          .map((suggestion, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => selectSuggestion(suggestion)}
+                              className="w-full text-left px-4 py-3 hover:bg-gray-100 text-sm font-medium text-gray-900 border-b last:border-0 transition-colors"
+                            >
+                              📍 {suggestion}
+                            </button>
+                          ))}
                       </div>
                     )}
                     
@@ -961,17 +979,6 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
                     onChange={handleCheckInDateChange}
                     minDate={new Date().toISOString().split('T')[0]}
                     error={errors.checkInDate}
-                  />
-                </div>
-
-                {/* Date de disponibilité (optionnelle) */}
-                <div className="mb-6">
-                  <ImprovedDatePicker
-                    label="Date de disponibilité minimum"
-                    placeholder="Optionnel - filtrer par disponibilité"
-                    value={availableFromDate}
-                    onChange={handleAvailableFromDateChange}
-                    minDate={new Date().toISOString().split('T')[0]}
                   />
                 </div>
 
