@@ -78,18 +78,23 @@ export class SearchController {
           filter.$expr = {
             $gte: [
               {
-                $toInt: {
-                  $arrayElemAt: [
-                    {
-                      $regexFindAll: {
-                        input: '$guests',
-                        regex: '[0-9]+'
-                      }
+                  $convert: {
+                    input: {
+                      $arrayElemAt: [
+                        {
+                          $regexFindAll: {
+                            input: '$guests',
+                            regex: '[0-9]+'
+                          }
+                        },
+                        0
+                      ]
                     },
-                    0
-                  ]
-                }
-              },
+                    to: 'int',
+                    onError: 0,
+                    onNull: 0
+                  }
+                },
               requiredCapacity
             ]
           };
@@ -380,13 +385,18 @@ export class SearchController {
         {
           $addFields: {
             capacityNum: {
-              $toInt: {
-                $arrayElemAt: [
-                  {
-                    $split: ['$guests', ' ']
-                  },
-                  0
-                ]
+              $convert: {
+                input: {
+                  $arrayElemAt: [
+                    {
+                      $split: ['$guests', ' ']
+                    },
+                    0
+                  ]
+                },
+                to: 'int',
+                onError: 0,
+                onNull: 0
               }
             }
           }
