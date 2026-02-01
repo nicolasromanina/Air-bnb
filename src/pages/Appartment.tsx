@@ -1639,6 +1639,9 @@ const Appartment: React.FC<AppartmentProps> = ({
 
         // Utiliser l'API de recherche du backend
         console.log('🔍 RECHERCHE API - Paramètres:', searchParams);
+        console.log('📍 Destination:', searchParams.destination);
+        console.log('📅 CheckIn:', searchParams.checkIn);
+        console.log('👥 Voyageurs:', searchParams.travelers);
         
         const response = await searchApi.searchApartments({
           destination: searchParams.destination,
@@ -1650,6 +1653,8 @@ const Appartment: React.FC<AppartmentProps> = ({
         });
 
         console.log(`📊 RÉSULTAT API: ${response.apartments.length} appartement(s) trouvé(s)`);
+        console.log('🏠 Détails des résultats:', response.apartments);
+        console.log('📌 Response complète:', response);
         
         // Transformer les résultats API en format compatible avec RoomsSection
         const transformedRooms = response.apartments.map((apt: any) => ({
@@ -1672,36 +1677,54 @@ const Appartment: React.FC<AppartmentProps> = ({
           ...apt // Inclure tous les autres champs
         }));
 
+        console.log('✅ Appartements transformés:', transformedRooms);
         setFilteredRooms(transformedRooms);
       } catch (error) {
-        console.error('Erreur lors de la recherche:', error);
+        console.error('❌ Erreur lors de la recherche:', error);
+        console.error('📋 Stack trace:', error instanceof Error ? error.stack : 'Pas de stack trace');
+        
         // En cas d'erreur API, utiliser le filtrage local comme fallback
         console.log('⚠️ Fallback au filtrage local');
         let rooms = pageData.roomsSection?.rooms || [];
+        console.log('📦 Rooms disponibles localement:', rooms.length, rooms);
         
         if (searchParams.destination) {
           const destination = searchParams.destination.toLowerCase().trim();
+          console.log(`🔎 Filtrage par destination: "${destination}"`);
           rooms = rooms.filter((room: any) => {
             const title = (room.title || '').toLowerCase();
             const city = (room.city || '').toLowerCase();
             const country = (room.country || '').toLowerCase();
             const location = (room.location || '').toLowerCase();
             
-            return title.includes(destination) || 
+            const match = title.includes(destination) || 
                    city.includes(destination) || 
                    country.includes(destination) ||
                    location.includes(destination);
+            
+            if (match) {
+              console.log(`  ✅ Match: ${room.title} (city: ${city}, location: ${location})`);
+            }
+            return match;
           });
+          console.log(`✅ Résultats après filtrage destination: ${rooms.length} appartements`);
         }
 
         if (searchParams.travelers) {
           const requiredTravelers = parseInt(searchParams.travelers, 10);
+          console.log(`🔎 Filtrage par nombre de voyageurs: ${requiredTravelers}`);
           rooms = rooms.filter((room: any) => {
             const guestCount = room.capacity !== undefined ? room.capacity : extractNumber(room.guests);
-            return guestCount >= requiredTravelers;
+            const match = guestCount >= requiredTravelers;
+            if (match) {
+              console.log(`  ✅ Match capacité: ${room.title} (capacité: ${guestCount})`);
+            }
+            return match;
           });
+          console.log(`✅ Résultats après filtrage voyageurs: ${rooms.length} appartements`);
         }
 
+        console.log('🎯 Résultat final du fallback local:', rooms);
         setFilteredRooms(rooms);
       }
     };

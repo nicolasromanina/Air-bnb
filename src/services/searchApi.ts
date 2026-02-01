@@ -76,19 +76,35 @@ const makeRequest = async <T>(
     ...options,
   };
 
+  const fullUrl = `${BACKEND_URL}${url}`;
+  console.log(`📡 Requête ${method}: ${fullUrl}`);
+  console.log(`   Headers:`, headers);
+  if (data) console.log(`   Body:`, data);
+
   try {
-    const response = await fetch(`${BACKEND_URL}${url}`, config);
+    const response = await fetch(fullUrl, config);
+    
+    console.log(`   Status: ${response.status} ${response.statusText}`);
+    console.log(`   Headers réponse:`, response.headers);
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       const errorMessage = errorData.error || `Erreur HTTP ${response.status}: ${response.statusText}`;
-      console.error(`Erreur ${method} ${url}:`, errorMessage);
+      console.error(`❌ Erreur ${method} ${url}:`, errorMessage);
+      console.error(`   Données d'erreur:`, errorData);
       throw new Error(errorMessage);
     }
     
-    return await response.json();
+    const data = await response.json();
+    console.log(`✅ Réponse complète reçue pour ${method} ${url}`);
+    return data;
   } catch (error) {
-    console.error(`Erreur ${method} ${url}:`, error);
+    console.error(`❌ Erreur ${method} ${url}:`, error);
+    console.error(`   Type d'erreur:`, error instanceof Error ? error.constructor.name : typeof error);
+    if (error instanceof Error) {
+      console.error(`   Message:`, error.message);
+      console.error(`   Stack:`, error.stack);
+    }
     throw error;
   }
 };
@@ -116,7 +132,21 @@ export const searchApi = {
     const queryString = params.toString();
     const url = queryString ? `/?${queryString}` : '/';
     
-    return await makeRequest<SearchResponse>(url);
+    console.log('🌐 APPEL API RECHERCHE');
+    console.log('  📍 URL complète:', `${BACKEND_URL}${url}`);
+    console.log('  🔍 Filtres appliqués:', filters);
+    console.log('  📋 Query string:', queryString);
+    
+    try {
+      const response = await makeRequest<SearchResponse>(url);
+      console.log('✅ Réponse API reçue:', response);
+      console.log(`  📦 Nombre d'appartements retournés: ${response.apartments.length}`);
+      console.log(`  📄 Pagination:`, response.pagination);
+      return response;
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'appel API de recherche:', error);
+      throw error;
+    }
   },
 
   // Recherche simple par destination
