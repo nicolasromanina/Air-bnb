@@ -26,6 +26,7 @@ import videoCover from "@/assets/video-cover.jpg";
 import finalRoom1 from "@/assets/final-room-1.jpg";
 import finalRoom2 from "@/assets/final-room-2.jpg";
 import { apartmentApi, ApartmentPageData } from '@/services/apartmentApi';
+import DESTINATIONS from '@/data/destinations';
 
 // --- CONFIGURATION DE LA GRILLE UNIFIÉE ---
 const GRID_CONTAINER = "max-w-[1440px] w-full mx-auto px-6 sm:px-10 md:px-16 lg:px-20";
@@ -628,6 +629,25 @@ const RoomsSection: React.FC<RoomsSectionProps & { searchParams?: any; filteredR
     return normalizedUrl;
   }, []);
 
+  // Suggestions alternatives quand aucun résultat
+  const computeAlternateDestinations = (query: string | undefined) => {
+    if (!query) return DESTINATIONS.slice(0, 6);
+    const q = query.trim().toLowerCase();
+    const starts = DESTINATIONS.filter(d => d.toLowerCase().startsWith(q) && d.toLowerCase() !== q);
+    const includes = DESTINATIONS.filter(d => !d.toLowerCase().startsWith(q) && d.toLowerCase().includes(q));
+    const others = DESTINATIONS.filter(d => !d.toLowerCase().includes(q));
+    return [...starts, ...includes, ...others].slice(0, 6);
+  };
+
+  const handleTryDestination = (dest: string) => {
+    const params = new URLSearchParams();
+    params.set('destination', dest);
+    if (searchParams.checkIn) params.set('checkIn', searchParams.checkIn);
+    if (searchParams.availableFrom) params.set('availableFrom', searchParams.availableFrom);
+    if (searchParams.travelers) params.set('travelers', searchParams.travelers);
+    navigate(`/appartement?${params.toString()}`);
+  };
+
   if (!data) return null;
 
 
@@ -674,28 +694,67 @@ const RoomsSection: React.FC<RoomsSectionProps & { searchParams?: any; filteredR
           ))}
         </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-gradient-to-br from-orange-50 to-red-50 rounded-xl border-2 border-dashed border-orange-200 p-8">
+          <div className="flex flex-col items-center justify-center py-12 text-center bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-100 p-8">
             <AlertCircle size={56} className="text-orange-500 mb-4" />
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">Aucun logement trouvé</h3>
-            <p className="text-gray-600 max-w-md mb-6">
-              Désolé, aucun appartement ne correspond exactement à vos critères de recherche. 
-              Essayez de modifier vos paramètres pour trouver ce que vous cherchez.
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Aucun logement correspondant</h3>
+            <p className="text-gray-600 max-w-lg mb-4">
+              Nous n'avons trouvé aucun logement correspondant exactement à vos critères.
+              Voici quelques idées pour élargir votre recherche ou essayer des alternatives.
             </p>
-            <div className="bg-white rounded-lg p-4 mb-6 w-full max-w-md border border-gray-200">
-              <p className="text-xs font-semibold text-gray-600 mb-2">💡 Suggestions :</p>
-              <ul className="text-sm text-left text-gray-700 space-y-1">
-                <li>• Élargissez vos dates de disponibilité</li>
-                <li>• Essayez une destination différente</li>
-                <li>• Réduisez le nombre de voyageurs</li>
-                <li>• Vérifiez l'orthographe de la destination</li>
-              </ul>
+
+            <div className="w-full max-w-2xl grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-white rounded-lg p-4 border border-gray-100">
+                <p className="text-sm font-semibold text-gray-700 mb-2">Conseils rapides</p>
+                <ul className="text-sm text-left text-gray-600 space-y-1">
+                  <li>• Élargissez vos dates de disponibilité</li>
+                  <li>• Diminuez le nombre de voyageurs</li>
+                  <li>• Supprimez le filtre de disponibilité minimum</li>
+                </ul>
+              </div>
+
+              <div className="bg-white rounded-lg p-4 border border-gray-100">
+                <p className="text-sm font-semibold text-gray-700 mb-2">Suggestions alternatives</p>
+                <div className="flex flex-wrap gap-2">
+                  {computeAlternateDestinations(searchParams.destination).map((d) => (
+                    <button
+                      key={d}
+                      onClick={() => handleTryDestination(d)}
+                      className="px-3 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 rounded-full text-sm font-medium border border-pink-100"
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg p-4 border border-gray-100 flex flex-col justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Besoin d'aide ?</p>
+                  <p className="text-sm text-gray-600 mb-3">Contactez notre support ou modifiez vos filtres pour obtenir davantage de résultats.</p>
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => navigate('/appartement')}
+                    className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md font-medium"
+                  >
+                    Réinitialiser les filtres
+                  </button>
+                  <a
+                    href="/contact"
+                    className="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-md font-medium"
+                  >
+                    Contacter le support
+                  </a>
+                </div>
+              </div>
             </div>
-            <button
-              onClick={() => navigate('/appartement')}
-              className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold rounded-lg hover:shadow-lg transition-all hover:-translate-y-1"
-            >
-              ← Voir tous les appartements
-            </button>
+
+            <div className="text-sm text-gray-500">Vous pouvez aussi parcourir nos villes populaires ci-dessous :</div>
+            <div className="mt-3 flex flex-wrap gap-2 justify-center">
+              {DESTINATIONS.slice(0, 8).map((d) => (
+                <button key={d} onClick={() => handleTryDestination(d)} className="px-3 py-1 bg-white border border-gray-200 rounded-full text-sm hover:shadow-sm">{d}</button>
+              ))}
+            </div>
           </div>
         )}
         

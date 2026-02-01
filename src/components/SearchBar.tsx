@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { MapPin, Calendar, Users, Search, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect, useRef, KeyboardEvent } from 'react';
+import { MapPin, Calendar, Users, Search, ArrowRight, X, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ImprovedDatePicker from './ImprovedDatePicker';
+import DESTINATIONS from '@/data/destinations';
 
 interface SearchBarProps {
   variant?: 'hero' | 'default';
@@ -11,6 +12,11 @@ interface SearchBarProps {
 const SearchBar: React.FC<SearchBarProps> = ({ variant = 'default', className = '' }) => {
   const navigate = useNavigate();
   const [destination, setDestination] = useState('');
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeIndex, setActiveIndex] = useState<number>(-1);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [checkIn, setCheckIn] = useState('');
   const [availableFrom, setAvailableFrom] = useState('');
   const [travelers, setTravelers] = useState('2');
@@ -30,6 +36,91 @@ const SearchBar: React.FC<SearchBarProps> = ({ variant = 'default', className = 
     navigate(`/appartement?${searchParams.toString()}`);
   };
 
+  const filterSuggestions = (value: string) => {
+    if (!value) return [];
+    const q = value.trim().toLowerCase();
+    // Prioritise exact startsWith, then includes
+    const starts = DESTINATIONS.filter((d) => d.toLowerCase().startsWith(q));
+    const includes = DESTINATIONS.filter((d) => !d.toLowerCase().startsWith(q) && d.toLowerCase().includes(q));
+    return [...starts, ...includes].slice(0, 6);
+  };
+
+  const handleInputChange = (value: string) => {
+    setDestination(value);
+    setActiveIndex(-1);
+    // suggestions are computed with debounce in effect below
+  };
+
+  // Debounce suggestions for better UX & perf
+  useEffect(() => {
+    if (!destination) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setIsLoadingSuggestions(false);
+      return;
+    }
+
+    setIsLoadingSuggestions(true);
+    const id = setTimeout(() => {
+      const results = filterSuggestions(destination);
+      setSuggestions(results);
+      setShowSuggestions(results.length > 0);
+      setActiveIndex(-1);
+      setIsLoadingSuggestions(false);
+    }, 250);
+
+    return () => clearTimeout(id);
+  }, [destination]);
+
+  const selectSuggestion = (value: string) => {
+    setDestination(value);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setActiveIndex(-1);
+  };
+
+  const highlightMatch = (text: string, query: string) => {
+    if (!query) return text;
+    const q = query.trim().toLowerCase();
+    const idx = text.toLowerCase().indexOf(q);
+    if (idx === -1) return text;
+    return (
+      <>
+        {text.slice(0, idx)}
+        <span className="font-semibold">{text.slice(idx, idx + q.length)}</span>
+        {text.slice(idx + q.length)}
+      </>
+    );
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIndex((i) => Math.min(i + 1, suggestions.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIndex((i) => Math.max(i - 1, 0));
+    } else if (e.key === 'Enter') {
+      if (activeIndex >= 0 && suggestions[activeIndex]) {
+        e.preventDefault();
+        selectSuggestion(suggestions[activeIndex]);
+      }
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (ev: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(ev.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   if (variant === 'hero') {
     return (
       <form onSubmit={handleSearch} className={`w-full ${className}`}>
@@ -47,20 +138,56 @@ const SearchBar: React.FC<SearchBarProps> = ({ variant = 'default', className = 
                      style={{ color: focusedField === 'destination' ? '#FF1B7C' : '#999' }}>
                   <MapPin size={18} strokeWidth={2.5} />
                 </div>
-                <input
-                  type="text"
-                  placeholder="Où souhaitez-vous aller ?"
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  onFocus={() => setFocusedField('destination')}
-                  onBlur={() => setFocusedField(null)}
-                  className={`w-full pl-10 pr-4 py-3.5 border-2 rounded-xl font-medium transition-all duration-300 placeholder-gray-400
-                    ${focusedField === 'destination' 
-                      ? 'border-pink-500 bg-pink-50/30 shadow-lg' 
-                      : 'border-gray-200 bg-gray-50/50 hover:border-gray-300'
-                    }
-                    focus:outline-none`}
-                />
+                <div ref={containerRef} className="relative">
+                  <input
+                    type="text"
+                    placeholder="Où souhaitez-vous aller ?"
+                    value={destination}
+                    onChange={(e) => handleInputChange(e.target.value)}
+                    onFocus={() => { setFocusedField('destination'); if (suggestions.length) setShowSuggestions(true); }}
+                    onBlur={() => setFocusedField(null)}
+                    onKeyDown={handleKeyDown}
+                    aria-autocomplete="list"
+                    aria-expanded={showSuggestions}
+                    aria-haspopup="listbox"
+                    className={`w-full pl-10 pr-10 py-3.5 border-2 rounded-xl font-medium transition-all duration-300 placeholder-gray-400
+                      ${focusedField === 'destination' 
+                        ? 'border-pink-500 bg-pink-50/30 shadow-lg' 
+                        : 'border-gray-200 bg-gray-50/50 hover:border-gray-300'
+                      }
+                      focus:outline-none`}
+                  />
+                  {destination && (
+                    <button type="button" onClick={() => handleInputChange('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                      <X size={16} />
+                    </button>
+                  )}
+
+                  {showSuggestions && (
+                    <ul role="listbox" aria-label="Suggestions de destinations" className="absolute z-50 left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden max-h-56 overflow-auto text-sm">
+                      {isLoadingSuggestions && (
+                        <li className="px-4 py-2 text-gray-500 flex items-center gap-2">
+                          <Loader2 className="animate-spin" size={14} /> Chargement...
+                        </li>
+                      )}
+                      {!isLoadingSuggestions && suggestions.length === 0 && (
+                        <li className="px-4 py-2 text-gray-500">Aucune suggestion trouvée</li>
+                      )}
+                      {suggestions.map((s, idx) => (
+                        <li
+                          key={s}
+                          role="option"
+                          aria-selected={activeIndex === idx}
+                          onMouseDown={(ev) => ev.preventDefault()}
+                          onClick={() => selectSuggestion(s)}
+                          className={`px-4 py-2 cursor-pointer hover:bg-pink-50 ${activeIndex === idx ? 'bg-pink-50 text-pink-700 font-semibold' : 'text-gray-700'}`}
+                        >
+                          {highlightMatch(s, destination)}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -165,15 +292,43 @@ const SearchBar: React.FC<SearchBarProps> = ({ variant = 'default', className = 
         {/* Destination */}
         <div className={`flex-1 relative transition-all duration-300 ${focusedField === 'destination' ? 'ring-2 ring-pink-300 rounded-lg' : ''}`}>
           <MapPin size={16} className={`absolute left-3 top-3 transition-colors ${focusedField === 'destination' ? 'text-pink-500' : 'text-gray-400'}`} />
-          <input
-            type="text"
-            placeholder="Destination"
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-            onFocus={() => setFocusedField('destination')}
-            onBlur={() => setFocusedField(null)}
-            className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:border-pink-500 transition-colors hover:border-gray-400"
-          />
+          <div ref={containerRef} className="relative">
+            <input
+              type="text"
+              placeholder="Destination"
+              value={destination}
+              onChange={(e) => handleInputChange(e.target.value)}
+              onFocus={() => { setFocusedField('destination'); if (suggestions.length) setShowSuggestions(true); }}
+              onBlur={() => setFocusedField(null)}
+              onKeyDown={handleKeyDown}
+              aria-autocomplete="list"
+              aria-expanded={showSuggestions}
+              aria-haspopup="listbox"
+              className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:border-pink-500 transition-colors hover:border-gray-400"
+            />
+            {destination && (
+              <button type="button" onClick={() => handleInputChange('')} className="absolute right-3 top-3 text-gray-500 hover:text-gray-700">
+                <X size={14} />
+              </button>
+            )}
+
+            {showSuggestions && suggestions.length > 0 && (
+              <ul role="listbox" className="absolute z-50 left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden max-h-56 overflow-auto text-sm">
+                {suggestions.map((s, idx) => (
+                  <li
+                    key={s}
+                    role="option"
+                    aria-selected={activeIndex === idx}
+                    onMouseDown={(ev) => ev.preventDefault()}
+                    onClick={() => selectSuggestion(s)}
+                    className={`px-4 py-2 cursor-pointer hover:bg-pink-50 ${activeIndex === idx ? 'bg-pink-50 text-pink-700 font-semibold' : 'text-gray-700'}`}
+                  >
+                    {s}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         {/* Check-in Date */}
