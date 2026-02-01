@@ -582,7 +582,7 @@ const InputField = ({ label, placeholder, icon: Icon, type = 'text', value, onCh
   useEffect(() => {
     if (type === 'text' && value && suggestions.length > 0) {
       const filtered = suggestions.filter((suggestion: string) =>
-        suggestion.toLowerCase().includes(value.toLowerCase())
+        suggestion.toLowerCase().startsWith(value.toLowerCase())
       );
       setFilteredSuggestions(filtered);
       setShowSuggestions(filtered.length > 0);
@@ -781,9 +781,10 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
     setErrors(prev => ({ ...prev, destination: validateDestination(value) }));
     
     // Filtrer les suggestions basées sur l'input de l'utilisateur
+    // Utiliser startsWith pour une meilleure expérience (afficher suggestions commençant par le texte)
     if (value.length > 0) {
       const filtered = destinationSuggestions.filter(suggestion =>
-        suggestion.toLowerCase().includes(value.toLowerCase())
+        suggestion.toLowerCase().startsWith(value.toLowerCase())
       );
       setShowSuggestions(filtered.length > 0);
     } else {
@@ -950,7 +951,7 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
                       <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
                         {destinationSuggestions
                           .filter(suggestion => 
-                            suggestion.toLowerCase().includes(destination.toLowerCase())
+                            suggestion.toLowerCase().startsWith(destination.toLowerCase())
                           )
                           .map((suggestion, idx) => (
                             <button
