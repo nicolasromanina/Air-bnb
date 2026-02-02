@@ -1628,6 +1628,7 @@ const PropertyCard = ({
   description: string;
   buttonText?: string;
 }) => {
+  const navigate = useNavigate();
   const [buttonHover, setButtonHover] = useState(false);
   const [featureHoverIndex, setFeatureHoverIndex] = useState<number | null>(null);
   const [diamondHover, setDiamondHover] = useState(false);
@@ -1697,6 +1698,7 @@ const PropertyCard = ({
               transform: buttonHover ? 'scale(1.02)' : 'scale(1)',
               fontFamily: "'Montserrat', sans-serif"
             }}
+            onClick={() => navigate('/appartement')}
             onMouseEnter={() => setButtonHover(true)}
             onMouseLeave={() => setButtonHover(false)}
           >
