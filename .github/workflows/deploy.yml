@@ -1,0 +1,36 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - develop
+      - staging
+      - main
+
+jobs:
+  deploy-test:
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment: test
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Déploiement TEST"
+
+  deploy-preprod:
+    if: github.ref == 'refs/heads/staging'
+    runs-on: ubuntu-latest
+    environment: preprod
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Déploiement PRE-PROD"
+
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Déploiement PROD"
