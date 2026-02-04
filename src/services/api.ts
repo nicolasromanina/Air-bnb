@@ -493,7 +493,7 @@ class ApiService {
   }
 
   async submitContactForm(data: any): Promise<ApiResponse<any>> {
-    return this.request('/contact/submit', {
+    return this.request('/contact-messages/submit', {
       method: 'POST',
       body: JSON.stringify(data),
       timeout: 90000,

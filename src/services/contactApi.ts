@@ -158,7 +158,7 @@ export const contactServices = {
 
   // Soumettre un formulaire de contact
   async submitContactForm(data: ContactFormData): Promise<{ success: boolean; message: string }> {
-    const response = await api.post('/contact/submit', data);
+    const response = await api.post('/contact-messages/submit', data);
     if (response.success) {
       return {
         success: true,
