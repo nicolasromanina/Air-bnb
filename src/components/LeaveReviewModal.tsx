@@ -33,11 +33,22 @@ export const LeaveReviewModal: React.FC<LeaveReviewModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation
+    if (!title.trim()) {
+      setError('Veuillez entrer un titre pour votre avis');
+      return;
+    }
+    if (!comment.trim()) {
+      setError('Veuillez entrer votre commentaire');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      await api.post('/reviews', {
+      const response = await api.post('/reviews', {
         reservationId,
         rating,
         title,
@@ -45,10 +56,19 @@ export const LeaveReviewModal: React.FC<LeaveReviewModalProps> = ({
         categories
       });
 
-      onSuccess();
-      onClose();
+      if (response.success) {
+        onSuccess();
+        onClose();
+      } else {
+        setError(response.error || 'Erreur lors de la soumission de l\'avis');
+      }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to submit review');
+      console.error('Review submission error:', err);
+      setError(
+        err?.response?.data?.error || 
+        err?.message || 
+        'Erreur réseau. Veuillez réessayer.'
+      );
     } finally {
       setLoading(false);
     }

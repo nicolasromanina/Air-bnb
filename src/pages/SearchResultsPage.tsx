@@ -43,14 +43,19 @@ export const SearchResultsPage: React.FC = () => {
         const params = new URLSearchParams(searchParams);
         params.set('page', currentPage.toString());
 
-        const response = await api.get<SearchResponse>('/search', {
-          params: Object.fromEntries(params)
-        });
+        const response = await api.get<SearchResponse>(`/search?${params.toString()}`);
 
-        setResults(response.data.apartments);
-        setPagination(response.data.pagination);
+        if (response.success && response.data?.apartments) {
+          setResults(response.data.apartments);
+          setPagination(response.data.pagination);
+          setError('');
+        } else {
+          setError(response.error || 'Failed to fetch search results');
+          setResults([]);
+        }
       } catch (err: any) {
         setError(err.response?.data?.error || 'Failed to fetch search results');
+        setResults([]);
       } finally {
         setLoading(false);
       }

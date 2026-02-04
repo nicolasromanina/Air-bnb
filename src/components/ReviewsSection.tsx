@@ -48,13 +48,19 @@ export const ReviewsSection: React.FC<{ apartmentId: number }> = ({ apartmentId 
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const response = await api.get(`/reviews/apartment/${apartmentId}`, {
-          params: { sortBy, status: 'approved' }
+        const params = new URLSearchParams({
+          sortBy,
+          status: 'approved'
         });
-        setReviews(response.data.reviews);
-        setStats(response.data.stats);
+        const response = await api.get(`/reviews/apartment/${apartmentId}?${params.toString()}`);
+        
+        if (response.success && response.data) {
+          setReviews(response.data.reviews || []);
+          setStats(response.data.stats || null);
+        }
       } catch (error) {
         console.error('Error fetching reviews:', error);
+        setReviews([]);
       } finally {
         setLoading(false);
       }

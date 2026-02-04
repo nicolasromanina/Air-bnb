@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { isAdmin } from '@/utils/auth';
-import { config } from '@/config/env';
+import { api } from '@/services/api';
 
 export default function Legal() {
   const [content, setContent] = useState<any>(null);
@@ -14,9 +14,12 @@ export default function Legal() {
 
   const loadContent = async () => {
     try {
-      const response = await fetch(`${config.apiBaseUrl}/cms/legal`);
-      const data = await response.json();
-      setContent(data.page);
+      const response = await api.get('/cms/legal');
+      if (response.success && response.data?.page) {
+        setContent(response.data.page);
+      } else {
+        console.error('Failed to load legal page:', response.error);
+      }
     } catch (err) {
       console.error('Failed to load legal page:', err);
     } finally {

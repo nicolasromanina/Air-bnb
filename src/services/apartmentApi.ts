@@ -1,3 +1,5 @@
+import { api } from './api';
+
 export interface Room {
   id: number;
   image: string;
@@ -92,157 +94,99 @@ export interface ApartmentPageData {
   };
 }
 
-import { api } from './api';
-
-// Configuration du backend
-const BACKEND_URL = 'http://api.waya2828.odns.fr/api/apartment';
-
-// Fonction utilitaire pour les requêtes
-const makeRequest = async <T>(
-  url: string,
-  method: string = 'GET',
-  data?: any,
-  options?: RequestInit
-): Promise<T> => {
-  const token = api.getAuthToken();
-
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` }),
-    ...options?.headers,
-  };
-
-  const config: RequestInit = {
-    method,
-    headers,
-    credentials: 'include',
-    ...(data && { body: JSON.stringify(data) }),
-    ...options,
-  };
-
-  try {
-    const response = await fetch(`${BACKEND_URL}${url}`, config);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const errorMessage = errorData.error || `Erreur HTTP ${response.status}: ${response.statusText}`;
-      console.error(`Erreur ${method} ${url}:`, errorMessage);
-      throw new Error(errorMessage);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error(`Erreur ${method} ${url}:`, error);
-    throw error;
-  }
-};
-
-// Fonction pour les uploads d'images
-const uploadImage = async (file: File): Promise<{ url: string }> => {
-  const formData = new FormData();
-  formData.append('image', file);
-  
-  const token = api.getAuthToken();
-  
-  try {
-    const response = await fetch(`${BACKEND_URL}/upload`, {
-      method: 'POST',
-      headers: {
-        ...(token && { 'Authorization': `Bearer ${token}` }),
-      },
-      body: formData,
-      credentials: 'include',
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.error || `Erreur HTTP ${response.status}: ${response.statusText}`
-      );
-    }
-    const resp = await response.json();
-
-    // Convertir le chemin relatif en URL absolue si nécessaire
-    if (resp && resp.url && typeof resp.url === 'string' && resp.url.startsWith('/')) {
-      const backendOrigin = BACKEND_URL.replace('/api/apartment', '');
-      resp.url = `${backendOrigin}${resp.url}`;
-    }
-
-    return resp;
-  } catch (error) {
-    console.error('Erreur upload image:', error);
-    throw error;
-  }
-};
-
 export const apartmentApi = {
   // Récupérer les données de la page appartements
   async getApartmentPage(): Promise<ApartmentPageData> {
-    return await makeRequest<ApartmentPageData>('');
+    const response = await api.get('/apartment');
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de la récupération de la page appartement');
   },
 
   // Mettre à jour la page appartements
   async updateApartmentPage(data: Partial<ApartmentPageData>): Promise<ApartmentPageData> {
-    const response = await makeRequest<{ message: string; page: ApartmentPageData }>('/', 'PUT', data);
-    return response.page;
+    const response = await api.put('/apartment', data);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de la mise à jour de la page appartement');
   },
 
   // Mettre à jour une section spécifique
   async updateSection(section: string, subsection?: string, data?: any): Promise<ApartmentPageData> {
     const url = subsection 
-      ? `/section/${section}/${subsection}`
-      : `/section/${section}`;
+      ? `/apartment/section/${section}/${subsection}`
+      : `/apartment/section/${section}`;
     
-    const response = await makeRequest<{ message: string; page: ApartmentPageData }>(url, 'PUT', data);
-    return response.page;
+    const response = await api.put(url, data);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || `Erreur lors de la mise à jour de la section ${section}`);
   },
 
   // Ajouter une chambre
   async addRoom(room: Omit<Room, 'id'>): Promise<ApartmentPageData> {
-    const response = await makeRequest<{ message: string; page: ApartmentPageData }>(
-      '/rooms',
-      'POST',
-      { room }
-    );
-    return response.page;
+    const response = await api.post('/apartment/rooms', { room });
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de l\'ajout de la chambre');
   },
 
   // Mettre à jour une chambre
   async updateRoom(id: number, updates: Partial<Room>): Promise<ApartmentPageData> {
-    const response = await makeRequest<{ message: string; page: ApartmentPageData }>(
-      `/rooms/${id}`,
-      'PUT',
-      { updates }
-    );
-    return response.page;
+    const response = await api.put(`/apartment/rooms/${id}`, { updates });
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de la mise à jour de la chambre');
   },
 
   // Supprimer une chambre
   async deleteRoom(id: number): Promise<ApartmentPageData> {
-    const response = await makeRequest<{ message: string; page: ApartmentPageData }>(
-      `/rooms/${id}`,
-      'DELETE'
-    );
-    return response.page;
+    const response = await api.delete(`/apartment/rooms/${id}`);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de la suppression de la chambre');
   },
 
   // Télécharger une image
   async uploadImage(file: File): Promise<{ url: string }> {
-    return await uploadImage(file);
+    const response = await api.uploadImage(file, 'apartment');
+    if (response.success) {
+      return { url: response.data.url };
+    }
+    throw new Error(response.error || 'Erreur lors du téléchargement de l\'image');
   },
 
   // Méthodes utilitaires pour gérer les données locales
   async saveLocalChanges(data: ApartmentPageData): Promise<void> {
-    localStorage.setItem('apartmentPage_draft', JSON.stringify(data));
+    try {
+      localStorage.setItem('apartmentPage_draft', JSON.stringify(data));
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde locale:', error);
+    }
   },
 
   async loadLocalChanges(): Promise<ApartmentPageData | null> {
-    const draft = localStorage.getItem('apartmentPage_draft');
-    return draft ? JSON.parse(draft) : null;
+    try {
+      const draft = localStorage.getItem('apartmentPage_draft');
+      return draft ? JSON.parse(draft) : null;
+    } catch (error) {
+      console.error('Erreur lors du chargement local:', error);
+      return null;
+    }
   },
 
   async clearLocalChanges(): Promise<void> {
-    localStorage.removeItem('apartmentPage_draft');
+    try {
+      localStorage.removeItem('apartmentPage_draft');
+    } catch (error) {
+      console.error('Erreur lors du nettoyage local:', error);
+    }
   },
 
   // Synchroniser avec le serveur
@@ -260,12 +204,11 @@ export const apartmentApi = {
   // Vérifier la connexion
   async checkConnection(): Promise<{ connected: boolean; message?: string }> {
     try {
-      await fetch(`${BACKEND_URL}/health`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-      });
-      return { connected: true };
+      const response = await api.healthCheck();
+      return { 
+        connected: response.success,
+        message: response.success ? undefined : 'Connexion impossible'
+      };
     } catch (error) {
       return { 
         connected: false, 
@@ -304,11 +247,11 @@ export const apartmentApi = {
 
   // Réinitialiser aux valeurs par défaut
   async resetToDefaults(): Promise<ApartmentPageData> {
-    const response = await makeRequest<{ message: string; page: ApartmentPageData }>(
-      '/reset',
-      'POST'
-    );
-    return response.page;
+    const response = await api.post('/apartment/reset');
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de la réinitialisation');
   },
 
   // Exporter les données
@@ -322,12 +265,11 @@ export const apartmentApi = {
 
   // Importer des données
   async importData(data: ApartmentPageData): Promise<ApartmentPageData> {
-    const response = await makeRequest<{ message: string; page: ApartmentPageData }>(
-      '/import',
-      'POST',
-      data
-    );
-    return response.page;
+    const response = await api.post('/apartment/import', data);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de l\'importation');
   }
 };
 

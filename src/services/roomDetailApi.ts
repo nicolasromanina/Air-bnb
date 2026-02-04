@@ -1,7 +1,5 @@
 import { api } from './api';
 
-const BACKEND_URL = 'http://api.waya2828.odns.fr/api';
-
 export interface RoomDetail {
   _id?: string;
   id?: number;
@@ -37,7 +35,6 @@ export interface RoomDetail {
   };
 }
 
-// Interfaces pour les modifications spécifiques
 export interface HeroInfo {
   title: string;
   subtitle: string;
@@ -95,184 +92,68 @@ export interface UpdateRoomDetailPayload {
   }[];
 }
 
-const makeRequest = async <T>(
-  url: string,
-  method: string = 'GET',
-  data?: any
-): Promise<T> => {
-  const token = api.getAuthToken();
-  
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` }),
-  };
-  
-  const config: RequestInit = {
-    method,
-    headers,
-    credentials: 'include', // Important pour CORS avec credentials
-    mode: 'cors', // Spécifie explicitement le mode CORS
-    ...(data && { body: JSON.stringify(data) }),
-  };
-  
-  try {
-    const fullUrl = url.startsWith('http') ? url : `${BACKEND_URL}${url}`;
-    console.log(`[makeRequest] 📡 Starting ${method} request:`, {
-      url: fullUrl,
-      hasToken: !!token,
-      hasData: !!data,
-      dataSize: data ? Object.keys(data).length : 0
-    });
-    
-    const response = await fetch(fullUrl, config);
-    
-    console.log(`[makeRequest] 📥 Response received:`, {
-      url: fullUrl,
-      status: response.status,
-      statusText: response.statusText,
-      contentType: response.headers.get('content-type'),
-      corsHeaders: {
-        'access-control-allow-origin': response.headers.get('access-control-allow-origin'),
-        'access-control-allow-methods': response.headers.get('access-control-allow-methods'),
-        'access-control-allow-credentials': response.headers.get('access-control-allow-credentials')
-      }
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const errorMsg = errorData.error || errorData.message || `Erreur HTTP ${response.status}`;
-      console.error(`[makeRequest] ❌ HTTP Error:`, {
-        status: response.status,
-        errorMsg,
-        errorData
-      });
-      throw new Error(errorMsg);
-    }
-    
-    const result = await response.json();
-    console.log(`[makeRequest] ✅ ${method} ${fullUrl} - Success:`, {
-      hasData: !!result,
-      dataKeys: result ? Object.keys(result).slice(0, 5) : []
-    });
-    return result;
-  } catch (error) {
-    console.error(`[makeRequest] ❌ EXCEPTION ${method} ${url}:`, {
-      errorMessage: error instanceof Error ? error.message : String(error),
-      errorType: error instanceof Error ? error.constructor.name : typeof error
-    });
-    throw error;
-  }
-};
-
 export const roomDetailApi = {
-  // Récupérer les détails d'une chambre via l'API room-details
-  async getRoomDetail(roomId: number): Promise<{ success: boolean; data: RoomDetail }> {
+  // Récupérer les détails d'une chambre
+  async getRoomDetail(roomId: number): Promise<RoomDetail> {
+    console.log('[roomDetailApi] 🔍 getRoomDetail called with roomId:', roomId);
+    
     try {
-      console.log('[roomDetailApi] 🔍 getRoomDetail called with roomId:', roomId);
+      const response = await api.get(`/room-details/${roomId}`);
       
-      // Essayer d'abord le nouvel endpoint room-details
-      try {
-        console.log('[roomDetailApi] 📡 Attempting /room-details/' + roomId);
-        const result = await makeRequest<{ success: boolean; data: RoomDetail }>(
-          `/room-details/${roomId}`
-        );
-        console.log('[roomDetailApi] ✅ /room-details succeeded:', {
-          success: result.success,
-          hasData: !!result.data,
-          roomId: result.data?.roomId,
-          title: result.data?.title
+      if (response.success) {
+        console.log('[roomDetailApi] ✅ Room detail retrieved:', {
+          roomId: response.data?.roomId,
+          title: response.data?.title
         });
-        return result;
-      } catch (e) {
-        // Fallback vers apartment-details
-        console.log('[roomDetailApi] ⚠️ /room-details failed, attempting fallback');
-        console.error('[roomDetailApi] Error details:', {
-          message: e instanceof Error ? e.message : String(e),
-          type: typeof e,
-          errorObj: e
-        });
-        
-        // Vérifier si c'est une erreur CORS
-        if (e instanceof Error && (e.message.includes('Failed to fetch') || e.message.includes('CORS'))) {
-          console.log('[roomDetailApi] ⚠️ CORS error detected, trying with CORS proxy');
-          // Essayer avec un proxy CORS temporaire
-          const proxyResult = await fetch(`https://cors-anywhere.herokuapp.com/${BACKEND_URL}/room-details/${roomId}`, {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            mode: 'cors'
-          });
-          
-          if (proxyResult.ok) {
-            const proxyData = await proxyResult.json();
-            console.log('[roomDetailApi] ✅ CORS proxy succeeded');
-            return proxyData;
-          }
-        }
-        
-        console.log('[roomDetailApi] 📡 Attempting fallback /apartment-details/' + roomId);
-        const result = await makeRequest<{ success: boolean; data: RoomDetail }>(
-          `/apartment-details/${roomId}`
-        );
-        console.log('[roomDetailApi] ✅ /apartment-details succeeded:', {
-          success: result.success,
-          hasData: !!result.data,
-          roomId: result.data?.roomId,
-          title: result.data?.title
-        });
-        return result;
+        return response.data!;
       }
+      
+      // Fallback vers apartment-details si room-details échoue
+      console.log('[roomDetailApi] ⚠️ room-details failed, attempting apartment-details fallback');
+      const fallbackResponse = await api.get(`/apartment-details/${roomId}`);
+      
+      if (fallbackResponse.success) {
+        console.log('[roomDetailApi] ✅ Apartment-details fallback succeeded');
+        return fallbackResponse.data!;
+      }
+      
+      throw new Error(fallbackResponse.error || 'Erreur lors de la récupération des détails de la chambre');
     } catch (error) {
-      console.error('[roomDetailApi] ❌ Erreur fetch room detail:', {
-        error: error instanceof Error ? error.message : String(error),
-        roomId,
-        stack: error instanceof Error ? error.stack : undefined
-      });
+      console.error('[roomDetailApi] ❌ Error fetching room detail:', error);
       throw error;
     }
   },
   
-  // Mettre à jour une chambre (via room-details endpoint)
-  async updateRoomDetail(roomId: number, data: Partial<RoomDetail>): Promise<{ success: boolean; data: RoomDetail }> {
-    console.log('[API] 📤 updateRoomDetail called with:', { roomId, dataKeys: Object.keys(data) });
+  // Mettre à jour une chambre
+  async updateRoomDetail(roomId: number, data: Partial<RoomDetail>): Promise<RoomDetail> {
+    console.log('[roomDetailApi] 🔄 updateRoomDetail called with:', { roomId, dataKeys: Object.keys(data) });
+    
     try {
-      // Essayer d'abord le nouvel endpoint room-details
-      console.log('[API] 🔄 Trying /room-details/' + roomId + ' endpoint...');
-      const result = await makeRequest<{ success: boolean; data: RoomDetail }>(
-        `/room-details/${roomId}`,
-        'PUT',
-        data
-      );
-      console.log('[API] ✅ Room detail update (room-details) response:', result);
-      return result;
-    } catch (e) {
-      console.log('[API] ⚠️ /room-details failed, trying fallback');
-      console.error('[API] Error from /room-details:', e);
+      const response = await api.put(`/room-details/${roomId}`, data);
       
-      // Si c'est une erreur CORS, essayer différentes approches
-      if (e instanceof Error && (e.message.includes('Failed to fetch') || e.message.includes('CORS'))) {
-        console.log('[API] ⚠️ CORS error detected, trying alternative endpoints');
-        
-        // Essayer apartment-details comme fallback
-        try {
-          const fallbackResult = await makeRequest<any>(
-            `/apartment-details/${roomId}`,
-            'PUT',
-            data
-          );
-          console.log('[API] 📥 Response from /apartment-details:', fallbackResult);
-          return { success: true, data: { roomId, ...data } as RoomDetail };
-        } catch (fallbackError) {
-          console.error('[API] ❌ All endpoints failed:', fallbackError);
-        }
+      if (response.success) {
+        console.log('[roomDetailApi] ✅ Room detail updated successfully');
+        return response.data!;
       }
       
-      throw e;
+      // Fallback vers apartment-details
+      console.log('[roomDetailApi] ⚠️ room-details update failed, attempting apartment-details fallback');
+      const fallbackResponse = await api.put(`/apartment-details/${roomId}`, data);
+      
+      if (fallbackResponse.success) {
+        console.log('[roomDetailApi] ✅ Apartment-details update succeeded');
+        return fallbackResponse.data!;
+      }
+      
+      throw new Error(fallbackResponse.error || 'Erreur lors de la mise à jour de la chambre');
+    } catch (error) {
+      console.error('[roomDetailApi] ❌ Error updating room detail:', error);
+      throw error;
     }
   },
   
   // Mettre à jour les informations de hero
-  async updateHeroInfo(roomId: number, heroInfo: Partial<HeroInfo>): Promise<{ success: boolean; data: RoomDetail }> {
+  async updateHeroInfo(roomId: number, heroInfo: Partial<HeroInfo>): Promise<RoomDetail> {
     const payload: UpdateRoomDetailPayload = {
       ...(heroInfo.title && { title: heroInfo.title }),
       ...(heroInfo.subtitle && { subtitle: heroInfo.subtitle }),
@@ -281,25 +162,20 @@ export const roomDetailApi = {
       ...(heroInfo.images && { images: heroInfo.images }),
     };
     
-    console.log('[API] 🔄 updateHeroInfo called:', { roomId, payload });
+    console.log('[roomDetailApi] 🔄 updateHeroInfo called:', { roomId, payload });
     
-    // Utiliser le bon endpoint
-    return await makeRequest<{ success: boolean; data: RoomDetail }>(
-      `/room-details/${roomId}`,
-      'PATCH',
-      payload
-    );
+    return await this.updateRoomDetail(roomId, payload);
   },
 
   // Mettre à jour le prix
-  async updatePricing(roomId: number, pricingInfo: PricingInfo): Promise<{ success: boolean; data: RoomDetail }> {
-    console.log('[API] 🔄 updatePricing called:', { roomId, pricingInfo });
+  async updatePricing(roomId: number, pricingInfo: PricingInfo): Promise<RoomDetail> {
+    console.log('[roomDetailApi] 🔄 updatePricing called:', { roomId, pricingInfo });
     return await this.updateRoomDetail(roomId, { price: pricingInfo.price });
   },
 
   // Mettre à jour le nombre d'invités et de chambres
-  async updateGuestBedInfo(roomId: number, guestBedInfo: GuestBedInfo): Promise<{ success: boolean; data: RoomDetail }> {
-    console.log('[API] 🔄 updateGuestBedInfo called:', { roomId, guestBedInfo });
+  async updateGuestBedInfo(roomId: number, guestBedInfo: GuestBedInfo): Promise<RoomDetail> {
+    console.log('[roomDetailApi] 🔄 updateGuestBedInfo called:', { roomId, guestBedInfo });
     return await this.updateRoomDetail(roomId, { 
       guests: guestBedInfo.guests,
       bedrooms: guestBedInfo.bedrooms,
@@ -309,23 +185,23 @@ export const roomDetailApi = {
   },
 
   // Mettre à jour la ville et le pays
-  async updateCityCountry(roomId: number, city: string, country: string): Promise<{ success: boolean; data: RoomDetail }> {
-    console.log('[API] 🔄 updateCityCountry called:', { roomId, city, country });
+  async updateCityCountry(roomId: number, city: string, country: string): Promise<RoomDetail> {
+    console.log('[roomDetailApi] 🔄 updateCityCountry called:', { roomId, city, country });
     return await this.updateRoomDetail(roomId, { city, country });
   },
 
   // Mettre à jour les images
-  async updateImages(roomId: number, imageUrls: string[]): Promise<{ success: boolean; data: RoomDetail }> {
-    console.log('[API] 🔄 updateImages called:', { roomId, imageCount: imageUrls.length });
+  async updateImages(roomId: number, imageUrls: string[]): Promise<RoomDetail> {
+    console.log('[roomDetailApi] 🔄 updateImages called:', { roomId, imageCount: imageUrls.length });
     return await this.updateRoomDetail(roomId, { images: imageUrls });
   },
 
   // Ajouter une image
-  async addImage(roomId: number, imageUrl: string): Promise<{ success: boolean; data: RoomDetail }> {
+  async addImage(roomId: number, imageUrl: string): Promise<RoomDetail> {
     try {
-      console.log('[API] ➕ addImage called:', { roomId, imageUrl });
+      console.log('[roomDetailApi] ➕ addImage called:', { roomId, imageUrl });
       const room = await this.getRoomDetail(roomId);
-      const updatedImages = [...(room.data.images || []), imageUrl];
+      const updatedImages = [...(room.images || []), imageUrl];
       return await this.updateRoomDetail(roomId, { images: updatedImages });
     } catch (error) {
       console.error('Erreur lors de l\'ajout d\'image:', error);
@@ -334,11 +210,11 @@ export const roomDetailApi = {
   },
 
   // Supprimer une image
-  async removeImage(roomId: number, imageUrl: string): Promise<{ success: boolean; data: RoomDetail }> {
+  async removeImage(roomId: number, imageUrl: string): Promise<RoomDetail> {
     try {
-      console.log('[API] ➖ removeImage called:', { roomId, imageUrl });
+      console.log('[roomDetailApi] ➖ removeImage called:', { roomId, imageUrl });
       const room = await this.getRoomDetail(roomId);
-      const updatedImages = (room.data.images || []).filter(img => img !== imageUrl);
+      const updatedImages = (room.images || []).filter(img => img !== imageUrl);
       return await this.updateRoomDetail(roomId, { images: updatedImages });
     } catch (error) {
       console.error('Erreur lors de la suppression d\'image:', error);
@@ -347,81 +223,33 @@ export const roomDetailApi = {
   },
 
   // Réorganiser les images
-  async reorderImages(roomId: number, imageUrls: string[]): Promise<{ success: boolean; data: RoomDetail }> {
-    console.log('[API] 🔄 reorderImages called:', { roomId, imageCount: imageUrls.length });
+  async reorderImages(roomId: number, imageUrls: string[]): Promise<RoomDetail> {
+    console.log('[roomDetailApi] 🔄 reorderImages called:', { roomId, imageCount: imageUrls.length });
     return await this.updateRoomDetail(roomId, { images: imageUrls });
   },
 
   // Télécharger une image
-  async uploadImage(file: File): Promise<{ success: boolean; url: string; filename: string }> {
-    const token = api.getAuthToken();
-    const formData = new FormData();
-    formData.append('image', file);
-
-    console.log('[API] 📤 uploadImage called:', { 
+  async uploadImage(file: File): Promise<{ url: string; filename: string }> {
+    console.log('[roomDetailApi] 📤 uploadImage called:', { 
       filename: file.name, 
       size: file.size,
-      type: file.type,
-      hasToken: !!token 
+      type: file.type
     });
 
     try {
-      // Essayer d'abord room-details endpoint
-      let uploadUrl = `${BACKEND_URL}/room-details/upload`;
+      const response = await api.uploadImage(file, 'room-details');
       
-      let response = await fetch(uploadUrl, {
-        method: 'POST',
-        headers: {
-          ...(token && { 'Authorization': `Bearer ${token}` }),
-        },
-        credentials: 'include',
-        mode: 'cors',
-        body: formData,
-      });
-
-      console.log('[API] 📥 Upload response (room-details):', {
-        status: response.status,
-        ok: response.ok,
-        url: uploadUrl
-      });
-
-      // Fallback vers apartment endpoint si nécessaire
-      if (!response.ok) {
-        console.log('[API] ⚠️ room-details upload failed, trying apartment endpoint');
-        uploadUrl = `${BACKEND_URL}/apartment/upload`;
-        response = await fetch(uploadUrl, {
-          method: 'POST',
-          headers: {
-            ...(token && { 'Authorization': `Bearer ${token}` }),
-          },
-          credentials: 'include',
-          mode: 'cors',
-          body: formData,
-        });
-        
-        console.log('[API] 📥 Upload response (apartment):', {
-          status: response.status,
-          ok: response.ok,
-          url: uploadUrl
-        });
+      if (response.success) {
+        console.log('[roomDetailApi] ✅ Upload success:', response.data);
+        return {
+          url: response.data.url,
+          filename: response.data.filename || file.name
+        };
       }
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('[API] ❌ Upload failed:', errorData);
-        throw new Error(errorData.error || `Erreur HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('[API] ✅ Upload success:', data);
       
-      return {
-        success: true,
-        url: data.url || data.filename || '',
-        filename: data.filename || ''
-      };
+      throw new Error(response.error || 'Erreur lors du téléchargement de l\'image');
     } catch (error) {
-      console.error('[API] ❌ Erreur upload image:', error);
+      console.error('[roomDetailApi] ❌ Error uploading image:', error);
       throw error;
     }
   },
@@ -430,18 +258,27 @@ export const roomDetailApi = {
   
   // Sauvegarder localement
   saveLocalChanges(roomId: number, data: RoomDetail): void {
-    console.log('[LocalStorage] 💾 Saving local changes for room:', roomId);
-    localStorage.setItem(`roomDetail_${roomId}_draft`, JSON.stringify(data));
+    console.log('[roomDetailApi] 💾 Saving local changes for room:', roomId);
+    try {
+      localStorage.setItem(`roomDetail_${roomId}_draft`, JSON.stringify(data));
+    } catch (error) {
+      console.error('[roomDetailApi] ❌ Error saving local changes:', error);
+    }
   },
 
   // Charger les changements locaux
   getLocalChanges(roomId: number): RoomDetail | null {
-    const data = localStorage.getItem(`roomDetail_${roomId}_draft`);
-    if (data) {
-      console.log('[LocalStorage] 📂 Loading local changes for room:', roomId);
-      return JSON.parse(data);
+    try {
+      const data = localStorage.getItem(`roomDetail_${roomId}_draft`);
+      if (data) {
+        console.log('[roomDetailApi] 📂 Loading local changes for room:', roomId);
+        return JSON.parse(data);
+      }
+      return null;
+    } catch (error) {
+      console.error('[roomDetailApi] ❌ Error loading local changes:', error);
+      return null;
     }
-    return null;
   },
 
   // Valider les données d'entrée
@@ -469,7 +306,7 @@ export const roomDetailApi = {
     }
 
     const valid = errors.length === 0;
-    console.log('[Validation] 🔍 Validation result:', { valid, errorCount: errors.length });
+    console.log('[roomDetailApi] 🔍 Validation result:', { valid, errorCount: errors.length });
     
     return {
       valid,
@@ -479,65 +316,164 @@ export const roomDetailApi = {
 
   // Sauvegarder les modifications localement avec versioning
   saveLocalDraft(roomId: number, data: RoomDetail, version: number = 1): void {
-    console.log('[LocalStorage] 💾 Saving draft v' + version + ' for room:', roomId);
-    const draft = {
-      ...data,
-      meta: {
-        ...(data.meta || {}),
-        version,
-        updatedAt: new Date().toISOString(),
-      },
-    };
-    localStorage.setItem(`roomDetail_${roomId}_draft`, JSON.stringify(draft));
-    localStorage.setItem(`roomDetail_${roomId}_draft_timestamp`, new Date().toISOString());
+    console.log('[roomDetailApi] 💾 Saving draft v' + version + ' for room:', roomId);
+    try {
+      const draft = {
+        ...data,
+        meta: {
+          ...(data.meta || {}),
+          version,
+          updatedAt: new Date().toISOString(),
+        },
+      };
+      localStorage.setItem(`roomDetail_${roomId}_draft`, JSON.stringify(draft));
+      localStorage.setItem(`roomDetail_${roomId}_draft_timestamp`, new Date().toISOString());
+    } catch (error) {
+      console.error('[roomDetailApi] ❌ Error saving draft:', error);
+    }
   },
 
   // Récupérer le timestamp du brouillon
   getLocalDraftTimestamp(roomId: number): string | null {
-    return localStorage.getItem(`roomDetail_${roomId}_draft_timestamp`);
+    try {
+      return localStorage.getItem(`roomDetail_${roomId}_draft_timestamp`);
+    } catch (error) {
+      console.error('[roomDetailApi] ❌ Error getting draft timestamp:', error);
+      return null;
+    }
   },
 
   // Supprimer le brouillon local après sauvegarde
   clearLocalDraft(roomId: number): void {
-    console.log('[LocalStorage] 🗑️ Clearing draft for room:', roomId);
-    localStorage.removeItem(`roomDetail_${roomId}_draft`);
-    localStorage.removeItem(`roomDetail_${roomId}_draft_timestamp`);
+    console.log('[roomDetailApi] 🗑️ Clearing draft for room:', roomId);
+    try {
+      localStorage.removeItem(`roomDetail_${roomId}_draft`);
+      localStorage.removeItem(`roomDetail_${roomId}_draft_timestamp`);
+    } catch (error) {
+      console.error('[roomDetailApi] ❌ Error clearing draft:', error);
+    }
   },
 
   // Obtenir tous les brouillons locaux
   getAllLocalDrafts(): Record<string, RoomDetail> {
     const drafts: Record<string, RoomDetail> = {};
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith('roomDetail_') && key?.endsWith('_draft')) {
-        const roomId = key.replace('roomDetail_', '').replace('_draft', '');
-        const data = localStorage.getItem(key);
-        if (data) {
-          drafts[roomId] = JSON.parse(data);
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith('roomDetail_') && key?.endsWith('_draft')) {
+          const roomId = key.replace('roomDetail_', '').replace('_draft', '');
+          const data = localStorage.getItem(key);
+          if (data) {
+            drafts[roomId] = JSON.parse(data);
+          }
         }
       }
+      console.log('[roomDetailApi] 📚 Found drafts:', Object.keys(drafts));
+    } catch (error) {
+      console.error('[roomDetailApi] ❌ Error getting all drafts:', error);
     }
-    console.log('[LocalStorage] 📚 Found drafts:', Object.keys(drafts));
     return drafts;
   },
 
   // Synchroniser les changements avec le serveur
-  async syncLocalChanges(roomId: number): Promise<{ success: boolean; data: RoomDetail }> {
+  async syncLocalChanges(roomId: number): Promise<RoomDetail> {
     const localDraft = this.getLocalChanges(roomId);
     if (!localDraft) {
       throw new Error('Aucun brouillon local trouvé');
     }
 
-    console.log('[API] 🔄 Syncing local changes for room:', roomId);
+    console.log('[roomDetailApi] 🔄 Syncing local changes for room:', roomId);
     
     try {
       const result = await this.updateRoomDetail(roomId, localDraft);
       this.clearLocalDraft(roomId);
-      console.log('[API] ✅ Sync successful:', result);
+      console.log('[roomDetailApi] ✅ Sync successful:', result);
       return result;
     } catch (error) {
-      console.error('[API] ❌ Sync failed:', error);
+      console.error('[roomDetailApi] ❌ Sync failed:', error);
       throw error;
     }
+  },
+
+  // Obtenir toutes les chambres
+  async getAllRooms(): Promise<RoomDetail[]> {
+    try {
+      const response = await api.get('/room-details');
+      if (response.success) {
+        return response.data || [];
+      }
+      return [];
+    } catch (error) {
+      console.error('[roomDetailApi] ❌ Error getting all rooms:', error);
+      return [];
+    }
+  },
+
+  // Créer une nouvelle chambre
+  async createRoom(data: Omit<RoomDetail, '_id' | 'id' | 'roomId' | 'meta'> & { roomId: number }): Promise<RoomDetail> {
+    console.log('[roomDetailApi] ➕ createRoom called:', { roomId: data.roomId });
+    
+    try {
+      const response = await api.post('/room-details', data);
+      if (response.success) {
+        return response.data!;
+      }
+      throw new Error(response.error || 'Erreur lors de la création de la chambre');
+    } catch (error) {
+      console.error('[roomDetailApi] ❌ Error creating room:', error);
+      throw error;
+    }
+  },
+
+  // Supprimer une chambre
+  async deleteRoom(roomId: number): Promise<{ success: boolean; message: string }> {
+    console.log('[roomDetailApi] 🗑️ deleteRoom called:', { roomId });
+    
+    try {
+      const response = await api.delete(`/room-details/${roomId}`);
+      if (response.success) {
+        this.clearLocalDraft(roomId);
+        return {
+          success: true,
+          message: response.message || 'Chambre supprimée avec succès'
+        };
+      }
+      return {
+        success: false,
+        message: response.error || 'Erreur lors de la suppression de la chambre'
+      };
+    } catch (error) {
+      console.error('[roomDetailApi] ❌ Error deleting room:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Erreur inconnue'
+      };
+    }
+  },
+
+  // Mettre à jour les options supplémentaires
+  async updateAdditionalOptions(
+    roomId: number, 
+    options: {
+      optionId: string;
+      name: string;
+      price: number;
+      quantity: number;
+      pricingType: 'fixed' | 'per_day' | 'per_guest';
+      image?: string;
+    }[]
+  ): Promise<RoomDetail> {
+    console.log('[roomDetailApi] 🔄 updateAdditionalOptions called:', { roomId, optionsCount: options.length });
+    
+    return await this.updateRoomDetail(roomId, { additionalOptions: options });
+  },
+
+  // Mettre à jour les IDs d'options sélectionnées
+  async updateSelectedOptionIds(roomId: number, optionIds: string[]): Promise<RoomDetail> {
+    console.log('[roomDetailApi] 🔄 updateSelectedOptionIds called:', { roomId, optionIds });
+    
+    return await this.updateRoomDetail(roomId, { selectedOptionIds: optionIds });
   }
 };
+
+export default roomDetailApi;

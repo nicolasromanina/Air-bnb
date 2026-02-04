@@ -1,4 +1,4 @@
-// services/serviceApi.ts
+import { api } from './api';
 
 export interface ServicePageData {
   service1: {
@@ -92,170 +92,118 @@ export interface ServicePageData {
   };
 }
 
-import { api } from './api';
-
-// Configuration du backend
-const BACKEND_URL = 'http://api.waya2828.odns.fr/api/services';
-
-// Fonction utilitaire pour les requêtes
-const makeRequest = async <T>(
-  url: string,
-  method: string = 'GET',
-  data?: any,
-  options?: RequestInit
-): Promise<T> => {
-  const token = api.getAuthToken();
-
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` }),
-    ...options?.headers,
-  };
-
-  const config: RequestInit = {
-    method,
-    headers,
-    credentials: 'include',
-    ...(data && { body: JSON.stringify(data) }),
-    ...options,
-  };
-
-  try {
-    const response = await fetch(`${BACKEND_URL}${url}`, config);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const errorMessage = errorData.error || `Erreur HTTP ${response.status}: ${response.statusText}`;
-      console.error(`Erreur ${method} ${url}:`, errorMessage);
-      throw new Error(errorMessage);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error(`Erreur ${method} ${url}:`, error);
-    throw error;
-  }
-};
-
-// Fonction pour les uploads d'images
-const uploadImage = async (file: File): Promise<{ url: string }> => {
-  const formData = new FormData();
-  formData.append('image', file);
-  
-  const token = api.getAuthToken();
-  
-  try {
-    const response = await fetch(`${BACKEND_URL}/upload`, {
-      method: 'POST',
-      headers: {
-        ...(token && { 'Authorization': `Bearer ${token}` }),
-      },
-      body: formData,
-      credentials: 'include',
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.error || `Erreur HTTP ${response.status}: ${response.statusText}`
-      );
-    }
-    const resp = await response.json();
-
-    // If backend returns a relative path (e.g. `/uploads/...`), convert to absolute
-    if (resp && resp.url && typeof resp.url === 'string' && resp.url.startsWith('/')) {
-      const backendOrigin = BACKEND_URL.replace('/api/services', '');
-      resp.url = `${backendOrigin}${resp.url}`;
-    }
-
-    return resp;
-  } catch (error) {
-    console.error('Erreur upload image:', error);
-    throw error;
-  }
-};
-
 export const serviceApi = {
   // Récupérer les données de la page services
   async getServicePage(): Promise<ServicePageData> {
-    return await makeRequest<ServicePageData>('');
+    const response = await api.get('/services');
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de la récupération de la page services');
   },
 
   // Mettre à jour la page services
   async updateServicePage(data: Partial<ServicePageData>): Promise<ServicePageData> {
-    const response = await makeRequest<{ message: string; page: ServicePageData }>('/', 'PUT', data);
-    return response.page;
+    const response = await api.put('/services', data);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de la mise à jour de la page services');
   },
 
   // Mettre à jour une section spécifique
   async updateSection(section: string, subsection?: string, data?: any): Promise<ServicePageData> {
     const url = subsection 
-      ? `/section/${section}/${subsection}`
-      : `/section/${section}`;
+      ? `/services/section/${section}/${subsection}`
+      : `/services/section/${section}`;
     
-    const response = await makeRequest<{ message: string; page: ServicePageData }>(url, 'PUT', data);
-    return response.page;
+    const response = await api.put(url, data);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || `Erreur lors de la mise à jour de la section ${section}`);
   },
 
   // Ajouter une question FAQ
   async addFAQItem(question: string, answer: string): Promise<ServicePageData> {
-    const response = await makeRequest<{ message: string; page: ServicePageData }>(
-      '/faq',
-      'POST',
-      { question, answer }
-    );
-    return response.page;
+    const response = await api.post('/services/faq', { question, answer });
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de l\'ajout de la question FAQ');
+  },
+
+  // Mettre à jour une question FAQ
+  async updateFAQItem(index: number, question: string, answer: string): Promise<ServicePageData> {
+    const response = await api.put(`/services/faq/${index}`, { question, answer });
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de la mise à jour de la question FAQ');
   },
 
   // Supprimer une question FAQ
   async removeFAQItem(index: number): Promise<ServicePageData> {
-    const response = await makeRequest<{ message: string; page: ServicePageData }>(
-      `/faq/${index}`,
-      'DELETE'
-    );
-    return response.page;
+    const response = await api.delete(`/services/faq/${index}`);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de la suppression de la question FAQ');
   },
 
   // Ajouter une feature
   async addFeature(section: string, feature: any): Promise<ServicePageData> {
-    const response = await makeRequest<{ message: string; page: ServicePageData }>(
-      '/features',
-      'POST',
-      { section, feature }
-    );
-    return response.page;
+    const response = await api.post('/services/features', { section, feature });
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de l\'ajout de la feature');
   },
 
   // Télécharger une image
   async uploadImage(file: File): Promise<{ url: string }> {
-    return await uploadImage(file);
+    const response = await api.uploadImage(file, 'services');
+    if (response.success) {
+      return { url: response.data.url };
+    }
+    throw new Error(response.error || 'Erreur lors du téléchargement de l\'image');
   },
 
   // Méthodes utilitaires pour gérer les données locales
   async saveLocalChanges(data: ServicePageData): Promise<void> {
-    // Optionnel: sauvegarde locale avant envoi au serveur
-    localStorage.setItem('servicePage_draft', JSON.stringify(data));
+    try {
+      localStorage.setItem('servicePage_draft', JSON.stringify(data));
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde locale:', error);
+    }
   },
 
   async loadLocalChanges(): Promise<ServicePageData | null> {
-    const draft = localStorage.getItem('servicePage_draft');
-    return draft ? JSON.parse(draft) : null;
+    try {
+      const draft = localStorage.getItem('servicePage_draft');
+      return draft ? JSON.parse(draft) : null;
+    } catch (error) {
+      console.error('Erreur lors du chargement local:', error);
+      return null;
+    }
   },
 
   async clearLocalChanges(): Promise<void> {
-    localStorage.removeItem('servicePage_draft');
+    try {
+      localStorage.removeItem('servicePage_draft');
+    } catch (error) {
+      console.error('Erreur lors du nettoyage local:', error);
+    }
   },
 
   // Synchroniser avec le serveur
   async syncWithServer(): Promise<ServicePageData> {
     const draft = await this.loadLocalChanges();
     if (draft) {
-      // Si on a des changements locaux, on les envoie au serveur
       const serverData = await this.updateServicePage(draft);
       await this.clearLocalChanges();
       return serverData;
     } else {
-      // Sinon on récupère les données du serveur
       return await this.getServicePage();
     }
   },
@@ -263,12 +211,11 @@ export const serviceApi = {
   // Vérifier la connexion
   async checkConnection(): Promise<{ connected: boolean; message?: string }> {
     try {
-      await fetch(`${BACKEND_URL}/health`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-      });
-      return { connected: true };
+      const response = await api.healthCheck();
+      return { 
+        connected: response.success,
+        message: response.success ? undefined : 'Connexion impossible'
+      };
     } catch (error) {
       return { 
         connected: false, 
@@ -313,11 +260,11 @@ export const serviceApi = {
 
   // Réinitialiser aux valeurs par défaut
   async resetToDefaults(): Promise<ServicePageData> {
-    const response = await makeRequest<{ message: string; page: ServicePageData }>(
-      '/reset',
-      'POST'
-    );
-    return response.page;
+    const response = await api.post('/services/reset');
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de la réinitialisation');
   },
 
   // Exporter les données
@@ -331,12 +278,11 @@ export const serviceApi = {
 
   // Importer des données
   async importData(data: ServicePageData): Promise<ServicePageData> {
-    const response = await makeRequest<{ message: string; page: ServicePageData }>(
-      '/import',
-      'POST',
-      data
-    );
-    return response.page;
+    const response = await api.post('/services/import', data);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de l\'importation');
   }
 };
 

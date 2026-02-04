@@ -1,153 +1,153 @@
-// src/services/homeApi.ts
+import { api } from './api';
 
-import { HomePageData, IHomePage } from '../types/home.types';
-
-// In the browser `process` is not defined (Vite uses `import.meta.env`).
-// Use `process.env` when available (node envs) otherwise fall back to Vite's `import.meta.env`.
-const API_BASE_URL = (
-  typeof process !== 'undefined' && (process as any)?.env?.NEXT_PUBLIC_API_URL
-) || (import.meta as any)?.env?.VITE_API_URL || 'http://api.waya2828.odns.fr/api';
-
-const HOME_ENDPOINT = `${API_BASE_URL}/home`;
-
-/**
- * Gestion des erreurs HTTP 
- */
-class HttpError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-    public details?: any
-  ) {
-    super(message);
-    this.name = 'HttpError';
-  }
+export interface HomePageData {
+  heroSection: {
+    titleLine1: string;
+    titleLine2: string;
+    titleLine3: string;
+    description: string;
+    backgroundImage: string;
+    buttonText: string;
+  };
+  welcomeSection: {
+    title: string;
+    subtitle: string;
+    description: string;
+    image: string;
+    features: Array<{
+      icon: string;
+      title: string;
+      description: string;
+    }>;
+  };
+  marqueeSection: {
+    text: string;
+    speed: number;
+    backgroundColor: string;
+    textColor: string;
+  };
+  destinationSearch: {
+    title: string;
+    subtitle: string;
+    placeholder: string;
+    buttonText: string;
+    backgroundImage: string;
+  };
+  featureRoom: {
+    title: string;
+    subtitle: string;
+    room: {
+      id: number;
+      title: string;
+      description: string;
+      image: string;
+      price: number;
+      guests: string;
+      bedrooms: string;
+      rating: number;
+    };
+    features: Array<{
+      icon: string;
+      title: string;
+      description: string;
+    }>;
+  };
+  marqueeBlackSection: {
+    text: string;
+    backgroundColor: string;
+    textColor: string;
+  };
+  videoSection: {
+    title: string;
+    subtitle: string;
+    description: string;
+    videoUrl: string;
+    coverImage: string;
+    playButtonText: string;
+  };
+  servicesSection: {
+    title: string;
+    subtitle: string;
+    services: Array<{
+      icon: string;
+      title: string;
+      description: string;
+      link: string;
+    }>;
+  };
+  featuresSection: {
+    title: string;
+    subtitle: string;
+    features: Array<{
+      icon: string;
+      title: string;
+      description: string;
+    }>;
+  };
+  statsSection: {
+    title: string;
+    stats: Array<{
+      value: string;
+      label: string;
+      suffix?: string;
+    }>;
+    backgroundImage: string;
+  };
+  logoSection: {
+    title: string;
+    logos: Array<{
+      name: string;
+      logo: string;
+      url?: string;
+    }>;
+  };
+  threeCardsSection: {
+    title: string;
+    subtitle: string;
+    cards: Array<{
+      icon: string;
+      title: string;
+      description: string;
+      buttonText: string;
+      link: string;
+    }>;
+  };
+  meta: {
+    updatedAt: string;
+    updatedBy: string;
+    version: number;
+  };
 }
 
-/**
- * Service API pour la gestion de la page d'accueil
- */
-class HomeApiService {
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const token = this.getAuthToken();
-    
-    const defaultHeaders: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-
-    if (token) {
-      defaultHeaders['Authorization'] = `Bearer ${token}`;
-    }
-
-    const config: RequestInit = {
-      ...options,
-      headers: {
-        ...defaultHeaders,
-        ...options.headers,
-      },
-      credentials: 'include',
-    };
-
-    try {
-      const response = await fetch(endpoint, config);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new HttpError(
-          response.status,
-          errorData.error || `HTTP Error ${response.status}`,
-          errorData.details
-        );
-      }
-
-      return response.json();
-    } catch (error) {
-      if (error instanceof HttpError) {
-        throw error;
-      }
-      throw new HttpError(
-        0,
-        'Network error or server unreachable',
-        error instanceof Error ? error.message : 'Unknown error'
-      );
-    }
-  }
-
-  private getAuthToken(): string | null {
-    if (typeof window !== 'undefined') {
-      // Pour Next.js, vous pouvez adapter selon votre méthode de stockage
-      return localStorage.getItem('auth_token') || 
-             sessionStorage.getItem('auth_token') ||
-             null;
-    }
-    return null;
-  }
-
-  /**
-   * Récupérer la page d'accueil
-   */
+export const homeApi = {
+  // Récupérer la page d'accueil
   async getHomePage(): Promise<HomePageData> {
-    try {
-      const response = await this.request<HomePageData>(HOME_ENDPOINT, {
-        method: 'GET',
-      });
-
-      return response;
-    } catch (error) {
-      console.error('Error fetching home page:', error);
-      throw error;
+    const response = await api.get('/home');
+    if (response.success) {
+      return response.data;
     }
-  }
+    throw new Error(response.error || 'Erreur lors de la récupération de la page d\'accueil');
+  },
 
-  /**
-   * Mettre à jour toute la page d'accueil
-   */
-  async updateHomePage(data: Partial<IHomePage>): Promise<{ message: string; page: HomePageData }> {
-    try {
-      const response = await this.request<{ message: string; page: HomePageData }>(
-        HOME_ENDPOINT,
-        {
-          method: 'PUT',
-          body: JSON.stringify(data),
-        }
-      );
-
-      return response;
-    } catch (error) {
-      console.error('Error updating home page:', error);
-      throw error;
+  // Mettre à jour la page d'accueil
+  async updateHomePage(data: Partial<HomePageData>): Promise<HomePageData> {
+    const response = await api.put('/home', data);
+    if (response.success) {
+      return response.data;
     }
-  }
+    throw new Error(response.error || 'Erreur lors de la mise à jour de la page d\'accueil');
+  },
 
-  /**
-   * Mettre à jour une section spécifique
-   */
-  async updateSection(
-    section: string,
-    data: any
-  ): Promise<{ message: string; page: HomePageData }> {
-    try {
-      const response = await this.request<{ message: string; page: HomePageData }>(
-        `${HOME_ENDPOINT}/section/${section}`,
-        {
-          method: 'PUT',
-          body: JSON.stringify(data),
-        }
-      );
-
-      return response;
-    } catch (error) {
-      console.error(`Error updating section ${section}:`, error);
-      throw error;
+  // Mettre à jour une section spécifique
+  async updateSection(section: string, data: any): Promise<HomePageData> {
+    const response = await api.put(`/home/section/${section}`, data);
+    if (response.success) {
+      return response.data;
     }
-  }
+    throw new Error(response.error || `Erreur lors de la mise à jour de la section ${section}`);
+  },
 
-  /**
-   * Vérifier les sections valides
-   */
+  // Vérifier si une section est valide
   isValidSection(section: string): boolean {
     const validSections = [
       'heroSection',
@@ -165,152 +165,129 @@ class HomeApiService {
     ];
     
     return validSections.includes(section);
-  }
+  },
 
-  /**
-   * Méthode utilitaire pour formater les données avant envoi
-   */
-  formatHomePageData(data: Partial<IHomePage>): any {
-    // Vous pouvez ajouter des transformations ici si nécessaire
-    return data;
-  }
-
-  /**
-   * Récupérer l'historique des versions (si vous implémentez cette fonctionnalité plus tard)
-   */
-  async getVersionHistory(): Promise<any> {
-    try {
-      // Cette route n'existe pas encore dans votre backend
-      // Vous pouvez l'ajouter ultérieurement
-      const response = await this.request<any>(`${HOME_ENDPOINT}/versions`, {
-        method: 'GET',
-      });
-
-      return response;
-    } catch (error) {
-      console.error('Error fetching version history:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Restaurer une version précédente (si vous implémentez cette fonctionnalité)
-   */
-  async restoreVersion(versionId: string): Promise<any> {
-    try {
-      const response = await this.request<any>(
-        `${HOME_ENDPOINT}/restore/${versionId}`,
-        {
-          method: 'POST',
-        }
-      );
-
-      return response;
-    } catch (error) {
-      console.error('Error restoring version:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Télécharger une image (méthode utilitaire)
-   */
+  // Télécharger une image
   async uploadImage(file: File): Promise<{ url: string }> {
-    try {
-      const formData = new FormData();
-      formData.append('image', file);
-
-      // Note: Vous aurez besoin d'une route dédiée pour l'upload d'images
-      const response = await fetch(`${API_BASE_URL}/upload/image`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Authorization': `Bearer ${this.getAuthToken()}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Image upload failed');
-      }
-
-      return response.json();
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      throw error;
+    const response = await api.uploadImage(file, 'home');
+    if (response.success) {
+      return { url: response.data.url };
     }
-  }
+    throw new Error(response.error || 'Erreur lors du téléchargement de l\'image');
+  },
 
-  /**
-   * Test de connexion au serveur
-   */
+  // Télécharger une vidéo
+  async uploadVideo(file: File): Promise<{ url: string }> {
+    const response = await api.uploadVideo(file, 'home');
+    if (response.success) {
+      return { url: response.data.url };
+    }
+    throw new Error(response.error || 'Erreur lors du téléchargement de la vidéo');
+  },
+
+  // Test de connexion
   async testConnection(): Promise<boolean> {
     try {
-      const response = await fetch(`${API_BASE_URL}/health`, {
-        method: 'GET',
-      });
-      return response.ok;
+      const response = await api.healthCheck();
+      return response.success;
     } catch {
       return false;
     }
+  },
+
+  // Gestion du cache local
+  async saveLocalChanges(data: HomePageData): Promise<void> {
+    try {
+      localStorage.setItem('homePage_draft', JSON.stringify(data));
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde locale:', error);
+    }
+  },
+
+  async loadLocalChanges(): Promise<HomePageData | null> {
+    try {
+      const draft = localStorage.getItem('homePage_draft');
+      return draft ? JSON.parse(draft) : null;
+    } catch (error) {
+      console.error('Erreur lors du chargement local:', error);
+      return null;
+    }
+  },
+
+  async clearLocalChanges(): Promise<void> {
+    try {
+      localStorage.removeItem('homePage_draft');
+    } catch (error) {
+      console.error('Erreur lors du nettoyage local:', error);
+    }
+  },
+
+  // Synchroniser avec le serveur
+  async syncWithServer(): Promise<HomePageData> {
+    const draft = await this.loadLocalChanges();
+    if (draft) {
+      const serverData = await this.updateHomePage(draft);
+      await this.clearLocalChanges();
+      return serverData;
+    } else {
+      return await this.getHomePage();
+    }
+  },
+
+  // Obtenir les statistiques
+  async getStats(): Promise<{
+    sections: number;
+    features: number;
+    services: number;
+    logos: number;
+    images: number;
+    lastUpdated: string;
+  }> {
+    const data = await this.getHomePage();
+    
+    const totalImages = 
+      1 + // hero background
+      1 + // welcome image
+      1 + // destination search background
+      1 + // feature room image
+      1 + // video cover
+      1 + // stats background
+      data.logoSection.logos.length;
+    
+    return {
+      sections: 12,
+      features: data.featuresSection.features.length,
+      services: data.servicesSection.services.length,
+      logos: data.logoSection.logos.length,
+      images: totalImages,
+      lastUpdated: data.meta.updatedAt
+    };
+  },
+
+  // Réinitialiser aux valeurs par défaut
+  async resetToDefaults(): Promise<HomePageData> {
+    const response = await api.post('/home/reset');
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de la réinitialisation');
+  },
+
+  // Exporter les données
+  async exportData(): Promise<{ data: HomePageData; timestamp: string }> {
+    const data = await this.getHomePage();
+    return {
+      data,
+      timestamp: new Date().toISOString()
+    };
+  },
+
+  // Importer des données
+  async importData(data: HomePageData): Promise<HomePageData> {
+    const response = await api.post('/home/import', data);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de l\'importation');
   }
-}
-
-/**
- * Hook React personnalisé pour utiliser le service
- */
-// Pour Next.js/React, vous pouvez créer un hook custom
-export const useHomeApi = () => {
-  const homeApi = new HomeApiService();
-
-  const getHomePage = async () => {
-    try {
-      return await homeApi.getHomePage();
-    } catch (error) {
-      // Gérer l'erreur selon votre contexte d'application
-      if (error instanceof HttpError) {
-        // Afficher un message à l'utilisateur
-        console.error(`HTTP Error ${error.status}: ${error.message}`);
-      }
-      throw error;
-    }
-  };
-
-  const updateHomePage = async (data: Partial<IHomePage>) => {
-    try {
-      return await homeApi.updateHomePage(data);
-    } catch (error) {
-      console.error('Failed to update home page:', error);
-      throw error;
-    }
-  };
-
-  const updateSection = async (section: string, data: any) => {
-    if (!homeApi.isValidSection(section)) {
-      throw new Error(`Invalid section: ${section}`);
-    }
-
-    try {
-      return await homeApi.updateSection(section, data);
-    } catch (error) {
-      console.error(`Failed to update section ${section}:`, error);
-      throw error;
-    }
-  };
-
-  return {
-    getHomePage,
-    updateHomePage,
-    updateSection,
-    isValidSection: homeApi.isValidSection,
-    testConnection: homeApi.testConnection,
-    uploadImage: homeApi.uploadImage,
-  };
 };
-
-/**
- * Instance singleton pour une utilisation directe
- */
-export const homeApi = new HomeApiService();
-
-// Exporter les types d'erreur pour une meilleure gestion
-export { HttpError };

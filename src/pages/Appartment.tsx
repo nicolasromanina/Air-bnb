@@ -63,7 +63,7 @@ const normalizeImageUrl = (url: string | any): string => {
   }
   
   if (urlStr.startsWith('/uploads')) {
-    const backendOrigin = 'http://api.waya2828.odns.fr';
+    const backendOrigin = 'https://api.wmsignaturegroup.com';
     return `${backendOrigin}${urlStr}`;
   }
   

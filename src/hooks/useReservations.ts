@@ -65,7 +65,8 @@ export const useReservations = () => {
   const deleteReservation = useCallback(async (id: string) => {
     try {
       setLoading(true);
-      const response = await api.deleteReservation(id);
+      // Utiliser cancelReservation au lieu de deleteReservation
+      const response = await api.cancelReservation(id);
       
       if (response.success) {
         toast.success('Réservation supprimée avec succès');

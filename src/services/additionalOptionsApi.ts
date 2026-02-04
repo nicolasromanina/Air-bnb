@@ -1,8 +1,6 @@
 // services/additionalOptionsApi.ts
 import { api } from './api';
 
-const BACKEND_URL = 'http://api.waya2828.odns.fr/api/options';
-
 export interface AdditionalOption {
   _id: string;
   name: string;
@@ -11,7 +9,7 @@ export interface AdditionalOption {
   price: number;
   pricingType: 'fixed' | 'per_day' | 'per_guest';
   icon?: string;
-  image?: string; // URL of the option image
+  image?: string;
   isActive: boolean;
   apartmentIds?: number[];
   createdAt: string;
@@ -36,51 +34,26 @@ export interface OptionsResponse {
   error?: string;
 }
 
-const makeRequest = async <T>(
-  url: string,
-  method: string = 'GET',
-  data?: any,
-  options?: RequestInit
-): Promise<T> => {
-  const token = api.getAuthToken();
-
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` }),
-    ...options?.headers,
-  };
-
-  const config: RequestInit = {
-    method,
-    headers,
-    credentials: 'include',
-    ...(data && { body: JSON.stringify(data) }),
-    ...options,
-  };
-
-  try {
-    const response = await fetch(`${BACKEND_URL}${url}`, config);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const errorMessage = errorData.error || `Erreur HTTP ${response.status}: ${response.statusText}`;
-      console.error(`Erreur ${method} ${url}:`, errorMessage);
-      throw new Error(errorMessage);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error(`Erreur ${method} ${url}:`, error);
-    throw error;
-  }
-};
-
 export const additionalOptionsApi = {
   // Récupérer toutes les options (groupées par catégorie)
   async getAllOptions(apartmentId?: number): Promise<OptionsResponse> {
     try {
-      const url = apartmentId ? `?apartmentId=${apartmentId}` : '';
-      return await makeRequest<OptionsResponse>(url);
+      const url = apartmentId ? `/options?apartmentId=${apartmentId}` : '/options';
+      const response = await api.get(url);
+      
+      if (response.success) {
+        return {
+          success: true,
+          options: response.data?.options,
+          all: response.data?.all || response.data,
+          message: response.message
+        };
+      }
+      
+      return {
+        success: false,
+        error: response.error
+      };
     } catch (error) {
       console.error('Erreur lors de la récupération des options:', error);
       return {
@@ -93,7 +66,22 @@ export const additionalOptionsApi = {
   // Récupérer les options par catégorie
   async getOptionsByCategory(category: string): Promise<OptionsResponse> {
     try {
-      return await makeRequest<OptionsResponse>(`/category/${category}`);
+      const response = await api.get(`/options/category/${category}`);
+      
+      if (response.success) {
+        return {
+          success: true,
+          options: response.data?.options,
+          all: response.data?.all || response.data,
+          category,
+          message: response.message
+        };
+      }
+      
+      return {
+        success: false,
+        error: response.error
+      };
     } catch (error) {
       console.error(`Erreur lors de la récupération des options ${category}:`, error);
       return {
@@ -106,7 +94,20 @@ export const additionalOptionsApi = {
   // Récupérer une option spécifique
   async getOption(id: string): Promise<OptionsResponse> {
     try {
-      return await makeRequest<OptionsResponse>(`/${id}`);
+      const response = await api.get(`/options/${id}`);
+      
+      if (response.success) {
+        return {
+          success: true,
+          option: response.data,
+          message: response.message
+        };
+      }
+      
+      return {
+        success: false,
+        error: response.error
+      };
     } catch (error) {
       console.error(`Erreur lors de la récupération de l'option ${id}:`, error);
       return {
@@ -116,10 +117,23 @@ export const additionalOptionsApi = {
     }
   },
 
-  // Créer une nouvelle option (Admin)
+  // Créer une nouvelle option
   async createOption(optionData: Omit<AdditionalOption, '_id' | 'createdAt' | 'updatedAt'>): Promise<OptionsResponse> {
     try {
-      return await makeRequest<OptionsResponse>('/', 'POST', optionData);
+      const response = await api.post('/options', optionData);
+      
+      if (response.success) {
+        return {
+          success: true,
+          option: response.data,
+          message: response.message || 'Option créée avec succès'
+        };
+      }
+      
+      return {
+        success: false,
+        error: response.error
+      };
     } catch (error) {
       console.error('Erreur lors de la création de l\'option:', error);
       return {
@@ -129,10 +143,23 @@ export const additionalOptionsApi = {
     }
   },
 
-  // Mettre à jour une option (Admin)
+  // Mettre à jour une option
   async updateOption(id: string, updates: Partial<AdditionalOption>): Promise<OptionsResponse> {
     try {
-      return await makeRequest<OptionsResponse>(`/${id}`, 'PUT', updates);
+      const response = await api.put(`/options/${id}`, updates);
+      
+      if (response.success) {
+        return {
+          success: true,
+          option: response.data,
+          message: response.message || 'Option mise à jour avec succès'
+        };
+      }
+      
+      return {
+        success: false,
+        error: response.error
+      };
     } catch (error) {
       console.error(`Erreur lors de la mise à jour de l'option ${id}:`, error);
       return {
@@ -142,10 +169,22 @@ export const additionalOptionsApi = {
     }
   },
 
-  // Supprimer une option (Admin)
+  // Supprimer une option
   async deleteOption(id: string): Promise<OptionsResponse> {
     try {
-      return await makeRequest<OptionsResponse>(`/${id}`, 'DELETE');
+      const response = await api.delete(`/options/${id}`);
+      
+      if (response.success) {
+        return {
+          success: true,
+          message: response.message || 'Option supprimée avec succès'
+        };
+      }
+      
+      return {
+        success: false,
+        error: response.error
+      };
     } catch (error) {
       console.error(`Erreur lors de la suppression de l'option ${id}:`, error);
       return {
@@ -158,7 +197,20 @@ export const additionalOptionsApi = {
   // Activer/désactiver une option
   async toggleOptionStatus(id: string, isActive: boolean): Promise<OptionsResponse> {
     try {
-      return await makeRequest<OptionsResponse>(`/${id}/status`, 'PATCH', { isActive });
+      const response = await api.patch(`/options/${id}/status`, { isActive });
+      
+      if (response.success) {
+        return {
+          success: true,
+          option: response.data,
+          message: response.message || 'Statut de l\'option mis à jour'
+        };
+      }
+      
+      return {
+        success: false,
+        error: response.error
+      };
     } catch (error) {
       console.error(`Erreur lors du changement de statut de l'option ${id}:`, error);
       return {
@@ -185,11 +237,16 @@ export const additionalOptionsApi = {
   // Rechercher des options
   async searchOptions(query: string): Promise<AdditionalOption[]> {
     try {
-      // Implémentation côté client si le backend ne le supporte pas
-      const response = await this.getAllOptions();
-      if (response.success && response.all) {
+      const response = await api.get(`/options/search?q=${encodeURIComponent(query)}`);
+      if (response.success && response.data) {
+        return response.data;
+      }
+      
+      // Fallback: recherche côté client
+      const allResponse = await this.getAllOptions();
+      if (allResponse.success && allResponse.all) {
         const searchTerm = query.toLowerCase();
-        return response.all.filter(option =>
+        return allResponse.all.filter(option =>
           option.name.toLowerCase().includes(searchTerm) ||
           option.description.toLowerCase().includes(searchTerm) ||
           option.category.toLowerCase().includes(searchTerm)
@@ -220,18 +277,54 @@ export const additionalOptionsApi = {
     if (!option.isActive) return false;
     
     if (!option.apartmentIds || option.apartmentIds.length === 0) {
-      // Option globale - applicable à tous les appartements
       return true;
     }
     
-    // Vérifier si l'appartement est dans la liste
     return apartmentId ? option.apartmentIds.includes(apartmentId) : false;
+  },
+
+  // Obtenir les options groupées par catégorie
+  async getGroupedOptions(apartmentId?: number): Promise<GroupedOptions> {
+    try {
+      const response = await this.getAllOptions(apartmentId);
+      if (response.success && response.options) {
+        return response.options;
+      }
+      
+      // Fallback: grouper manuellement
+      const allOptions = await this.getOptionsForApartment(apartmentId || 0);
+      const grouped: GroupedOptions = {
+        service: [],
+        modification: [],
+        insurance: [],
+        commodity: []
+      };
+      
+      allOptions.forEach(option => {
+        if (grouped[option.category]) {
+          grouped[option.category].push(option);
+        }
+      });
+      
+      return grouped;
+    } catch (error) {
+      console.error('Erreur lors du groupement des options:', error);
+      return {
+        service: [],
+        modification: [],
+        insurance: [],
+        commodity: []
+      };
+    }
   },
 
   // Gestion du cache local
   async saveLocalChanges(options: AdditionalOption[]): Promise<void> {
     try {
-      localStorage.setItem('additional_options_draft', JSON.stringify(options));
+      localStorage.setItem('additional_options_draft', JSON.stringify({
+        data: options,
+        timestamp: new Date().toISOString()
+      }));
     } catch (error) {
       console.error('Erreur lors de la sauvegarde locale:', error);
     }
@@ -240,7 +333,18 @@ export const additionalOptionsApi = {
   async loadLocalChanges(): Promise<AdditionalOption[]> {
     try {
       const draft = localStorage.getItem('additional_options_draft');
-      return draft ? JSON.parse(draft) : [];
+      if (!draft) return [];
+      
+      const { data, timestamp } = JSON.parse(draft);
+      const cacheAge = new Date().getTime() - new Date(timestamp).getTime();
+      const cacheMaxAge = 60 * 60 * 1000; // 1 heure
+      
+      if (cacheAge > cacheMaxAge) {
+        localStorage.removeItem('additional_options_draft');
+        return [];
+      }
+      
+      return data;
     } catch (error) {
       console.error('Erreur lors du chargement local:', error);
       return [];
@@ -253,6 +357,36 @@ export const additionalOptionsApi = {
     } catch (error) {
       console.error('Erreur lors du nettoyage local:', error);
     }
+  },
+
+  // Synchroniser avec le serveur
+  async syncWithServer(): Promise<AdditionalOption[]> {
+    const draft = await this.loadLocalChanges();
+    if (draft.length === 0) {
+      const response = await this.getAllOptions();
+      return response.success && response.all ? response.all : [];
+    }
+
+    const results = await Promise.all(
+      draft.map(async (option) => {
+        if (option._id) {
+          return await this.updateOption(option._id, option);
+        } else {
+          return await this.createOption(option);
+        }
+      })
+    );
+
+    const allSuccess = results.every(result => result.success);
+    if (allSuccess) {
+      await this.clearLocalChanges();
+    }
+
+    const updatedOptions = results
+      .filter(result => result.success && result.option)
+      .map(result => result.option!);
+
+    return updatedOptions;
   },
 
   // Exporter les options
@@ -275,19 +409,19 @@ export const additionalOptionsApi = {
   // Importer des options
   async importOptions(data: AdditionalOption[]): Promise<OptionsResponse> {
     try {
-      // Note: Cette fonctionnalité pourrait nécessiter une route backend dédiée
-      // Pour l'instant, on crée chaque option individuellement
       const results = await Promise.all(
-        data.map(option => this.createOption(option))
+        data.map(async (option) => {
+          const { _id, createdAt, updatedAt, ...optionData } = option;
+          return await this.createOption(optionData);
+        })
       );
       
-      const allSuccess = results.every(result => result.success);
+      const successCount = results.filter(result => result.success).length;
+      const failedCount = results.length - successCount;
       
       return {
-        success: allSuccess,
-        message: allSuccess 
-          ? `${data.length} options importées avec succès` 
-          : 'Certaines options n\'ont pas pu être importées'
+        success: successCount > 0,
+        message: `${successCount} options importées avec succès${failedCount > 0 ? `, ${failedCount} échecs` : ''}`
       };
     } catch (error) {
       console.error('Erreur lors de l\'importation:', error);
@@ -305,16 +439,19 @@ export const additionalOptionsApi = {
     active: number;
     inactive: number;
     averagePrice: number;
+    pricingTypes: Record<string, number>;
   }> {
     try {
       const response = await this.getAllOptions();
       if (response.success && response.all) {
         const options = response.all;
         const byCategory: Record<string, number> = {};
+        const pricingTypes: Record<string, number> = {};
         let totalPrice = 0;
         
         options.forEach(option => {
           byCategory[option.category] = (byCategory[option.category] || 0) + 1;
+          pricingTypes[option.pricingType] = (pricingTypes[option.pricingType] || 0) + 1;
           totalPrice += option.price;
         });
         
@@ -323,7 +460,8 @@ export const additionalOptionsApi = {
           byCategory,
           active: options.filter(o => o.isActive).length,
           inactive: options.filter(o => !o.isActive).length,
-          averagePrice: options.length > 0 ? totalPrice / options.length : 0
+          averagePrice: options.length > 0 ? totalPrice / options.length : 0,
+          pricingTypes
         };
       }
       return {
@@ -331,7 +469,8 @@ export const additionalOptionsApi = {
         byCategory: {},
         active: 0,
         inactive: 0,
-        averagePrice: 0
+        averagePrice: 0,
+        pricingTypes: {}
       };
     } catch (error) {
       console.error('Erreur lors de la récupération des statistiques:', error);
@@ -340,8 +479,23 @@ export const additionalOptionsApi = {
         byCategory: {},
         active: 0,
         inactive: 0,
-        averagePrice: 0
+        averagePrice: 0,
+        pricingTypes: {}
       };
+    }
+  },
+
+  // Télécharger une image d'option
+  async uploadOptionImage(file: File): Promise<{ url: string }> {
+    try {
+      const response = await api.uploadImage(file, 'options');
+      if (response.success) {
+        return { url: response.data.url };
+      }
+      throw new Error(response.error || 'Erreur lors du téléchargement');
+    } catch (error) {
+      console.error('Erreur lors du téléchargement de l\'image:', error);
+      throw error;
     }
   },
 
@@ -446,10 +600,11 @@ export const additionalOptionsApi = {
       );
       
       const successCount = results.filter(r => r.success).length;
+      const failedCount = results.length - successCount;
       
       return {
         success: successCount > 0,
-        message: `${successCount} options par défaut créées avec succès`
+        message: `${successCount} options par défaut créées avec succès${failedCount > 0 ? `, ${failedCount} échecs` : ''}`
       };
     } catch (error) {
       console.error('Erreur lors de l\'initialisation des options par défaut:', error);
@@ -458,6 +613,40 @@ export const additionalOptionsApi = {
         error: error instanceof Error ? error.message : 'Erreur inconnue'
       };
     }
+  },
+
+  // Valider une option
+  validateOption(option: Partial<AdditionalOption>): { valid: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    if (!option.name || option.name.trim().length === 0) {
+      errors.push('Le nom de l\'option est requis');
+    }
+
+    if (!option.description || option.description.trim().length === 0) {
+      errors.push('La description de l\'option est requise');
+    }
+
+    if (!option.category || !['service', 'modification', 'insurance', 'commodity'].includes(option.category)) {
+      errors.push('La catégorie de l\'option est invalide');
+    }
+
+    if (option.price === undefined || option.price < 0) {
+      errors.push('Le prix de l\'option doit être un nombre positif');
+    }
+
+    if (!option.pricingType || !['fixed', 'per_day', 'per_guest'].includes(option.pricingType)) {
+      errors.push('Le type de tarification est invalide');
+    }
+
+    if (option.apartmentIds && !Array.isArray(option.apartmentIds)) {
+      errors.push('Les IDs d\'appartements doivent être un tableau');
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors
+    };
   }
 };
 

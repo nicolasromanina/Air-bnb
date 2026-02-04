@@ -429,7 +429,7 @@ const Service1: React.FC<Service1Props> = ({
     if (dataValue && typeof dataValue === 'string' && dataValue.trim() !== '') {
       const normalizedUrl = normalizeImageUrl(dataValue);
       
-      if (normalizedUrl.includes('/uploads/') || normalizedUrl.includes('http://api.waya2828.odns.fr')) {
+      if (normalizedUrl.includes('/uploads/') || normalizedUrl.includes('https://api.wmsignaturegroup.com')) {
         return addCacheBuster(normalizedUrl, metaVersion, metaTimestamp || imageVersion);
       }
       
@@ -1155,7 +1155,7 @@ const Service2: React.FC<Service2Props> = ({
     if (dataValue && typeof dataValue === 'string' && dataValue.trim() !== '') {
       const normalizedUrl = normalizeImageUrl(dataValue);
       
-      if (normalizedUrl.includes('/uploads/') || normalizedUrl.includes('http://api.waya2828.odns.fr')) {
+      if (normalizedUrl.includes('/uploads/') || normalizedUrl.includes('https://api.wmsignaturegroup.com')) {
         return addCacheBuster(normalizedUrl, metaVersion, metaTimestamp || imageVersion);
       }
       
@@ -1408,18 +1408,23 @@ const Services = () => {
     setLoading(true);
     setError(null);
     try {
-      const connection = await serviceApi.checkConnection();
-      
-      if (!connection.connected) {
-        const localData = await serviceApi.loadLocalChanges();
-        if (localData) {
-          setPageData(localData);
-        } else {
-          throw new Error('Pas de connexion et aucune donnée locale trouvée');
-        }
-      } else {
+      // Essayer de charger depuis le serveur d'abord
+      try {
         const data = await serviceApi.getServicePage();
-        setPageData(data);
+        if (data && typeof data === 'object') {
+          setPageData(data);
+          return;
+        }
+      } catch (serverError) {
+        console.warn('⚠️ Impossible de charger du serveur, tentative de lecture locale...', serverError);
+      }
+
+      // Fallback : charger les données locales
+      const localData = await serviceApi.loadLocalChanges();
+      if (localData && typeof localData === 'object') {
+        setPageData(localData);
+      } else {
+        throw new Error('Pas de connexion et aucune donnée locale trouvée');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur de chargement');
@@ -1431,11 +1436,19 @@ const Services = () => {
   }, []);
 
   const handleUpdate = useCallback(async (service: 'service1' | 'service2', sectionPath: string, data: any) => {
-    if (!pageData) return;
+    if (!pageData) {
+      console.warn('Aucune donnée de page disponible');
+      return;
+    }
 
     try {
       const [section, field] = sectionPath.split('.');
       
+      if (!section || !field) {
+        console.error('Format de chemin invalide:', sectionPath);
+        return;
+      }
+
       const updatedData = {
         ...pageData,
         [service]: {
@@ -1448,13 +1461,20 @@ const Services = () => {
         meta: {
           ...pageData.meta,
           updatedAt: new Date().toISOString(),
-          version: pageData.meta.version + 1
+          version: (pageData.meta?.version || 0) + 1
         }
       };
 
       setPageData(updatedData);
-      await serviceApi.saveLocalChanges(updatedData);
+      
+      // Sauvegarder localement d'abord
+      try {
+        await serviceApi.saveLocalChanges(updatedData);
+      } catch (localError) {
+        console.warn('⚠️ Erreur lors de la sauvegarde locale:', localError);
+      }
 
+      // Essayer de synchroniser avec le serveur
       try {
         await serviceApi.updateSection(service, sectionPath, data);
         await serviceApi.clearLocalChanges();
@@ -1463,15 +1483,33 @@ const Services = () => {
       }
     } catch (err) {
       console.error('❌ Erreur mise à jour:', err);
+      setError(err instanceof Error ? err.message : 'Erreur lors de la mise à jour');
     }
   }, [pageData]);
 
   const handleUploadImage = useCallback(async (file: File): Promise<string> => {
     try {
+      if (!file || !file.type.startsWith('image/')) {
+        throw new Error('Veuillez sélectionner une image valide');
+      }
+
       const result = await serviceApi.uploadImage(file);
-      return result.url || result;
+      
+      if (!result) {
+        throw new Error('Aucune réponse du serveur lors de l\'upload');
+      }
+
+      const imageUrl = typeof result === 'string' ? result : result.url;
+      
+      if (!imageUrl) {
+        throw new Error('URL d\'image non reçue du serveur');
+      }
+
+      return imageUrl;
     } catch (error) {
       console.error('Erreur upload:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'upload de l\'image';
+      setError(errorMessage);
       throw error;
     }
   }, []);
@@ -1502,6 +1540,13 @@ const Services = () => {
   const handleExportData = async () => {
     try {
       const exportData = await serviceApi.exportData();
+      
+      if (!exportData) {
+        console.error('Aucune donnée à exporter');
+        setError('Aucune donnée disponible pour l\'export');
+        return;
+      }
+
       const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1511,6 +1556,7 @@ const Services = () => {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Erreur export:', error);
+      setError(error instanceof Error ? error.message : 'Erreur lors de l\'export des données');
     }
   };
 
@@ -1611,7 +1657,7 @@ const Services = () => {
       <Footer />
       
       {/* Styles CSS pour les animations */}
-      <style jsx global>{`
+      <style>{`
         @keyframes fadeInUp {
           from {
             opacity: 0;

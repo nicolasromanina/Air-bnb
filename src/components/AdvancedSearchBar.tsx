@@ -45,18 +45,25 @@ export const AdvancedSearchBar: React.FC = () => {
     sort: false
   });
 
+  const [loadingFilters, setLoadingFilters] = useState(true);
+
   useEffect(() => {
     const fetchFilters = async () => {
       try {
+        setLoadingFilters(true);
         const response = await api.get('/search/filters');
-        setFilters(response.data);
-        setSearchParams((prev) => ({
-          ...prev,
-          minPrice: response.data.priceRange.minPrice,
-          maxPrice: response.data.priceRange.maxPrice
-        }));
+        if (response.success && response.data) {
+          setFilters(response.data);
+          setSearchParams((prev) => ({
+            ...prev,
+            minPrice: response.data.priceRange?.minPrice || 0,
+            maxPrice: response.data.priceRange?.maxPrice || 5000
+          }));
+        }
       } catch (error) {
         console.error('Error fetching filters:', error);
+      } finally {
+        setLoadingFilters(false);
       }
     };
 

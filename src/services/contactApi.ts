@@ -1,200 +1,284 @@
-// Services pour communiquer avec l'API backend du CMS
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { IContactPage } from '@/types/contact.types';
-import { config } from '@/config/env';
+import { api } from './api';
 
-// Configuration de l'instance Axios
-const createApiClient = (): AxiosInstance => {
-  const baseURL = config.apiBaseUrl || 'http://api.waya2828.odns.fr/api';
-  
-  return axios.create({
-    baseURL,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    timeout: 90000, // 90 secondes timeout pour emails (Render peut être lent)
-  });
-};
-
-// Instance API avec intercepteur pour le token d'authentification
-const apiClient = createApiClient();
-
-// Ajouter l'intercepteur pour inclure le token JWT
-apiClient.interceptors.request.use((config) => {
-  // Récupérer le token depuis localStorage ou cookies
-  const token = localStorage.getItem('auth_token');
-  
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  
-  return config;
-});
-
-// Gestion des erreurs
-const handleApiError = (error: any): never => {
-  console.error('API Error:', error.response?.data || error.message);
-  
-  // Gestion spécifique des timeouts
-  if (error.code === 'ECONNABORTED') {
-    throw new Error('Délai d\'attente dépassé. Le serveur met trop de temps à répondre. Veuillez réessayer.');
-  }
-  
-  if (error.message && error.message.includes('timeout')) {
-    throw new Error('La requête a expiré (délai dépassé). Veuillez vérifier votre connexion internet et réessayer.');
-  }
-  
-  if (error.response) {
-    // Erreur serveur (4xx, 5xx)
-    throw new Error(error.response.data.error || 'Une erreur est survenue');
-  } else if (error.request) {
-    // Pas de réponse du serveur
-    throw new Error('Impossible de contacter le serveur. Veuillez vérifier votre connexion internet.');
-  } else {
-    // Erreur de configuration
-    throw new Error('Erreur de configuration');
-  }
-};
-
-// Interface pour les réponses API
-interface ApiResponse<T> {
-  data: T;
-  message?: string;
-  status: number;
+export interface ContactFormData {
+  fullName: string;
+  email: string;
+  phone: string;
+  message: string;
+  consent: boolean;
 }
 
-// Services pour la page Contact
+export interface Testimonial {
+  _id?: string;
+  name: string;
+  role: string;
+  content: string;
+  rating: number;
+  image?: string;
+  date: string;
+}
+
+export interface GalleryImage {
+  _id?: string;
+  image: string;
+  alt: string;
+  order: number;
+}
+
+export interface ContactPageData {
+  heroSection: {
+    title: string;
+    subtitle: string;
+    backgroundImage: string;
+    contactInfo: {
+      phone: string;
+      email: string;
+      address: string;
+    };
+  };
+  contactForm: {
+    title: string;
+    subtitle: string;
+    submitButton: string;
+    fields: Array<{
+      name: string;
+      label: string;
+      type: string;
+      required: boolean;
+      placeholder?: string;
+    }>;
+  };
+  testimonialsSection: {
+    title: string;
+    subtitle: string;
+    testimonials: Testimonial[];
+  };
+  gallerySection: {
+    title: string;
+    subtitle: string;
+    images: GalleryImage[];
+  };
+  mapSection: {
+    title: string;
+    subtitle: string;
+    iframeUrl: string;
+    coordinates: {
+      lat: number;
+      lng: number;
+    };
+  };
+  meta: {
+    updatedAt: string;
+    updatedBy: string;
+    version: number;
+  };
+}
+
 export const contactServices = {
   // Récupérer la page contact complète
-  async getContactPage(): Promise<IContactPage> {
-    try {
-      const response: AxiosResponse = await apiClient.get('/contact');
-      // Backend sometimes returns the page directly, sometimes wrapped in { data: ... } or { page: ... }
-      const respData = response.data;
-      if (respData?.data) return respData.data;
-      if (respData?.page) return respData.page;
-      return respData;
-    } catch (error) {
-      return handleApiError(error);
+  async getContactPage(): Promise<ContactPageData> {
+    const response = await api.get('/contact');
+    if (response.success) {
+      return response.data;
     }
+    throw new Error(response.error || 'Erreur lors de la récupération de la page contact');
   },
 
   // Mettre à jour la page contact complète
-  async updateContactPage(pageData: Partial<IContactPage>): Promise<ApiResponse<IContactPage>> {
-    try {
-      const response: AxiosResponse = await apiClient.put('/contact', pageData);
-      const respData = response.data;
-      // Normalize different backend shapes
-      if (respData?.page) return { data: respData.page, message: respData.message || 'OK', status: response.status };
-      if (respData?.data) return { data: respData.data, message: respData.message || 'OK', status: response.status };
-      // If backend returns the page directly
-      return { data: respData, message: respData?.message || 'OK', status: response.status };
-    } catch (error) {
-      return handleApiError(error);
+  async updateContactPage(pageData: Partial<ContactPageData>): Promise<ContactPageData> {
+    const response = await api.put('/contact', pageData);
+    if (response.success) {
+      return response.data;
     }
+    throw new Error(response.error || 'Erreur lors de la mise à jour de la page contact');
   },
 
   // Mettre à jour une section spécifique
-  async updateSection(section: string, sectionData: any): Promise<ApiResponse<IContactPage>> {
-    try {
-      const response: AxiosResponse<ApiResponse<IContactPage>> = await apiClient.put(`/contact/section/${section}`, sectionData);
+  async updateSection(section: string, sectionData: any): Promise<ContactPageData> {
+    const response = await api.put(`/contact/section/${section}`, sectionData);
+    if (response.success) {
       return response.data;
-    } catch (error) {
-      return handleApiError(error);
     }
+    throw new Error(response.error || `Erreur lors de la mise à jour de la section ${section}`);
   },
 
   // Ajouter un témoignage
-  async addTestimonial(testimonial: any): Promise<ApiResponse<any>> {
-    try {
-      const response: AxiosResponse<ApiResponse<any>> = await apiClient.post('/contact/testimonials', testimonial);
+  async addTestimonial(testimonial: Omit<Testimonial, '_id' | 'date'>): Promise<ContactPageData> {
+    const response = await api.post('/contact/testimonials', testimonial);
+    if (response.success) {
       return response.data;
-    } catch (error) {
-      return handleApiError(error);
     }
+    throw new Error(response.error || 'Erreur lors de l\'ajout du témoignage');
+  },
+
+  // Mettre à jour un témoignage
+  async updateTestimonial(id: string, testimonial: Partial<Testimonial>): Promise<ContactPageData> {
+    const response = await api.put(`/contact/testimonials/${id}`, testimonial);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de la mise à jour du témoignage');
+  },
+
+  // Supprimer un témoignage
+  async deleteTestimonial(id: string): Promise<ContactPageData> {
+    const response = await api.delete(`/contact/testimonials/${id}`);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de la suppression du témoignage');
   },
 
   // Ajouter un élément à la galerie
-  async addGalleryItem(galleryItem: any): Promise<ApiResponse<any>> {
-    try {
-      const response: AxiosResponse<ApiResponse<any>> = await apiClient.post('/contact/gallery', galleryItem);
+  async addGalleryItem(galleryItem: Omit<GalleryImage, '_id'>): Promise<ContactPageData> {
+    const response = await api.post('/contact/gallery', galleryItem);
+    if (response.success) {
       return response.data;
-    } catch (error) {
-      return handleApiError(error);
     }
+    throw new Error(response.error || 'Erreur lors de l\'ajout de l\'image à la galerie');
+  },
+
+  // Mettre à jour un élément de la galerie
+  async updateGalleryItem(id: string, galleryItem: Partial<GalleryImage>): Promise<ContactPageData> {
+    const response = await api.put(`/contact/gallery/${id}`, galleryItem);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de la mise à jour de l\'image de la galerie');
+  },
+
+  // Supprimer un élément de la galerie
+  async deleteGalleryItem(id: string): Promise<ContactPageData> {
+    const response = await api.delete(`/contact/gallery/${id}`);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de la suppression de l\'image de la galerie');
   },
 
   // Soumettre un formulaire de contact
-  async submitContactForm(data: {
-    fullName: string;
-    email: string;
-    phone: string;
-    message: string;
-    consent: boolean;
-  }): Promise<ApiResponse<any>> {
-    try {
-      // Timeout très long pour les envois d'email (90 secondes)
-      // Car Render peut être lent et SMTP peut prendre du temps
-      const response: AxiosResponse<ApiResponse<any>> = await apiClient.post('/contact-messages/submit', data, {
-        timeout: 90000, // 90 secondes pour l'envoi d'email
-      });
-      return response.data;
-    } catch (error: any) {
-      // Gestion spécifique des timeouts
-      if (error.code === 'ECONNABORTED') {
-        throw new Error('Délai d\'attente dépassé. Le serveur met trop de temps à répondre. Veuillez réessayer dans quelques instants.');
-      }
-      if (error.message?.includes('timeout')) {
-        throw new Error('La requête a expiré. Veuillez vérifier votre connexion internet et réessayer.');
-      }
-      return handleApiError(error);
+  async submitContactForm(data: ContactFormData): Promise<{ success: boolean; message: string }> {
+    const response = await api.post('/contact/submit', data);
+    if (response.success) {
+      return {
+        success: true,
+        message: response.message || 'Message envoyé avec succès'
+      };
     }
+    return {
+      success: false,
+      message: response.error || 'Erreur lors de l\'envoi du message'
+    };
   },
 
   // Upload d'image
   async uploadImage(file: File): Promise<string> {
-    try {
-      const formData = new FormData();
-      formData.append('image', file);
-      
-      // Pour l'exemple, on simule l'upload
-      // En réalité, vous devriez avoir un endpoint dédié
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          resolve(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-      });
-      
-      // Pour une vraie implémentation:
-      // const response = await apiClient.post('/upload', formData, {
-      //   headers: {
-      //     'Content-Type': 'multipart/form-data',
-      //   },
-      // });
-      // return response.data.url;
-    } catch (error) {
-      return handleApiError(error);
+    const response = await api.uploadImage(file, 'contact');
+    if (response.success) {
+      return response.data.url;
     }
+    throw new Error(response.error || 'Erreur lors du téléchargement de l\'image');
   },
 
   // Vérifier la santé de l'API
   async healthCheck(): Promise<boolean> {
     try {
-      const response = await apiClient.get('/health');
-      return response.status === 200;
+      const response = await api.healthCheck();
+      return response.success;
     } catch {
       return false;
     }
   },
+
+  // Gestion du cache local
+  async saveLocalChanges(data: ContactPageData): Promise<void> {
+    try {
+      localStorage.setItem('contactPage_draft', JSON.stringify(data));
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde locale:', error);
+    }
+  },
+
+  async loadLocalChanges(): Promise<ContactPageData | null> {
+    try {
+      const draft = localStorage.getItem('contactPage_draft');
+      return draft ? JSON.parse(draft) : null;
+    } catch (error) {
+      console.error('Erreur lors du chargement local:', error);
+      return null;
+    }
+  },
+
+  async clearLocalChanges(): Promise<void> {
+    try {
+      localStorage.removeItem('contactPage_draft');
+    } catch (error) {
+      console.error('Erreur lors du nettoyage local:', error);
+    }
+  },
+
+  // Synchroniser avec le serveur
+  async syncWithServer(): Promise<ContactPageData> {
+    const draft = await this.loadLocalChanges();
+    if (draft) {
+      const serverData = await this.updateContactPage(draft);
+      await this.clearLocalChanges();
+      return serverData;
+    } else {
+      return await this.getContactPage();
+    }
+  },
+
+  // Obtenir les statistiques
+  async getStats(): Promise<{
+    testimonials: number;
+    galleryImages: number;
+    contactFields: number;
+    lastUpdated: string;
+  }> {
+    const data = await this.getContactPage();
+    
+    return {
+      testimonials: data.testimonialsSection.testimonials.length,
+      galleryImages: data.gallerySection.images.length,
+      contactFields: data.contactForm.fields.length,
+      lastUpdated: data.meta.updatedAt
+    };
+  },
+
+  // Réinitialiser aux valeurs par défaut
+  async resetToDefaults(): Promise<ContactPageData> {
+    const response = await api.post('/contact/reset');
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de la réinitialisation');
+  },
+
+  // Exporter les données
+  async exportData(): Promise<{ data: ContactPageData; timestamp: string }> {
+    const data = await this.getContactPage();
+    return {
+      data,
+      timestamp: new Date().toISOString()
+    };
+  },
+
+  // Importer des données
+  async importData(data: ContactPageData): Promise<ContactPageData> {
+    const response = await api.post('/contact/import', data);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Erreur lors de l\'importation');
+  }
 };
 
-// Hook personnalisé pour utiliser les services
+// Hook React personnalisé pour utiliser les services
 import { useState, useEffect, useCallback } from 'react';
 
 export const useContactPage = () => {
-  const [pageData, setPageData] = useState<IContactPage | null>(null);
+  const [pageData, setPageData] = useState<ContactPageData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -212,12 +296,12 @@ export const useContactPage = () => {
     }
   }, []);
 
-  const updatePageData = useCallback(async (newData: Partial<IContactPage>) => {
+  const updatePageData = useCallback(async (newData: Partial<ContactPageData>) => {
     try {
       setError(null);
       const result = await contactServices.updateContactPage(newData);
-      setPageData(result.data);
-      return result;
+      setPageData(result);
+      return { success: true, message: 'Mise à jour réussie' };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la mise à jour';
       setError(errorMessage);
@@ -238,9 +322,4 @@ export const useContactPage = () => {
   };
 };
 
-// Exporter par défaut tous les services
-export default {
-  contact: contactServices,
-  healthCheck: contactServices.healthCheck,
-  useContactPage,
-};
+export default contactServices;

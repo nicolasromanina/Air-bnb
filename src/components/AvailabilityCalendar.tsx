@@ -31,15 +31,15 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
     const fetchCalendar = async () => {
       try {
         setLoading(true);
-        const response = await api.get('/search/calendar/:apartmentId', {
-          params: {
-            apartmentId,
-            month: currentMonth.getMonth() + 1,
-            year: currentMonth.getFullYear()
-          }
+        const params = new URLSearchParams({
+          month: (currentMonth.getMonth() + 1).toString(),
+          year: currentMonth.getFullYear().toString()
         });
+        const response = await api.get(`/search/calendar/${apartmentId}?${params.toString()}`);
 
-        setCalendar(response.data.calendar);
+        if (response.success && response.data?.calendar) {
+          setCalendar(response.data.calendar);
+        }
       } catch (error) {
         console.error('Error fetching calendar:', error);
       } finally {

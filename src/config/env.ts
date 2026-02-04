@@ -1,7 +1,7 @@
 // config/env.ts
 export const config = {
-  // API Base URL
-  apiBaseUrl: import.meta.env.VITE_API_URL || 'https://airbnb-backend-l640.onrender.com/api',
+  // API Base URL - Utilise le bon domaine pour production
+  apiBaseUrl: import.meta.env.VITE_API_URL || 'https://api.wmsignaturegroup.com/api',
   
   // Stripe Configuration
   stripePublishableKey: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '',
@@ -10,10 +10,49 @@ export const config = {
   isDev: import.meta.env.DEV,
   isProd: import.meta.env.PROD,
   
-  // Supabase (si vous l'utilisez encore pour d'autres fonctionnalités)
-  supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
-  supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+  // URLs complètes pour les différents environnements
+  urls: {
+    production: 'https://api.wmsignaturegroup.com/api',
+    development: import.meta.env.VITE_API_URL || 'http://api.wmsignaturegroup.com/api',
+    staging: 'https://api-staging.wmsignaturegroup.com/api',
+    test: 'https://api-test.wmsignaturegroup.com/api'
+  } as const,
+  
+  // Configuration spécifique par service
+  services: {
+    apartment: '/apartment',
+    apartmentDetails: '/apartment-details',
+    roomDetails: '/room-details',
+    additionalOptions: '/options',
+    search: '/search',
+    home: '/home',
+    services: '/services',
+    contact: '/contact',
+    footer: '/footer',
+    payments: '/payments',
+    auth: '/auth',
+    cms: '/cms',
+    upload: '/upload'
+  } as const
 } as const;
+
+// Fonction pour obtenir l'URL de base appropriée
+export const getBaseUrl = (): string => {
+  if (import.meta.env.PROD) {
+    return config.urls.production;
+  }
+  if (import.meta.env.DEV) {
+    return config.urls.development;
+  }
+  return config.apiBaseUrl;
+};
+
+// Fonction pour obtenir l'URL complète d'un service
+export const getServiceUrl = (service: keyof typeof config.services): string => {
+  const baseUrl = getBaseUrl();
+  const endpoint = config.services[service];
+  return `${baseUrl}${endpoint}`;
+};
 
 // Validation des variables d'environnement
 export const validateEnv = () => {
