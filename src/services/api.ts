@@ -1,5 +1,5 @@
 // services/api.ts
-import { config, getBaseUrl, getServiceUrl } from '@/config/env';
+import { config, getBaseUrl, getServiceUrl, getNormalizedBaseUrl } from '@/config/env';
 import { toast } from 'sonner';
 
 export interface ApiResponse<T = any> {
@@ -125,7 +125,8 @@ class ApiService {
   private token: string | null = null;
 
   constructor() {
-    this.baseUrl = getBaseUrl();
+    // Prefer a normalized, absolute base URL in the browser to avoid relative/malformed URLs
+    this.baseUrl = (typeof window !== 'undefined') ? getNormalizedBaseUrl() : getBaseUrl();
     this.loadToken();
   }
 

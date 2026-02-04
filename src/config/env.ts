@@ -47,6 +47,17 @@ export const getBaseUrl = (): string => {
   return config.apiBaseUrl;
 };
 
+const normalizeUrl = (url: string): string => {
+  if (typeof window !== 'undefined') {
+    if (/^\/\//.test(url)) return window.location.protocol + url;
+    if (!/^https?:\/\//.test(url)) return window.location.protocol + '//' + url.replace(/^[\.\/]+/, '');
+  }
+  return url;
+};
+
+// Returns an absolute URL when possible, preventing protocol-relative or dot-prefixed hosts
+export const getNormalizedBaseUrl = (): string => normalizeUrl(getBaseUrl());
+
 // Fonction pour obtenir l'URL complète d'un service
 export const getServiceUrl = (service: keyof typeof config.services): string => {
   const baseUrl = getBaseUrl();
