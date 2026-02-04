@@ -5,6 +5,7 @@ import { SelectedOption } from '../reservation/AdditionalOptionsSelector';
 import { api } from '@/services/api';
 import { roomDetailApi, RoomDetail } from '@/services/roomDetailApi';
 import { formatGuests, formatBedrooms } from '@/utils/numberExtractor';
+import { getBaseUrl } from '@/config/env';
 import { toast } from 'sonner';
 import ImprovedDatePicker from '../ImprovedDatePicker';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,6 +13,25 @@ import VideoPlayer from '../VideoPlayer';
 import PromoSection from '../payment/PromoSection';
 
 const PINK_ACCENT = "#FF385C";
+
+// Fonction pour normaliser les URLs d'images
+const normalizeImageUrl = (url: string | undefined | null): string => {
+  if (!url) return '';
+  
+  // Si c'est déjà une URL complète avec protocole
+  if (url.includes('cloudinary.com') || url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // Si c'est un chemin relatif commençant par /
+  if (url.startsWith('/')) {
+    const baseUrl = getBaseUrl();
+    const backendOrigin = baseUrl.replace('/api', '');
+    return `${backendOrigin}${url}`;
+  }
+  
+  return url;
+};
 
 function AppartmentDetail() {
     const { id } = useParams();
@@ -419,11 +439,7 @@ function AppartmentDetail() {
             apartmentId: aptIdNum,
             apartmentNumber: apartment.title || `Appartement ${aptIdNum}`,
             title: apartment.title || 'Réservation',
-            image: roomDetail?.images?.[0] 
-                ? (roomDetail.images[0].includes('cloudinary.com') || roomDetail.images[0].includes('airbnb-backend')
-                    ? roomDetail.images[0]
-                    : `https://airbnb-backend.onrender.com${roomDetail.images[0]}`)
-                : 'https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200',
+            image: normalizeImageUrl(roomDetail?.images?.[0]) || 'https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200',
             includes: [],
             checkIn: checkInDate,
             checkOut: checkOutDate,
@@ -525,12 +541,7 @@ function AppartmentDetail() {
                             </div>
                         )}
                         <img
-                            src={
-                                roomDetail.images[currentImageIndex]?.includes('cloudinary.com') || 
-                                roomDetail.images[currentImageIndex]?.includes('airbnb-backend')
-                                    ? roomDetail.images[currentImageIndex]
-                                    : `https://airbnb-backend.onrender.com${roomDetail.images[currentImageIndex]}`
-                            }
+                            src={normalizeImageUrl(roomDetail.images[currentImageIndex])}
                             alt={`Image ${currentImageIndex + 1}`}
                             className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${
                                 imageLoading[currentImageIndex] ? 'opacity-0' : 'opacity-100'
@@ -590,11 +601,7 @@ function AppartmentDetail() {
                             type="button"
                         >
                             <img
-                                src={
-                                    img.includes('cloudinary.com') || img.includes('airbnb-backend')
-                                        ? img
-                                        : `https://airbnb-backend.onrender.com${img}`
-                                }
+                                src={normalizeImageUrl(img)}
                                 alt={`Miniature ${index + 1}`}
                                 className="w-full h-full object-cover"
                             />
@@ -672,11 +679,7 @@ function AppartmentDetail() {
                                 <div className="relative w-full h-full">
                                     <img
                                         src={
-                                            roomDetail.images?.[0] 
-                                                ? (roomDetail.images[0].includes('cloudinary.com') || roomDetail.images[0].includes('airbnb-backend')
-                                                    ? roomDetail.images[0]
-                                                    : `https://airbnb-backend.onrender.com${roomDetail.images[0]}`)
-                                                : "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200"
+                                            normalizeImageUrl(roomDetail.images?.[0]) || "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200"
                                         }
                                         className="w-full h-full object-cover"
                                         alt="Video poster"
@@ -687,13 +690,7 @@ function AppartmentDetail() {
                                     {/* VideoPlayer Component with Play Button */}
                                     <VideoPlayer
                                         videoUrl={roomDetail.videoUrl}
-                                        posterImage={
-                                            roomDetail.images?.[0] 
-                                                ? (roomDetail.images[0].includes('cloudinary.com') || roomDetail.images[0].includes('airbnb-backend')
-                                                    ? roomDetail.images[0]
-                                                    : `https://airbnb-backend.onrender.com${roomDetail.images[0]}`)
-                                                : undefined
-                                        }
+                                        posterImage={normalizeImageUrl(roomDetail.images?.[0])}
                                         playButtonSize="large"
                                     />
                                 </div>
@@ -707,11 +704,7 @@ function AppartmentDetail() {
                                     )}
                                     <img
                                         src={
-                                            roomDetail?.images?.[0] 
-                                                ? (roomDetail.images[0].includes('cloudinary.com') || roomDetail.images[0].includes('airbnb-backend')
-                                                    ? roomDetail.images[0]
-                                                    : `https://airbnb-backend.onrender.com${roomDetail.images[0]}`)
-                                                : "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200"
+                                            normalizeImageUrl(roomDetail?.images?.[0]) || "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=1200"
                                         }
                                         className={`w-full h-full object-cover transition-opacity duration-300 ${
                                             imageLoading[0] ? 'opacity-0' : 'opacity-100'
@@ -751,11 +744,7 @@ function AppartmentDetail() {
                                                 </div>
                                             )}
                                             <img 
-                                                src={
-                                                    img.includes('cloudinary.com') || img.includes('airbnb-backend')
-                                                        ? img
-                                                        : `https://airbnb-backend.onrender.com${img}`
-                                                }
+                                                src={normalizeImageUrl(img)}
                                                 className={`w-full h-full object-cover transition-all duration-300 ${
                                                     imageLoading[i] ? 'opacity-0' : 'opacity-100'
                                                 } group-hover/img:scale-110`}
