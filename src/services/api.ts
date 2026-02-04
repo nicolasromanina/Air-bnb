@@ -546,7 +546,20 @@ class ApiService {
   // ========== UTILITAIRES ==========
   async healthCheck(): Promise<ApiResponse<any>> {
     try {
-      const response = await fetch(`${this.baseUrl.replace('/api', '')}/health`);
+      const healthUrl = `${this.baseUrl.replace('/api', '')}/health`;
+      const headers: HeadersInit = {};
+
+      // Ajouter le token d'authentification si disponible
+      if (this.token) {
+        headers['Authorization'] = `Bearer ${this.token}`;
+      }
+
+      const response = await fetch(healthUrl, {
+        method: 'GET',
+        headers,
+        credentials: 'include' as RequestCredentials,
+      });
+
       if (response.ok) {
         const data = await response.json();
         return {
