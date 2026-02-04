@@ -546,7 +546,17 @@ class ApiService {
   // ========== UTILITAIRES ==========
   async healthCheck(): Promise<ApiResponse<any>> {
     try {
-      const healthUrl = `${this.baseUrl.replace('/api', '')}/health`;
+      // Construire l'URL correctement en gérant les différentes formats de baseUrl
+      let healthUrl = this.baseUrl;
+      
+      // Si l'URL se termine par '/api', enlever cette partie
+      if (healthUrl.endsWith('/api')) {
+        healthUrl = healthUrl.slice(0, -4);
+      }
+      
+      // Ajouter le endpoint health
+      healthUrl = `${healthUrl}/health`;
+      
       const headers: HeadersInit = {};
 
       // Ajouter le token d'authentification si disponible

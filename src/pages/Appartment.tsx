@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import VideoPlayer from "@/components/VideoPlayer";
 import { formatGuests, formatBedrooms, extractNumber } from "@/utils/numberExtractor";
+import { getBaseUrl } from '@/config/env';
 import heroRoom from "@/assets/hero-room.jpg";
 import room1 from "@/assets/room-1.jpg";
 import room2 from "@/assets/room-2.jpg";
@@ -63,7 +64,9 @@ const normalizeImageUrl = (url: string | any): string => {
   }
   
   if (urlStr.startsWith('/uploads')) {
-    const backendOrigin = 'https://api.wmsignaturegroup.com';
+    // Utiliser la configuration dynamique au lieu de hardcoder l'URL
+    const baseUrl = getBaseUrl();
+    const backendOrigin = baseUrl.replace('/api', '');
     return `${backendOrigin}${urlStr}`;
   }
   

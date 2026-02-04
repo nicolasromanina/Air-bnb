@@ -48,6 +48,12 @@ export const getBaseUrl = (): string => {
 };
 
 const normalizeUrl = (url: string): string => {
+  // Si l'URL est déjà complète avec protocole, la retourner telle quelle
+  if (/^https?:\/\//.test(url)) {
+    return url;
+  }
+  
+  // Si c'est une URL relative dans le navigateur
   if (typeof window !== 'undefined') {
     if (/^\/\//.test(url)) return window.location.protocol + url;
     if (!/^https?:\/\//.test(url)) return window.location.protocol + '//' + url.replace(/^[\.\/]+/, '');
