@@ -429,7 +429,7 @@ const Service1: React.FC<Service1Props> = ({
     if (dataValue && typeof dataValue === 'string' && dataValue.trim() !== '') {
       const normalizedUrl = normalizeImageUrl(dataValue);
       
-      if (normalizedUrl.includes('/uploads/') || normalizedUrl.includes('airbnb-backend.onrender.com')) {
+      if (normalizedUrl.includes('/uploads/') || normalizedUrl.includes('http://api.waya2828.odns.fr')) {
         return addCacheBuster(normalizedUrl, metaVersion, metaTimestamp || imageVersion);
       }
       
@@ -1155,7 +1155,7 @@ const Service2: React.FC<Service2Props> = ({
     if (dataValue && typeof dataValue === 'string' && dataValue.trim() !== '') {
       const normalizedUrl = normalizeImageUrl(dataValue);
       
-      if (normalizedUrl.includes('/uploads/') || normalizedUrl.includes('airbnb-backend.onrender.com')) {
+      if (normalizedUrl.includes('/uploads/') || normalizedUrl.includes('http://api.waya2828.odns.fr')) {
         return addCacheBuster(normalizedUrl, metaVersion, metaTimestamp || imageVersion);
       }
       

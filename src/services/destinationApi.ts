@@ -1,7 +1,7 @@
 import { api } from './api';
 
 // Configuration du backend
-const BACKEND_URL = 'https://airbnb-backend-l640.onrender.com/api/search';
+const BACKEND_URL = 'http://api.waya2828.odns.fr/api/search';
 
 export interface DestinationSuggestions {
   cities: string[];

@@ -3,7 +3,7 @@ import { IFooterData } from '@/types/footer.types';
 import { config } from '@/config/env';
 
 const createApiClient = (): AxiosInstance => {
-  const baseURL = config.apiBaseUrl || 'https://airbnb-backend-l640.onrender.com/api';
+  const baseURL = config.apiBaseUrl || 'http://api.waya2828.odns.fr/api';
   
   return axios.create({
     baseURL,

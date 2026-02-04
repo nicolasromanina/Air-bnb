@@ -63,7 +63,7 @@ const normalizeImageUrl = (url: string | any): string => {
   }
   
   if (urlStr.startsWith('/uploads')) {
-    const backendOrigin = 'https://airbnb-backend.onrender.com';
+    const backendOrigin = 'http://api.waya2828.odns.fr';
     return `${backendOrigin}${urlStr}`;
   }
   

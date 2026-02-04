@@ -1,6 +1,6 @@
 import { api } from './api';
 
-const BACKEND_URL = 'https://airbnb-backend-l640.onrender.com/api';
+const BACKEND_URL = 'http://api.waya2828.odns.fr/api';
 
 export interface RoomDetail {
   _id?: string;
