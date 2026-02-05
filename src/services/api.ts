@@ -664,15 +664,6 @@ class ApiService {
   }
 
   async sendAdminCommunication(data: any): Promise<ApiResponse<any>> {
-    // Essayer d'abord avec l'endpoint booking-specific
-    const bookingId = data.bookingId;
-    if (bookingId) {
-      return this.request(`/admin/bookings/${bookingId}/communications`, {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
-    }
-    // Fallback vers l'endpoint général
     return this.request('/admin/communications', {
       method: 'POST',
       body: JSON.stringify(data),
