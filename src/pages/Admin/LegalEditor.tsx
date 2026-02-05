@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { config } from '@/config/env';
+import { api } from '@/services/api';
 import RichTextEditor from '../../components/RichTextEditor';
 
 export default function LegalEditor() {
@@ -18,14 +18,11 @@ export default function LegalEditor() {
 
   const loadContent = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${config.apiBaseUrl}/admin/cms/legal`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      // Gérer différents formats de réponse
-      const pageData = data.data?.page || data.page;
-      setContent(pageData?.html || '');
+      const response = await api.getCmsPage('legal');
+      if (response.success && response.data) {
+        const pageData = response.data.page || response.data;
+        setContent(pageData?.html || '');
+      }
     } catch (err) {
       console.error('Failed to load legal page:', err);
     } finally {
@@ -35,14 +32,11 @@ export default function LegalEditor() {
 
   const loadHistory = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${config.apiBaseUrl}/admin/cms/legal/history`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      // Gérer différents formats de réponse
-      const historyData = data.data?.history || data.history;
-      setHistory(Array.isArray(historyData) ? historyData : []);
+      const response = await api.getCmsPageHistory('legal');
+      if (response.success && response.data) {
+        const historyData = response.data.history || response.data;
+        setHistory(Array.isArray(historyData) ? historyData : []);
+      }
     } catch (err) {
       console.error('Failed to load history:', err);
     }
@@ -51,17 +45,8 @@ export default function LegalEditor() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${config.apiBaseUrl}/admin/cms/legal`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ html: content })
-      });
-      const data = await response.json();
-      if (response.ok) {
+      const response = await api.updateCmsPage('legal', content);
+      if (response.success) {
         setMessage('✓ Sauvegardé avec succès');
         loadHistory();
         setTimeout(() => setMessage(''), 3000);
@@ -78,19 +63,9 @@ export default function LegalEditor() {
 
   const handleRestore = async (snapshotId: number) => {
     try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${config.apiBaseUrl}/admin/cms/legal/restore`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ id: snapshotId })
-      });
-      const data = await response.json();
-      if (response.ok) {
-        // Gérer différents formats de réponse
-        const pageData = data.data?.page || data.page;
+      const response = await api.restoreCmsPage('legal', snapshotId);
+      if (response.success && response.data) {
+        const pageData = response.data.page || response.data;
         setContent(pageData?.html || content);
         setMessage('✓ Version restaurée');
         loadHistory();

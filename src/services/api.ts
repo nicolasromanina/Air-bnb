@@ -664,7 +664,16 @@ class ApiService {
   }
 
   async sendAdminCommunication(data: any): Promise<ApiResponse<any>> {
-    return this.request('/admin/communications/send', {
+    // Essayer d'abord avec l'endpoint booking-specific
+    const bookingId = data.bookingId;
+    if (bookingId) {
+      return this.request(`/admin/bookings/${bookingId}/communications`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    }
+    // Fallback vers l'endpoint général
+    return this.request('/admin/communications', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -715,6 +724,29 @@ class ApiService {
   async cancelBooking(id: string): Promise<ApiResponse<any>> {
     return this.request(`/admin/bookings/${id}/cancel`, {
       method: 'POST',
+    });
+  }
+
+  // ========== CMS LEGAL PAGES ==========
+  async getCmsPage(page: 'legal' | 'policy' | 'general-conditions'): Promise<ApiResponse<any>> {
+    return this.request(`/admin/cms/${page}`);
+  }
+
+  async updateCmsPage(page: 'legal' | 'policy' | 'general-conditions', html: string): Promise<ApiResponse<any>> {
+    return this.request(`/admin/cms/${page}`, {
+      method: 'POST',
+      body: JSON.stringify({ html }),
+    });
+  }
+
+  async getCmsPageHistory(page: 'legal' | 'policy' | 'general-conditions'): Promise<ApiResponse<any>> {
+    return this.request(`/admin/cms/${page}/history`);
+  }
+
+  async restoreCmsPage(page: 'legal' | 'policy' | 'general-conditions', snapshotId: number): Promise<ApiResponse<any>> {
+    return this.request(`/admin/cms/${page}/restore`, {
+      method: 'POST',
+      body: JSON.stringify({ id: snapshotId }),
     });
   }
 
