@@ -390,6 +390,35 @@ class ApiService {
     return this.request(`/promotions/${roomId}`);
   }
 
+  async updatePromotion(roomId: number, promotionData: any): Promise<ApiResponse<any>> {
+    return this.request(`/promotions/${roomId}`, {
+      method: 'PUT',
+      body: JSON.stringify(promotionData),
+    });
+  }
+
+  async uploadPromotionImage(roomId: number, file: File): Promise<ApiResponse<any>> {
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    return this.request(`/promotions/${roomId}/image`, {
+      method: 'POST',
+      body: formData,
+      skipContentType: true, // Let browser set Content-Type with boundary
+    });
+  }
+
+  async uploadPromotionCardImage(roomId: number, file: File): Promise<ApiResponse<any>> {
+    const formData = new FormData();
+    formData.append('cardImage', file);
+    
+    return this.request(`/promotions/${roomId}/card-image`, {
+      method: 'POST',
+      body: formData,
+      skipContentType: true, // Let browser set Content-Type with boundary
+    });
+  }
+
   // ========== OPTIONS SUPPLÉMENTAIRES ==========
   async getAdditionalOptions(apartmentId?: number): Promise<ApiResponse<any>> {
     const q = apartmentId ? `?apartmentId=${encodeURIComponent(String(apartmentId))}` : '';

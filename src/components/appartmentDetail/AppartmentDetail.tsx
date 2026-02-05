@@ -71,13 +71,13 @@ function AppartmentDetail() {
                 return;
             }
             
-            const response = await roomDetailApi.getRoomDetail(parseInt(id));
+            const roomData = await roomDetailApi.getRoomDetail(parseInt(id));
             
-            if (response.success && response.data) {
-                setRoomDetail(response.data);
+            if (roomData && roomData.roomId) {
+                setRoomDetail(roomData);
                 // Initialize loading states for images
-                if (response.data.images) {
-                    setImageLoading(new Array(response.data.images.length).fill(true));
+                if (roomData.images) {
+                    setImageLoading(new Array(roomData.images.length).fill(true));
                 }
                 // Charger la promotion
                 loadPromotion(parseInt(id));
@@ -184,18 +184,31 @@ function AppartmentDetail() {
             const updatedRoomId = customEvent.detail?.roomId;
             
             if (!updatedRoomId || updatedRoomId === parseInt(id || '0')) {
+                console.log('[DETAIL] 🔄 Received update event, reloading room detail...');
                 fetchRoomDetail();
+            }
+        };
+
+        const handlePromotionUpdate = (event: Event) => {
+            const customEvent = event as CustomEvent;
+            const updatedRoomId = customEvent.detail?.roomId;
+            
+            if (!updatedRoomId || updatedRoomId === parseInt(id || '0')) {
+                console.log('[DETAIL] 🔄 Received promotion update event, reloading promotion...');
+                if (id) loadPromotion(parseInt(id));
             }
         };
 
         window.addEventListener('roomDetailUpdated', handleDataUpdate);
         window.addEventListener('apartmentDataUpdated', handleDataUpdate);
+        window.addEventListener('promotionUpdated', handlePromotionUpdate);
 
         return () => {
             window.removeEventListener('roomDetailUpdated', handleDataUpdate);
             window.removeEventListener('apartmentDataUpdated', handleDataUpdate);
+            window.removeEventListener('promotionUpdated', handlePromotionUpdate);
         };
-    }, [id, fetchRoomDetail]);
+    }, [id, fetchRoomDetail, loadPromotion]);
 
     // Initialize dates
     useEffect(() => {

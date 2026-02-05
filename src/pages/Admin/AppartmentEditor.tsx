@@ -271,6 +271,17 @@ const AppartmentEditor: React.FC = () => {
             setPromotionData(response.data);
             console.log('[ADMIN] 🔄 Promotion data updated from server');
           }
+          
+          // Diffuser l'événement de mise à jour
+          window.dispatchEvent(new CustomEvent('promotionUpdated', { 
+            detail: { 
+              roomId: selectedRoomForDetail, 
+              data: response.data,
+              timestamp: Date.now() 
+            } 
+          }));
+          console.log('[ADMIN] ✅ Event promotionUpdated dispatched');
+          
           toast.success('✅ Promotion auto-sauvegardée');
         } else {
           console.error('[ADMIN] ❌ Auto-save failed - Server error:', response.error);
@@ -613,6 +624,17 @@ const AppartmentEditor: React.FC = () => {
           setPromotionData(response.data);
           console.log('[ADMIN] 🔄 Promotion data updated from server');
         }
+        
+        // Diffuser l'événement de mise à jour
+        window.dispatchEvent(new CustomEvent('promotionUpdated', { 
+          detail: { 
+            roomId: selectedRoomForDetail, 
+            data: response.data,
+            timestamp: Date.now() 
+          } 
+        }));
+        console.log('[ADMIN] ✅ Event promotionUpdated dispatched');
+        
         setSaveMessage({ type: 'success', text: '✅ Promotion sauvegardée!' });
         toast.success('Promotion sauvegardée');
       } else {
@@ -654,6 +676,16 @@ const AppartmentEditor: React.FC = () => {
         const saveResponse = await api.updatePromotion(selectedRoomForDetail, updatedData);
         if (saveResponse.success) {
           console.log('[ADMIN] ✅ Image saved to database successfully');
+          
+          // Diffuser l'événement de mise à jour
+          window.dispatchEvent(new CustomEvent('promotionUpdated', { 
+            detail: { 
+              roomId: selectedRoomForDetail, 
+              data: saveResponse.data,
+              timestamp: Date.now() 
+            } 
+          }));
+          
           toast.success('Image principale uploadée et sauvegardée');
         } else {
           console.error('[ADMIN] ❌ Save after upload failed:', saveResponse.error);
@@ -695,6 +727,16 @@ const AppartmentEditor: React.FC = () => {
         const saveResponse = await api.updatePromotion(selectedRoomForDetail, updatedData);
         if (saveResponse.success) {
           console.log('[ADMIN] ✅ Card image saved to database successfully');
+          
+          // Diffuser l'événement de mise à jour
+          window.dispatchEvent(new CustomEvent('promotionUpdated', { 
+            detail: { 
+              roomId: selectedRoomForDetail, 
+              data: saveResponse.data,
+              timestamp: Date.now() 
+            } 
+          }));
+          
           toast.success('Image carte uploadée et sauvegardée');
         } else {
           console.error('[ADMIN] ❌ Card image save after upload failed:', saveResponse.error);
