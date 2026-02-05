@@ -488,22 +488,22 @@ const AppartmentEditor: React.FC = () => {
     setIsLoadingRoomDetail(true);
     try {
       console.log('[ADMIN] Calling roomDetailApi.getRoomDetail...');
-      const response = await roomDetailApi.getRoomDetail(roomId);
-      console.log('[ADMIN] API Response received:', { success: response.success, hasData: !!response.data, response });
+      const roomData = await roomDetailApi.getRoomDetail(roomId);
+      console.log('[ADMIN] API Response received:', { hasData: !!roomData, roomData });
       
-      if (response.success && response.data) {
+      if (roomData && roomData.roomId) {
         console.log('[ADMIN] ✅ Room details loaded successfully:', {
-          roomId: response.data?.roomId,
-          title: response.data?.title,
-          price: response.data?.price,
-          guests: response.data?.guests,
-          bedrooms: response.data?.bedrooms,
-          imagesCount: response.data?.images?.length || 0,
-          includes: response.data?.includes,
-          amenities: response.data?.amenities,
-          features: response.data?.features
+          roomId: roomData?.roomId,
+          title: roomData?.title,
+          price: roomData?.price,
+          guests: roomData?.guests,
+          bedrooms: roomData?.bedrooms,
+          imagesCount: roomData?.images?.length || 0,
+          includes: roomData?.includes,
+          amenities: roomData?.amenities,
+          features: roomData?.features
         });
-        setRoomDetail(response.data);
+        setRoomDetail(roomData);
         setSelectedRoomForDetail(roomId);
         setActiveSection('roomDetail');
         
@@ -513,7 +513,7 @@ const AppartmentEditor: React.FC = () => {
         // Charger les options disponibles
         loadAvailableOptions();
       } else {
-        console.warn('[ADMIN] ⚠️ API returned invalid response:', { success: response.success, hasData: !!response.data });
+        console.warn('[ADMIN] ⚠️ API returned invalid response:', { hasData: !!roomData });
         setSaveMessage({ type: 'error', text: '❌ Impossible de charger les détails' });
       }
     } catch (error) {
@@ -764,11 +764,11 @@ const AppartmentEditor: React.FC = () => {
         imagesCount: cleanData.images?.length || 0
       });
       const response = await roomDetailApi.updateRoomDetail(selectedRoomForDetail, cleanData);
-      console.log('[ADMIN] 📥 Update response received:', { success: response.success, hasData: !!response.data });
+      console.log('[ADMIN] 📥 Update response received:', { hasData: !!response });
       
-      if (response.success) {
+      if (response && response.roomId) {
         // Mettre à jour le state avec la réponse du serveur
-        const updatedData = response.data || roomDetail; // Fallback si le serveur ne retourne pas les données
+        const updatedData = response; // La réponse est directement RoomDetail
         setRoomDetail(updatedData);
         setRoomDetailHasChanges(false);
         setRoomDetailLastSaved(new Date());
@@ -825,7 +825,7 @@ const AppartmentEditor: React.FC = () => {
         
         setTimeout(() => setSaveMessage(null), 2000);
       } else {
-        console.error('[ADMIN] ❌ Update response success: false');
+        console.error('[ADMIN] ❌ Update response invalid');
         console.error('[ADMIN] ❌ Full response:', response);
         if (!isAutoSave) {
           setSaveMessage({ type: 'error', text: '❌ Erreur: réponse serveur invalide' });
@@ -860,8 +860,8 @@ const AppartmentEditor: React.FC = () => {
     try {
       await roomDetailApi.saveLocalDraft(selectedRoomForDetail, roomDetail);
       const response = await roomDetailApi.syncLocalChanges(selectedRoomForDetail);
-      if (response.success) {
-        setRoomDetail(response.data);
+      if (response && response.roomId) {
+        setRoomDetail(response);
         setSaveMessage({ type: 'success', text: '✅ Changements synchronisés avec succès!' });
         setTimeout(() => setSaveMessage(null), 2000);
       }
@@ -1533,7 +1533,7 @@ const AppartmentEditor: React.FC = () => {
                                   for (let i = 0; i < files.length; i++) {
                                     try {
                                       const response = await roomDetailApi.uploadImage(files[i]);
-                                      if (response.success) {
+                                      if (response && response.url) {
                                         newImages.push(response.url);
                                         successCount++;
                                       }
