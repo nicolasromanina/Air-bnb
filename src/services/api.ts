@@ -664,7 +664,7 @@ class ApiService {
   }
 
   async sendAdminCommunication(data: any): Promise<ApiResponse<any>> {
-    return this.request('/admin/communications', {
+    return this.request('/admin/users/communications', {
       method: 'POST',
       body: JSON.stringify(data),
     });
