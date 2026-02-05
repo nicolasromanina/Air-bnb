@@ -22,8 +22,11 @@ const UsersPage: React.FC = () => {
       if (!mounted) return;
       setLoading(false);
       if (res.success && res.data) {
-        setUsers(res.data.data || []);
-        setTotal(res.data.meta?.total || 0);
+        const data = res.data as any;
+        const items = data.data || data;
+        const meta = data.meta || data.pagination || null;
+        setUsers(Array.isArray(items) ? items : []);
+        setTotal(meta?.total || 0);
       } else {
         toast.push({ title: 'Erreur', description: res.error || 'Impossible de charger les utilisateurs', variant: 'destructive' });
       }
@@ -35,7 +38,8 @@ const UsersPage: React.FC = () => {
     try {
       const res = await api.updateUserRole(id, { role });
       if (res.success && res.data) {
-        setUsers((prev) => prev.map(u => u._id === id ? res.data.data : u));
+        const updatedUser = (res.data as any).data || res.data;
+        setUsers((prev) => prev.map(u => u._id === id ? updatedUser : u));
         toast.push({ title: 'Rôle modifié', description: `Le rôle a été mis à jour en ${role}` });
       } else {
         toast.push({ title: 'Erreur', description: 'Impossible de modifier le rôle', variant: 'destructive' });

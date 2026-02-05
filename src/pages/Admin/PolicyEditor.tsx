@@ -23,7 +23,9 @@ export default function PolicyEditor() {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
-      setContent(data.page?.html || '');
+      // Gérer différents formats de réponse
+      const pageData = data.data?.page || data.page;
+      setContent(pageData?.html || '');
     } catch (err) {
       console.error('Failed to load policy page:', err);
     } finally {
@@ -38,7 +40,9 @@ export default function PolicyEditor() {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
-      setHistory(data.history || []);
+      // Gérer différents formats de réponse
+      const historyData = data.data?.history || data.history;
+      setHistory(Array.isArray(historyData) ? historyData : []);
     } catch (err) {
       console.error('Failed to load history:', err);
     }
@@ -85,7 +89,9 @@ export default function PolicyEditor() {
       });
       const data = await response.json();
       if (response.ok) {
-        setContent(data.page.html || '');
+        // Gérer différents formats de réponse
+        const pageData = data.data?.page || data.page;
+        setContent(pageData?.html || content);
         setMessage('✓ Version restaurée');
         loadHistory();
         setTimeout(() => setMessage(''), 3000);

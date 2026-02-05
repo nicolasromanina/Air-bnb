@@ -173,9 +173,10 @@ L'équipe de gestion`,
       try {
         const res = await api.getAdminBooking(id);
         if (res.success && res.data) {
-          setReservation(res.data.data);
+          const bookingData = (res.data as any).data || res.data;
+          setReservation(bookingData);
           // Charger l'historique des communications
-          fetchCommunicationHistory(res.data.data._id);
+          fetchCommunicationHistory(bookingData._id || id);
         }
       } catch (error) {
         toast({
@@ -193,8 +194,9 @@ L'équipe de gestion`,
     try {
       const res = await api.getBookingCommunications(bookingId);
       if (res.success && res.data) {
-        // Ensure data is always an array
-        const communications = Array.isArray(res.data) ? res.data : [];
+        // Ensure data is always an array - handle both { data: [] } and [] formats
+        const data = res.data as any;
+        const communications = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : []);
         setCommunicationHistory(communications);
       } else {
         setCommunicationHistory([]);

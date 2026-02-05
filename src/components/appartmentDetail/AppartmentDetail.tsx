@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import ImprovedDatePicker from '../ImprovedDatePicker';
 import { motion, AnimatePresence } from 'framer-motion';
 import VideoPlayer from '../VideoPlayer';
-import PromoSection from '../payment/PromoSection';
 
 const PINK_ACCENT = "#FF385C";
 
@@ -56,8 +55,6 @@ function AppartmentDetail() {
     const [touchStart, setTouchStart] = useState<number | null>(null);
     const [touchStartFullScreen, setTouchStartFullScreen] = useState<number | null>(null);
     const [isScrolling, setIsScrolling] = useState(false);
-    const [promotionData, setPromotionData] = useState<any>(null);
-    const [isLoadingPromotion, setIsLoadingPromotion] = useState(false);
     const galleryRef = useRef<HTMLDivElement>(null);
     const imageContainerRef = useRef<HTMLDivElement>(null);
 
@@ -79,8 +76,6 @@ function AppartmentDetail() {
                 if (roomData.images) {
                     setImageLoading(new Array(roomData.images.length).fill(true));
                 }
-                // Charger la promotion
-                loadPromotion(parseInt(id));
             } else {
                 // Fallback data
                 setRoomDetail({
@@ -124,57 +119,6 @@ function AppartmentDetail() {
         }
     }, [id]);
 
-    // Load promotion data
-    const loadPromotion = useCallback(async (roomId: number) => {
-        try {
-            setIsLoadingPromotion(true);
-            console.log('[DETAIL] 📥 Loading promotion for roomId:', roomId);
-            const response = await api.getPromotion(roomId);
-            console.log('[DETAIL] API response:', { 
-              success: response.success, 
-              hasData: !!response.data,
-              dataKeys: response.data ? Object.keys(response.data) : [],
-              data: response.data 
-            });
-            
-            // Extract the data from the API response
-            if (response.success && response.data) {
-                console.log('[DETAIL] ✅ Setting promotion data:', response.data);
-                setPromotionData(response.data);
-            } else {
-                console.log('[DETAIL] ⚠️ No promotion found, setting empty data');
-                // Set empty promotion data if loading fails
-                setPromotionData({
-                    roomId: roomId,
-                    title: '',
-                    description: '',
-                    image: '',
-                    cardImage: '',
-                    badge: { label: '', color: '#FF6B35' },
-                    features: [],
-                    bottomMessage: '',
-                    isActive: false
-                });
-            }
-        } catch (error) {
-            console.error('[DETAIL] ❌ Failed to load promotion:', error);
-            // Set default empty promotion data if loading fails
-            setPromotionData({
-                roomId: roomId,
-                title: '',
-                description: '',
-                image: '',
-                cardImage: '',
-                badge: { label: '', color: '#FF6B35' },
-                features: [],
-                bottomMessage: '',
-                isActive: false
-            });
-        } finally {
-            setIsLoadingPromotion(false);
-        }
-    }, []);
-
     // Listen for updates
     useEffect(() => {
         fetchRoomDetail();
@@ -189,26 +133,14 @@ function AppartmentDetail() {
             }
         };
 
-        const handlePromotionUpdate = (event: Event) => {
-            const customEvent = event as CustomEvent;
-            const updatedRoomId = customEvent.detail?.roomId;
-            
-            if (!updatedRoomId || updatedRoomId === parseInt(id || '0')) {
-                console.log('[DETAIL] 🔄 Received promotion update event, reloading promotion...');
-                if (id) loadPromotion(parseInt(id));
-            }
-        };
-
         window.addEventListener('roomDetailUpdated', handleDataUpdate);
         window.addEventListener('apartmentDataUpdated', handleDataUpdate);
-        window.addEventListener('promotionUpdated', handlePromotionUpdate);
 
         return () => {
             window.removeEventListener('roomDetailUpdated', handleDataUpdate);
             window.removeEventListener('apartmentDataUpdated', handleDataUpdate);
-            window.removeEventListener('promotionUpdated', handlePromotionUpdate);
         };
-    }, [id, fetchRoomDetail, loadPromotion]);
+    }, [id, fetchRoomDetail]);
 
     // Initialize dates
     useEffect(() => {
@@ -1125,15 +1057,6 @@ function AppartmentDetail() {
                         )}
                     </motion.div>
                 </section>
-
-                {/* --- SECTION PROMOTION --- */}
-                {isLoadingPromotion ? (
-                    <div className="flex justify-center items-center py-16">
-                        <div className="w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin" />
-                    </div>
-                ) : (
-                    promotionData && <PromoSection promo={promotionData} />
-                )}
             </div>
         </div>
     );
