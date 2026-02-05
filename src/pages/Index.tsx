@@ -213,7 +213,7 @@ function HeroSection({ data }: { data?: IHeroSection | null }) {
                 style={{ transform: `translate3d(${mousePosition.x * 0.15}px, ${mousePosition.y * 0.15}px, 0)` }}
               >
                 <div className="relative w-full h-full overflow-hidden rounded-sm group">
-                  <img src={data?.images?.secondary ?? imageGrise} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="TV Area" />
+                  <img src={data?.images?.secondary ?? imageGrise} className="w-full h-full object-cover grayscale-0 group-hover:grayscale-0 transition-all duration-700" alt="TV Area" />
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 animate-scan pointer-events-none" />
                 </div>
               </div>
@@ -878,7 +878,7 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
                   <img
                     src={data?.images?.small ?? '/placeholder.jpg'}
                     alt="Interior"
-                    className="w-full aspect-[3/4] object-cover grayscale
+                    className="w-full aspect-[3/4] object-cover grayscale-0
                                hover:grayscale-0 transition-all duration-1000"
                   />
                 </div>
@@ -903,7 +903,7 @@ const DestinationSearch = ({ data }: { data?: any | null }) => {
                   <img
                     src={data?.images?.main ?? '/placeholder.jpg'}
                     alt="Main Lounge"
-                    className="w-full aspect-[4/5] object-cover grayscale
+                    className="w-full aspect-[4/5] object-cover grayscale-0
                                hover:grayscale-0 transition-all duration-1000"
                   />
                 </div>
@@ -1129,7 +1129,7 @@ const FeatureRoom = ({ data }: { data?: any | null }) => {
               <img
                 src={data?.images?.bedroom ?? featureBedroom}
                 alt="Luxury bedroom interior"
-                className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000 scale-105 group-hover:scale-100"
+                className="w-full h-full object-cover grayscale-0 hover:grayscale-0 transition-all duration-1000 scale-105 group-hover:scale-100"
               />
             </div>
           </div>
@@ -1139,7 +1139,7 @@ const FeatureRoom = ({ data }: { data?: any | null }) => {
             <img
               src={data?.images?.living ?? featureLiving}
               alt="Modern living room interior"
-              className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000 scale-105 group-hover:scale-100"
+              className="w-full h-full object-cover grayscale-0 hover:grayscale-0 transition-all duration-1000 scale-105 group-hover:scale-100"
             />
           </div>
         </div>
@@ -1287,7 +1287,7 @@ const VideoSection = ({ data }: { data?: any | null }) => {
                 <img
                   src={data?.mainImage ?? bedroomMain}
                   alt={data?.mainImageAlt ?? 'Chambre luxueuse'}
-                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 
+                  className="w-full h-full object-cover grayscale-0 group-hover:grayscale-0 
                            transition-all duration-1000 group-hover:scale-105"
                 />
                 {isCloudinaryVideo && (
@@ -1306,7 +1306,7 @@ const VideoSection = ({ data }: { data?: any | null }) => {
                   <img
                     src={img}
                     alt={`Vue ${idx}`}
-                    className="w-full h-full object-cover grayscale hover:grayscale-0 
+                    className="w-full h-full object-cover grayscale-0 hover:grayscale-0 
                              transition-all duration-700"
                   />
                 </div>
@@ -1331,7 +1331,7 @@ const VideoSection = ({ data }: { data?: any | null }) => {
                           <img
                             src={img}
                             alt={`Vue ${idx}`}
-                            className="w-full h-40 xs:h-44 sm:h-48 md:h-56 object-cover grayscale hover:grayscale-0 
+                            className="w-full h-40 xs:h-44 sm:h-48 md:h-56 object-cover grayscale-0 hover:grayscale-0 
                                      transition-all duration-700"
                           />
                         </div>
@@ -1457,7 +1457,7 @@ const ServicesSection = ({ data }: { data?: any | null }) => {
                 <img
                   src={service.image}
                   alt={service.title}
-                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110"
+                  className="w-full h-full object-cover grayscale-0 group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110"
                 />
                 {/* Overlay discret au survol */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
@@ -1561,7 +1561,7 @@ const FeaturesSection = ({ data }: { data?: any | null }) => {
               <img
                 src={data?.mainImage ?? livingMain}
                 alt="Salon moderne"
-                className="w-full h-full object-cover transition-all duration-1000 grayscale group-hover:grayscale-0 group-hover:scale-110"
+                className="w-full h-full object-cover transition-all duration-1000 grayscale-0 group-hover:grayscale-0 group-hover:scale-110"
               />
               {/* Overlay subtil pour le look luxury */}
               <div className="absolute inset-0 border-[15px] border-white/10 pointer-events-none" />
@@ -1591,14 +1591,14 @@ const FeaturesSection = ({ data }: { data?: any | null }) => {
                   <img
                     src={(data?.thumbnails && data.thumbnails[0]) ?? thumb1}
                     alt="Intérieur"
-                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                    className="w-full h-full object-cover grayscale-0 hover:grayscale-0 transition-all duration-700"
                   />
                 </div>
                 <div className="w-1/2 aspect-square overflow-hidden rounded-sm shadow-lg group">
                   <img
                     src={(data?.thumbnails && data.thumbnails[1]) ?? thumb2}
                     alt="Chambre"
-                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                    className="w-full h-full object-cover grayscale-0 hover:grayscale-0 transition-all duration-700"
                   />
                 </div>
               </div>
